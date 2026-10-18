@@ -732,8 +732,52 @@ function renderMore(sub) {
     '<div class="inrow wrap"><button class="btn" data-act="exportData">Back-up maken</button><label class="btn ghost">Back-up of dagboek importeren<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
     '<div class="inrow wrap"><label class="btn ghost">Markdown-dagboek inlezen (AI)<input type="file" accept=".md,.txt,text/plain,text/markdown" hidden data-chg="importMd"></label><button class="btn ghost" data-act="shareWeek">Weeksamenvatting delen</button></div>' +
     '<button class="link" data-act="redoIntake">Intake opnieuw doen</button> · <button class="link danger" data-act="wipe">Alles wissen</button></div>';
+  h += installCard();
   h += '<p class="muted small center">Voedingsdagboek · werkt offline · versie ' + APP_VERSION + '</p>';
   view().innerHTML = h;
+  runDiag();
+}
+let INSTALL_EVT = null, DIAG = [];
+function installCard() {
+  return '<div class="card"><h3>App installeren</h3>' + (isStandalone() ? '<p class="muted small">De app draait geïnstalleerd.</p>' : (INSTALL_EVT ? '<p class="muted small">Chrome vindt de app installeerbaar.</p><button class="btn" data-act="installApp">Installeer de app</button>' : '<p class="muted small">Chrome heeft (nog) niet gemeld dat de app installeerbaar is. Hieronder zie je wat je toestel controleert.</p>')) +
+    '<div id="diag" class="table small"><p class="muted">Controleren…</p></div><button class="btn ghost" data-act="copyDiag">Kopieer controle</button></div>';
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTALL_EVT = e; if (/^#\/(meer|intake)/.test(location.hash)) render(); });
+window.addEventListener('appinstalled', () => { INSTALL_EVT = null; toast('App geïnstalleerd'); });
+function isStandalone() { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+ACT.installApp = async () => { if (!INSTALL_EVT) return; INSTALL_EVT.prompt(); const r = await INSTALL_EVT.userChoice; INSTALL_EVT = null; toast(r.outcome === 'accepted' ? 'Installeren gestart' : 'Installeren geannuleerd'); render(); };
+ACT.copyDiag = () => shareText(DIAG.map(d => (d[1] ? '✓ ' : '✗ ') + d[0] + (d[2] ? ': ' + d[2] : '')).join('\n'), 'Installatiecontrole');
+async function runDiag() {
+  const out = [];
+  const add = (label, ok, info) => out.push([label, ok, info || '']);
+  add('HTTPS', location.protocol === 'https:', location.origin);
+  add('Geïnstalleerd (standalone)', isStandalone());
+  add('Chrome meldt installeerbaar (beforeinstallprompt)', !!INSTALL_EVT);
+  const link = document.querySelector('link[rel=manifest]');
+  let man = null;
+  try { const r = await fetch(link.href, { cache: 'no-store' }); man = await r.json(); add('Manifest geladen', r.ok, r.status + ' ' + (r.headers.get('content-type') || '')); }
+  catch (e) { add('Manifest geladen', false, e.message); }
+  if (man) {
+    add('Manifest: naam, start_url, display', !!(man.name && man.start_url && man.display), [man.id, man.start_url, man.scope, man.display].join(' | '));
+    for (const ic of man.icons || []) {
+      const url = new URL(ic.src, link.href).href;
+      const res = await new Promise(r => { const im = new Image(); im.onload = () => r(im.naturalWidth + 'x' + im.naturalHeight); im.onerror = () => r(null); im.src = url + '?d=' + Date.now(); });
+      add('Icoon ' + ic.sizes + ' ' + (ic.purpose || ''), !!res, res || 'laadt niet');
+    }
+  }
+  if ('serviceWorker' in navigator) {
+    const reg = await navigator.serviceWorker.getRegistration();
+    add('Service worker geregistreerd', !!reg, reg ? reg.scope : '');
+    add('Service worker actief', !!(reg && reg.active), reg && reg.active ? reg.active.state : (reg && reg.installing ? 'installeert nog' : reg && reg.waiting ? 'wacht' : ''));
+    add('Pagina gecontroleerd door service worker', !!navigator.serviceWorker.controller, navigator.serviceWorker.controller ? '' : 'herlaad de pagina');
+  } else add('Service worker ondersteund', false);
+  if (navigator.getInstalledRelatedApps) { try { const a = await navigator.getInstalledRelatedApps(); add('Gerelateerde apps', true, String(a.length)); } catch (e) { } }
+  const uad = navigator.userAgentData;
+  add('Browser', true, uad ? uad.brands.map(b => b.brand + ' ' + b.version).join(', ') + (uad.mobile ? ' (mobiel)' : '') : navigator.userAgent);
+  add('Versie app', true, APP_VERSION);
+  DIAG = out;
+  const el = $('#diag');
+  if (el) el.innerHTML = out.map(d => '<div class="tr"><span>' + (d[1] ? '✓ ' : '✗ ') + esc(d[0]) + '</span><small>' + esc(d[2]) + '</small></div>').join('');
 }
 function gfield(p, l, v, type) { return '<label class="fld"><span>' + l + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="setG" data-p="' + p + '"></label>'; }
 ACT.setG = el => {
@@ -825,7 +869,7 @@ function renderIntake(step) {
   if (step === '1') {
     h = '<div class="hero"><h1>Voedingsdagboek</h1><p>Je eigen dagboek voor eten, drinken, slaap, stemming en stappen. Werkt offline, alles blijft op je gsm.</p></div>' +
       '<div class="card"><h3>Heb je al een dagboek?</h3><p class="muted small">Importeer het bestand dat je kreeg (.json). Dan staan je dagen, mealpreps, doelen en check-in-tijden er meteen in.</p><label class="btn">Dagboek importeren<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
-      '<div class="card"><h3>Nieuw beginnen</h3><p class="muted small">Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.</p><button class="btn ghost" data-act="intakeGo" data-s="2">Start intake</button></div>';
+      '<div class="card"><h3>Nieuw beginnen</h3><p class="muted small">Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.</p><button class="btn ghost" data-act="intakeGo" data-s="2">Start intake</button></div>' + installCard();
   } else if (step === '2') {
     h = header('Over jou', 'Stap 1 van 3') + '<div class="card"><div class="grid2">' +
       ifield('profile.name', 'Naam', I.profile.name, 'text') +
@@ -846,6 +890,7 @@ function renderIntake(step) {
       '<button class="btn big" data-act="intakeDone">Klaar, start het dagboek</button>';
   }
   view().innerHTML = h;
+  if (step === '1') runDiag();
 }
 function ifield(p, l, v, type) { return '<label class="fld"><span>' + l + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="intakeSet" data-p="' + p + '"></label>'; }
 ACT.intakeSet = el => {
@@ -884,7 +929,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
