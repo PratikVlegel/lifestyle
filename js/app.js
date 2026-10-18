@@ -769,7 +769,7 @@ ACT.ics = () => {
     const [hh, mm] = r.time.split(':').map(Number);
     const end = pad(mm + 5 >= 60 ? hh + 1 : hh) + pad((mm + 5) % 60) + '00';
     const link = base + '#/checkin/' + r.id;
-    ics += 'BEGIN:VEVENT\r\nUID:' + r.id + '-' + start + '@voedingsdagboek\r\nDTSTAMP:' + stamp + '\r\nDTSTART;TZID=Europe/Brussels:' + start + 'T' + t + '\r\nDTEND;TZID=Europe/Brussels:' + start + 'T' + end + '\r\nRRULE:FREQ=DAILY\r\n' +
+    ics += 'BEGIN:VEVENT\r\nUID:' + r.id + '-' + start + '@voedingsdagboek\r\nDTSTAMP:' + stamp + '\r\nDTSTART;TZID=Europe/Brussels:' + start + 'T' + t + '\r\nDTEND;TZID=Europe/Brussels:' + start + 'T' + end + '\r\nRRULE:FREQ=DAILY\r\nTRANSP:TRANSPARENT\r\nCLASS:PRIVATE\r\n' +
       'SUMMARY:' + fold('Check-in: ' + r.label) + '\r\nDESCRIPTION:' + fold('Open je voedingsdagboek: ' + link) + '\r\nURL:' + link + '\r\n' +
       'BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:' + fold(r.label) + '\r\nTRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n';
   }
@@ -879,7 +879,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

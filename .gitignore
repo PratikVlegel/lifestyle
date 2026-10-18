@@ -1,0 +1,7 @@
+# Nooit persoonlijke gegevens publiceren
+*.json
+!manifest.json
+*.ics
+.DS_Store
+Thumbs.db
+desktop.ini
