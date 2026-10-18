@@ -941,7 +941,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.1.6';
+const APP_VERSION = '1.1.7';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
@@ -950,6 +950,7 @@ function boot() {
   window.addEventListener('online', upd); window.addEventListener('offline', upd); upd();
   setInterval(tickReminders, 20000);
   window.addEventListener('online', () => cloudSync(true));
+  try { if (dedupeLocal()) save(); } catch (e) { console.warn(e); }
   setTimeout(() => cloudSync(true), 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && (location.hash === '' || location.hash === '#/')) render(); });
   render();
