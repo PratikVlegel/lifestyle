@@ -738,6 +738,13 @@ function renderMore(sub) {
   runDiag();
 }
 let INSTALL_EVT = null, DIAG = [];
+/* Sommige toestellen of netwerkfilters halen de manifest-link uit de pagina. Dan zetten we hem er zelf terug. */
+function ensureManifestLink() {
+  let l = document.querySelector('link[rel=manifest]');
+  if (!l) { l = document.createElement('link'); l.rel = 'manifest'; l.href = '/lifestyle/manifest.webmanifest'; document.head.appendChild(l); window.__manifestInjected = true; }
+  return l;
+}
+ensureManifestLink();
 function installCard() {
   return '<div class="card"><h3>App installeren</h3>' + (isStandalone() ? '<p class="muted small">De app draait geïnstalleerd.</p>' : (INSTALL_EVT ? '<p class="muted small">Chrome vindt de app installeerbaar.</p><button class="btn" data-act="installApp">Installeer de app</button>' : '<p class="muted small">Chrome heeft (nog) niet gemeld dat de app installeerbaar is. Hieronder zie je wat je toestel controleert.</p>')) +
     '<div id="diag" class="table small"><p class="muted">Controleren…</p></div><button class="btn ghost" data-act="copyDiag">Kopieer controle</button></div>';
@@ -753,7 +760,10 @@ async function runDiag() {
   add('HTTPS', location.protocol === 'https:', location.origin);
   add('Geïnstalleerd (standalone)', isStandalone());
   add('Chrome meldt installeerbaar (beforeinstallprompt)', !!INSTALL_EVT);
-  const link = document.querySelector('link[rel=manifest]');
+  let link = document.querySelector('link[rel=manifest]');
+  add('Manifest-link in de pagina', !!link, link ? link.getAttribute('href') : 'ontbreekt; links: ' + [...document.querySelectorAll('link')].map(l => l.rel).join(',') + ' | head ' + document.head.children.length + ' elementen');
+  try { const src = await (await fetch(location.pathname, { cache: 'no-store' })).text(); add('Manifest-link in index.html van de server', src.includes('rel="manifest"'), src.length + ' tekens'); } catch (e) { add('index.html ophalen', false, e.message); }
+  if (!link) link = ensureManifestLink();
   let man = null;
   try { const r = await fetch(link.href, { cache: 'no-store' }); man = await r.json(); add('Manifest geladen', r.ok, r.status + ' ' + (r.headers.get('content-type') || '')); }
   catch (e) { add('Manifest geladen', false, e.message); }
@@ -774,6 +784,7 @@ async function runDiag() {
   if (navigator.getInstalledRelatedApps) { try { const a = await navigator.getInstalledRelatedApps(); add('Gerelateerde apps', true, String(a.length)); } catch (e) { } }
   const uad = navigator.userAgentData;
   add('Browser', true, uad ? uad.brands.map(b => b.brand + ' ' + b.version).join(', ') + (uad.mobile ? ' (mobiel)' : '') : navigator.userAgent);
+  add('Manifest-link door app teruggezet', !window.__manifestInjected, window.__manifestInjected ? 'ja, ontbrak bij het laden' : 'niet nodig');
   add('Versie app', true, APP_VERSION);
   DIAG = out;
   const el = $('#diag');
@@ -929,7 +940,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.1.3';
+const APP_VERSION = '1.1.4';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
