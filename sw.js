@@ -1,6 +1,6 @@
 /* Service worker: houdt de app offline beschikbaar. Verhoog VERSION bij elke update. */
-const VERSION = 'vd-1.0.1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/store.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'icons/icon-192.png', 'icons/icon-512.png'];
+const VERSION = 'vd-1.1.0';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js', 'js/ocr.js', 'js/cloud.js', 'js/library.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -16,7 +16,7 @@ function render() {
   const h = location.hash.replace(/^#\/?/, '');
   const [page, a, b] = h.split('/');
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && page === 'prep') || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && (page === 'prep' || page === 'bieb')) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -31,6 +31,7 @@ function render() {
       case 'inzicht': return renderInsights();
       case 'meer': return renderMore(a);
       case 'intake': return renderIntake(a || '1');
+      case 'bieb': return renderLibrary();
       default: return renderHome();
     }
   } catch (e) {
@@ -390,7 +391,8 @@ function renderPicker(msg) {
         [[1, '1'], [0.75, '¾'], [2 / 3, '⅔'], [0.5, '½'], [1 / 3, '⅓'], [0.25, '¼']].map(([v, l]) => '<button class="chip" data-act="pickPrep" data-id="' + p.id + '" data-p="' + v + '">' + l + '</button>').join('') + '</div></div>';
     }).join('');
   } else if (PICK_TAB === 'lib') {
-    h += '<div class="inrow"><input type="search" id="libq" placeholder="Zoek in je bibliotheek" data-chg="libSearch"><button class="btn ghost" data-act="scanFood">Scan barcode</button></div>';
+    h += '<input type="search" id="libq" placeholder="Zoek in je bibliotheek">';
+    h += '<div class="chips"><button class="chip" data-act="scanFood">Scan barcode</button><label class="chip">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="pickPhoto"></label><button class="chip add" data-act="pickNewFood">+ nieuw product</button></div>';
     h += '<div id="libres">' + libResults('') + '</div>';
   } else {
     h += '<label class="fld"><span>Wat?</span><input id="vdesc" type="text" placeholder="bv. croissant, mixgrill met frieten"></label>' +
@@ -400,18 +402,20 @@ function renderPicker(msg) {
   $('#sheet .sheet-in').innerHTML = h;
 }
 function libResults(q) {
-  const list = DB.foods.filter(f => !q || f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 40);
-  if (!list.length) return '<p class="muted">Niets gevonden. Producten komen in je bibliotheek als je ze scant of in een mealprep gebruikt.</p>';
-  return list.map(f => '<div class="pick"><div><b>' + esc(f.name) + '</b><small>' + fmtNum(f.per.kcal) + ' kcal · ' + fmtNum(f.per.protein, 1) + ' g eiwit per 100 g</small></div><div class="inrow"><input type="number" inputmode="decimal" placeholder="gram" id="g_' + f.id + '" value="' + (f.unitG || '') + '"><button class="btn ghost" data-act="pickFood" data-id="' + f.id + '">+</button></div></div>').join('');
+  const list = libSearch(q, 40);
+  if (!list.length) return '<p class="muted">Niets gevonden. Scan de barcode, neem een foto van het etiket of maak een nieuw product.</p>';
+  return list.map(f => '<div class="pick"><div><b>' + esc(f.name) + (f.brand ? ' <span class="muted">· ' + esc(f.brand) + '</span>' : '') + '</b><small>' + fmtNum(f.per.kcal) + ' kcal · ' + fmtNum(f.per.protein, 1) + ' g eiwit per 100 g</small></div>' + amountRow(f, 'p') + '<button class="btn ghost" data-act="pickFood" data-id="' + f.id + '">Toevoegen</button></div>').join('');
 }
 ACT.libSearch = el => { $('#libres').innerHTML = libResults(el.value); };
 document.addEventListener('keyup', e => { if (e.target.id === 'libq') $('#libres').innerHTML = libResults(e.target.value); });
 ACT.pickTab = el => { PICK_TAB = el.dataset.t; renderPicker(); };
 ACT.pickPrep = el => { const p = prepById(el.dataset.id); const it = itemFromPrep(p, Number(el.dataset.p)); closeSheet(); PICK_CB && PICK_CB([it]); };
 ACT.pickFood = el => {
-  const f = DB.foods.find(x => x.id === el.dataset.id); const g = Number(($('#g_' + f.id).value || '').replace(',', '.'));
-  if (!g) return toast('Vul het aantal gram in.');
-  f.unitG = g; save(); closeSheet(); PICK_CB && PICK_CB([itemFromFood(f, g)]);
+  const f = DB.foods.find(x => x.id === el.dataset.id); const a = readAmount(f, 'p');
+  if (!a) return toast('Vul een hoeveelheid in.');
+  f.used = (f.used || 0) + 1; save(); closeSheet();
+  const it = itemFromFood(f, a.g); if (a.label) it.desc = f.name + ' (' + a.label + ', ' + fmtNum(a.g, a.g % 1 ? 1 : 0) + ' g)';
+  PICK_CB && PICK_CB([it]);
 };
 ACT.pickFree = () => {
   const desc = $('#vdesc').value.trim(); if (!desc) return toast('Wat at je?');
@@ -422,13 +426,13 @@ ACT.pickFree = () => {
 
 /* ---------- barcode scannen (Open Food Facts, online) ---------- */
 let SCAN = null;
-async function scanBarcode(onFood) {
+async function scanBarcode(onCode) {
   let h = '<div class="sheet-h"><h2>Barcode scannen</h2><button class="iconbtn" data-act="closeSheet">✕</button></div>';
   const supported = 'BarcodeDetector' in window;
   h += supported ? '<video id="scanv" playsinline muted></video><p class="muted small">Richt de camera op de barcode.</p>' : '<p class="note">Je browser ondersteunt geen camerascan. Typ de barcode in.</p>';
   h += '<div class="inrow"><input id="bcode" type="text" inputmode="numeric" placeholder="barcode (EAN)"><button class="btn ghost" data-act="lookupCode">Zoek</button></div><div id="scanmsg"></div>';
   $('#sheet .sheet-in').innerHTML = h; $('#sheet').hidden = false;
-  SCAN = { onFood };
+  SCAN = { onCode };
   if (!supported) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -437,33 +441,22 @@ async function scanBarcode(onFood) {
     const det = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
     const loop = async () => {
       if (!SCAN || !SCAN.stream) return;
-      try { const r = await det.detect(v); if (r.length) { $('#bcode').value = r[0].rawValue; stopScan(true); return lookup(r[0].rawValue); } } catch (e) { }
+      try { const r = await det.detect(v); if (r.length) { $('#bcode').value = r[0].rawValue; stopScan(true); return SCAN.onCode(r[0].rawValue); } } catch (e) { }
       SCAN.t = setTimeout(loop, 300);
     };
     loop();
   } catch (e) { $('#scanmsg').innerHTML = '<p class="note">Camera niet beschikbaar: ' + esc(e.message) + '</p>'; }
 }
 function stopScan(keep) { if (SCAN && SCAN.stream) { SCAN.stream.getTracks().forEach(t => t.stop()); SCAN.stream = null; clearTimeout(SCAN.t); } if (!keep) SCAN = null; }
-ACT.lookupCode = () => lookup($('#bcode').value.trim());
-async function lookup(code) {
-  if (!code) return;
-  const m = $('#scanmsg'); m.innerHTML = '<p class="muted">Zoeken…</p>';
-  const known = DB.foods.find(f => f.barcode === code);
-  if (known) { SCAN.onFood(known); return; }
-  if (!navigator.onLine) { m.innerHTML = '<p class="note">Offline: barcode opzoeken kan niet. Voeg het product manueel toe.</p>'; return; }
-  try {
-    const r = await fetch('https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(code) + '.json?fields=product_name,product_name_nl,brands,nutriments,serving_quantity');
-    const j = await r.json();
-    if (!j.product) throw new Error('Product niet gevonden in Open Food Facts.');
-    const n = j.product.nutriments || {};
-    const num = x => isNum(Number(x)) && x !== undefined && x !== '' ? Math.round(Number(x) * 10) / 10 : null;
-    const food = { id: uid(), barcode: code, name: [j.product.product_name_nl || j.product.product_name, j.product.brands].filter(Boolean).join(' – ') || code,
-      per: { kcal: num(n['energy-kcal_100g']), protein: num(n.proteins_100g), carbs: num(n.carbohydrates_100g), fat: num(n.fat_100g), fiber: num(n.fiber_100g) }, unitG: num(j.product.serving_quantity) };
-    DB.foods.push(food); save();
-    SCAN.onFood(food);
-  } catch (e) { m.innerHTML = '<p class="note">' + esc(e.message) + ' Vul de waarden van het etiket zelf in.</p>'; }
+ACT.lookupCode = () => { const c = $('#bcode').value.trim(); if (!/^[0-9]{6,14}$/.test(c)) return toast('Een barcode bestaat uit 6 tot 14 cijfers.'); stopScan(true); SCAN.onCode(c); };
+function backToPicker(msg, food) {
+  PICK_TAB = 'lib'; renderPicker(msg); $('#sheet').hidden = false;
+  const q = $('#libq'); if (q && food) { q.value = food.name; $('#libres').innerHTML = libResults(food.name); }
 }
-ACT.scanFood = () => scanBarcode(food => { PICK_TAB = 'lib'; renderPicker('Gevonden: ' + food.name + '. Vul het aantal gram in.'); const q = $('#libq'); if (q) { q.value = food.name; $('#libres').innerHTML = libResults(food.name); } });
+ACT.scanFood = () => findByBarcode(food => { keepFood(food); backToPicker('Gevonden: ' + food.name + '. Kies de hoeveelheid.', food); },
+  code => openFoodEditor({ id: uid(), name: '', brand: '', barcode: code, per: { kcal: null, protein: null, carbs: null, fat: null, fiber: null }, units: [], source: 'etiket' }, f => backToPicker('Bewaard: ' + f.name + '. Kies de hoeveelheid.', f)));
+ACT.pickPhoto = el => { const f = el.files[0]; el.value = ''; if (f) openFoodEditor(null, food => backToPicker('Bewaard: ' + food.name + '. Kies de hoeveelheid.', food), f); };
+ACT.pickNewFood = () => openFoodEditor(null, food => backToPicker('Bewaard: ' + food.name + '. Kies de hoeveelheid.', food));
 
 /* ================= dagboek ================= */
 function renderDays() {
@@ -540,7 +533,7 @@ function renderPreps() {
       '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + fmtNum(per[n]) + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
       '<small class="muted">per portie · gemaakt ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + '</small></a>';
   }).join('');
-  h += '<h2 class="sec">Bibliotheek</h2><p class="muted small">' + DB.foods.length + ' producten met voedingswaarden per 100 g. Ze worden automatisch bewaard als je een etiket invult of scant.</p>';
+  h += '<a class="card prepc" href="#/bieb"><div class="pc-h"><b>Productenbibliotheek</b><span class="pill">' + DB.foods.length + '</span></div><small class="muted">Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.' + (cloudReady() && DB.settings.share !== false ? ' Gedeeld over je toestellen en met andere gebruikers.' : '') + '</small></a>';
   view().innerHTML = h;
 }
 ACT.newPrep = () => { PREP = { id: uid(), name: '', date: todayKey(), portions: 3, left: 3, plan: '', cooked: null, ingredients: [blankIng()] , isNew: true }; go('#/prep/nieuw'); };
@@ -560,7 +553,7 @@ function renderPrep(id) {
     '<div class="grid2"><label class="fld"><span>Hoeveelheid (hele prep)</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="ing.' + i + '.grams" value="' + (isNum(g.grams) ? g.grams : '') + '"><em>g/ml</em></div></label>' +
     '<label class="fld"><span>Waarden zijn</span><select data-pp="ing.' + i + '.mode"><option value="per100"' + (g.mode !== 'totaal' ? ' selected' : '') + '>per 100 g (etiket)</option><option value="totaal"' + (g.mode === 'totaal' ? ' selected' : '') + '>totaal voor deze hoeveelheid</option></select></label></div>' +
     '<div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + NUTR_LABEL[n] + '</span><input type="number" inputmode="decimal" data-pp="ing.' + i + '.per.' + n + '" value="' + (isNum(g.per[n]) ? g.per[n] : '') + '"></label>').join('') + '</div>' +
-    '<div class="chips"><button class="chip" data-act="ingLib" data-i="' + i + '">Uit bibliotheek</button><button class="chip" data-act="ingScan" data-i="' + i + '">Scan barcode</button>' + (DB.settings.apiKey ? '<label class="chip">Foto etiket (AI)<input type="file" accept="image/*" capture="environment" hidden data-chg="ingPhoto" data-i="' + i + '"></label>' : '') + '</div>' +
+    '<div class="chips"><button class="chip" data-act="ingLib" data-i="' + i + '">Uit bibliotheek</button><button class="chip" data-act="ingScan" data-i="' + i + '">Scan barcode</button><label class="chip">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="ingOcr" data-i="' + i + '"></label></div>' + ingUnitChips(g, i) +
     '<small class="muted" id="ingsum_' + i + '">' + ingSummary(g) + '</small></div>').join('');
   h += '<datalist id="foodlist">' + DB.foods.map(f => '<option value="' + esc(f.name) + '">').join('') + '</datalist>';
   h += '<button class="btn ghost" data-act="addIng">+ ingrediënt</button>';
@@ -605,16 +598,25 @@ function prepInput(el) {
 }
 ACT.addIng = () => { PREP.ingredients.push(blankIng()); const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y + 200); };
 ACT.delIng = el => { PREP.ingredients.splice(Number(el.dataset.i), 1); if (!PREP.ingredients.length) PREP.ingredients.push(blankIng()); const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y); };
+function ingUnitChips(g, i) {
+  const f = g.foodId && DB.foods.find(x => x.id === g.foodId);
+  if (!f || !(f.units || []).length || g.mode === 'totaal') return '';
+  return '<div class="chips">' + f.units.map(u => '<button class="chip sm" data-act="ingAddUnit" data-i="' + i + '" data-g="' + u.g + '">+1 ' + esc(u.n) + ' (' + fmtNum(u.g, 1) + ' g)</button>').join('') + '</div>';
+}
+ACT.ingAddUnit = el => { const g = PREP.ingredients[Number(el.dataset.i)]; g.grams = Math.round(((isNum(g.grams) ? g.grams : 0) + Number(el.dataset.g)) * 10) / 10; const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y); };
 function fillIng(i, food) {
   const g = PREP.ingredients[i];
+  if (!DB.foods.some(f => f.id === food.id)) keepFood(food);
+  food.used = (food.used || 0) + 1;
   g.name = g.name || food.name; g.per = Object.assign({}, food.per); g.mode = 'per100'; g.foodId = food.id;
   closeSheet(); const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y);
 }
-ACT.ingScan = el => { const i = Number(el.dataset.i); $('#sheet').hidden = false; scanBarcode(food => fillIng(i, food)); };
+ACT.ingScan = el => { const i = Number(el.dataset.i); findByBarcode(food => fillIng(i, food), code => openFoodEditor({ id: uid(), name: PREP.ingredients[i].name || '', brand: '', barcode: code, per: { kcal: null, protein: null, carbs: null, fat: null, fiber: null }, units: [], source: 'etiket' }, f => fillIng(i, f))); };
+ACT.ingOcr = el => { const i = Number(el.dataset.i), file = el.files[0]; el.value = ''; if (!file) return; openFoodEditor({ id: uid(), name: PREP.ingredients[i].name || '', brand: '', barcode: '', per: { kcal: null, protein: null, carbs: null, fat: null, fiber: null }, units: [], source: 'etiket' }, f => fillIng(i, f), file); };
 ACT.ingLib = el => {
   const i = Number(el.dataset.i);
   $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>Uit bibliotheek</h2><button class="iconbtn" data-act="closeSheet">✕</button></div>' +
-    (DB.foods.length ? DB.foods.map(f => '<button class="pick wide" data-act="ingLibPick" data-i="' + i + '" data-id="' + f.id + '"><b>' + esc(f.name) + '</b><small>' + fmtNum(f.per.kcal) + ' kcal / 100 g</small></button>').join('') : '<p class="muted">Je bibliotheek is nog leeg.</p>');
+    (DB.foods.length ? libSearch('', 400).map(f => '<button class="pick wide" data-act="ingLibPick" data-i="' + i + '" data-id="' + f.id + '"><b>' + esc(f.name) + '</b><small>' + fmtNum(f.per.kcal) + ' kcal / 100 g</small></button>').join('') : '<p class="muted">Je bibliotheek is nog leeg.</p>');
   $('#sheet').hidden = false;
 };
 ACT.ingLibPick = el => fillIng(Number(el.dataset.i), DB.foods.find(f => f.id === el.dataset.id));
@@ -634,7 +636,7 @@ ACT.savePrep = () => {
   if (!ingr.length) return toast('Voeg minstens één ingrediënt toe.');
   PREP.ingredients = ingr;
   for (const g of ingr) {
-    if (g.mode === 'per100' && g.name && NUTR.some(n => isNum(g.per[n])) && !DB.foods.some(f => f.name.toLowerCase() === g.name.toLowerCase())) DB.foods.push({ id: uid(), name: g.name, per: Object.assign({}, g.per) });
+    if (g.mode === 'per100' && g.name && NUTR.some(n => isNum(g.per[n])) && !g.foodId && !DB.foods.some(f => f.name.toLowerCase() === g.name.toLowerCase())) { const nf = { id: uid(), name: g.name, per: Object.assign({}, g.per), units: [], source: 'eigen', dirty: true }; DB.foods.push(nf); g.foodId = nf.id; if (navigator.onLine && cloudReady()) pushFood(nf).catch(() => { }); }
   }
   const isNew = PREP.isNew; delete PREP.isNew;
   if (!isNum(PREP.left)) PREP.left = PREP.portions;
@@ -720,6 +722,8 @@ function renderMore(sub) {
     gfield('settings.glassMl', 'Eén glas = ml', S.glassMl) + '</div>' +
     '<label class="fld"><span>Context voor analyses (medisch, werk, gewoontes)</span><textarea rows="4" data-chg="setG" data-p="profile.notes">' + esc(P.notes || '') + '</textarea></label></div>';
 
+  h += '<div class="card"><h3>Gedeelde bibliotheek</h3><p class="muted small">Producten (naam, merk, barcode, etiketwaarden) worden gedeeld met iedereen die de app gebruikt, ook over je eigen toestellen heen. Je dagboek, gewicht en notities blijven altijd alleen op je gsm.</p>' +
+    (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> Mijn producten delen en gedeelde producten ophalen</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">Bibliotheek openen</a><button class="btn ghost" data-act="syncNow">Nu bijwerken</button></div>' : '<p class="note">Niet ingesteld.</p>') + '</div>';
   h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. Je betaalt per gebruik; één analyse kost meestal een paar cent. De sleutel blijft op dit toestel en zit niet in back-ups.</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
@@ -744,6 +748,7 @@ ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); };
 ACT.remDel = el => { if (!confirm('Herinnering verwijderen?')) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); render(); };
 ACT.remAdd = () => { DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); render(); };
 ACT.setAppUrl = el => { DB.settings.appUrl = el.value.trim(); save(); };
+ACT.setShare = el => { DB.settings.share = el.checked; save(); if (el.checked) cloudSync(false); };
 ACT.setNotify = async el => {
   if (el.checked) {
     if (!('Notification' in window)) { el.checked = false; return toast('Meldingen niet ondersteund.'); }
@@ -879,7 +884,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.1.0';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
@@ -887,7 +892,9 @@ function boot() {
   const upd = () => { off.hidden = navigator.onLine; };
   window.addEventListener('online', upd); window.addEventListener('offline', upd); upd();
   setInterval(tickReminders, 20000);
+  window.addEventListener('online', () => cloudSync(true));
+  setTimeout(() => cloudSync(true), 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && (location.hash === '' || location.hash === '#/')) render(); });
   render();
 }
-boot();
+window.addEventListener("DOMContentLoaded", boot);
