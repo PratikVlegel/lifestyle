@@ -11,12 +11,13 @@ let PICK_CB = null;     // callback van de itemkiezer
 
 /* ================= router ================= */
 function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
-window.addEventListener('hashchange', render);
+window.addEventListener('hashchange', () => { if (!$('#sheet').hidden) closeSheet(); render(); });
 function render() {
   const h = location.hash.replace(/^#\/?/, '');
   const [page, a, b] = h.split('/');
+  if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -33,6 +34,10 @@ function render() {
       case 'intake': return renderIntake(a || '1');
       case 'bieb': return renderLibrary();
       case 'recepten': return renderRecipes();
+      case 'week': return renderWeek(a);
+      case 'experimenten': return renderExperiments();
+      case 'lijst': return renderShop();
+      case 'rapport': return renderReport();
       case 'recept': return renderRecipe(a);
       default: return renderHome();
     }
@@ -82,11 +87,13 @@ function renderHome() {
     h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">Check-in klaar</span><span class="due-l">' + esc(due.label) + ' · ' + due.time + '</span><span class="due-go">Invullen ›</span></button>';
   }
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(x.r.label) + '</button>').join('') + '</div>';
+  h += weekCard();
   h += feedbackCard();
   h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">+ eten</button><button class="btn ghost" data-act="quickAct">+ activiteit</button><button class="btn ghost" data-act="quickWater">+ glas water</button><button class="btn ghost" data-act="quickCoffee">+ koffie</button></div>';
   h += '<h2 class="sec">Kerncijfers</h2><div class="kpis">' + KPI_ORDER.map(kpiTile).join('') + '</div>';
   const day = getDay(k);
   h += '<h2 class="sec">Gegeten vandaag</h2>' + mealsList(day, k, false);
+  h += '<div class="card tip"><b>Tip van de dag</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
   view().innerHTML = h;
 }
 function kpiTile(key) {
@@ -266,6 +273,7 @@ function renderCheckin(rid, dateKey) {
       choice('vape', 'Vapen', ['niet', 'paar keer', 'om de 3 u', 'om de 2 u', 'elk uur']) +
       field('alcohol', 'Alcohol (glazen)', 'number', { unit: 'glazen', step: '1', unknown: 'onbekend', bare: true }) +
       (Number(CI.f.alcohol) > 0 ? '<label class="fld"><span>Wat gedronken?</span><input type="text" data-ci="alcoholNote" value="' + esc(CI.f.alcoholNote || '') + '"></label>' : '') + '</div>';
+    h += expQuestionHtml();
     h += '<div class="card"><h3>Andere activiteiten vandaag?</h3><p class="muted small">Fietsen, fitness, zwemmen, padel… Wandelen telt al mee via je stappen.</p>' + activitiesHtml(getDay(CI.k), CI.k, true) + '<button class="chip add" data-act="ciAct">+ activiteit</button></div>';
     h += slotBlock('na', 'Iets gegeten of gedronken na het avondeten?');
     h += '<label class="fld card"><span>Notitie voor vandaag (optioneel)</span><textarea data-ci="notes" rows="2">' + esc(CI.f.notes || '') + '</textarea></label>';
@@ -287,7 +295,7 @@ function newCheckin(r, k) {
     }
   }
   if (r.kind === 'vrij') f.slot = slotForNow();
-  return { rid: r.id, kind: r.kind, k, time: r.kind === 'vrij' ? nowTime() : r.time, f, items: {}, ans: {}, glasses: 0, shots: 0 };
+  return { rid: r.id, kind: r.kind, k, time: r.kind === 'vrij' ? nowTime() : r.time, f, items: {}, ans: {}, glasses: 0, shots: 0, hunger: Object.assign({}, (day && day.hunger) || {}) };
 }
 ACT.ciAct = () => openActivitySheet(CI.k, a => { const d = getDay(CI.k, true); d.activities = (d.activities || []).concat(a); save(); rerenderCI(); });
 ACT.ciDate = el => { go('#/checkin/' + CI.rid + '/' + el.dataset.k); };
@@ -317,8 +325,11 @@ function slotBlock(slot, q) {
   }
   h += '<div class="chips">' +
     '<button class="chip add" data-act="ciAdd" data-s="' + slot + '">+ toevoegen</button>' +
+    (yesterdayItems(slot).length && !items.length ? '<button class="chip" data-act="ciSame" data-s="' + slot + '">↺ zelfde als gisteren</button>' : '') +
     (items.length ? '' : '<button class="chip ' + (a === 'niets' ? 'on' : '') + '" data-act="ciAns" data-s="' + slot + '" data-v="niets">niets gegeten</button><button class="chip ' + (a === '?' ? 'on' : '') + '" data-act="ciAns" data-s="' + slot + '" data-v="?">weet ik niet</button>') + '</div>';
   if (items.length) h += '<label class="fld"><span>Hoe laat?</span><input type="time" data-ci="time_' + slot + '" value="' + esc(CI.f['time_' + slot] || defaultTime(slot)) + '"></label>';
+  if (['ontbijt', 'lunch', 'avond'].includes(slot) && a !== 'niets') h += hungerRow(slot, 'Hoeveel honger had je vlak ervoor?');
+  if (slot === 'na') h += hungerRow('na', 'Hoeveel trek had je na het avondeten?');
   return h + '</div>';
 }
 function defaultTime(slot) { return ['tussen1', 'tussen2', 'na'].includes(slot) ? '' : CI.time; }
@@ -374,6 +385,7 @@ ACT.ciSave = () => {
     if (CI.glasses) d.waterMl = (isNum(d.waterMl) ? d.waterMl : 0) + CI.glasses * DB.settings.glassMl;
     if (CI.shots) d.caffeine = (isNum(d.caffeine) ? d.caffeine : 0) + CI.shots;
   }
+  if (CI.hunger) { d.hunger = d.hunger || {}; for (const [s, v] of Object.entries(CI.hunger)) if (isNum(v)) d.hunger[s] = v; }
   if (CI.rid !== 'vrij') d.done[CI.rid] = true;
   save();
   const kc = dayNutr(d, 'kcal');
@@ -389,9 +401,11 @@ function closeSheet() { $('#sheet').hidden = true; document.body.classList.remov
 ACT.closeSheet = closeSheet;
 function renderPicker(msg) {
   let h = '<div class="sheet-h"><h2>Eten toevoegen</h2><button class="iconbtn" data-act="closeSheet" aria-label="Sluiten">✕</button></div>';
-  h += '<div class="seg">' + [['prep', 'Mealprep'], ['lib', 'Bibliotheek'], ['vrij', 'Vrij']].map(([k, l]) => '<button class="' + (PICK_TAB === k ? 'on' : '') + '" data-act="pickTab" data-t="' + k + '">' + l + '</button>').join('') + '</div>';
+  h += '<div class="seg">' + [['vaak', 'Vaak'], ['prep', 'Mealprep'], ['lib', 'Bibliotheek'], ['vrij', 'Vrij']].map(([k, l]) => '<button class="' + (PICK_TAB === k ? 'on' : '') + '" data-act="pickTab" data-t="' + k + '">' + l + '</button>').join('') + '</div>';
   if (msg) h += '<p class="note">' + esc(msg) + '</p>';
-  if (PICK_TAB === 'prep') {
+  if (PICK_TAB === 'vaak') {
+    h += favResults();
+  } else if (PICK_TAB === 'prep') {
     const preps = DB.preps.slice().sort((a, b) => (b.left > 0) - (a.left > 0) || (b.date || '').localeCompare(a.date || ''));
     if (!preps.length) h += '<p class="muted">Nog geen mealpreps. Maak er een in het tabblad Mealprep.</p>';
     h += preps.map(p => {
@@ -535,7 +549,7 @@ ACT.saveMeal = el => {
 /* ================= mealprep ================= */
 function renderPreps() {
   let h = header('Mealprep', 'Bereken je preps uit etiketten en hoeveelheden');
-  h += '<div class="inrow wrap"><button class="btn" data-act="newPrep">+ Nieuwe mealprep</button><a class="btn ghost" href="#/recepten">Gedeelde recepten</a></div>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="newPrep">+ Nieuwe mealprep</button><a class="btn ghost" href="#/recepten">Gedeelde recepten</a><a class="btn ghost" href="#/lijst">Boodschappenlijst</a></div>';
   const list = DB.preps.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   h += list.map(p => {
     const { per } = prepTotals(p);
@@ -673,12 +687,18 @@ async function shareText(txt, title) {
 
 /* ================= inzicht ================= */
 function insightCard(i) {
-  return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + i.cat + '</span><b>' + esc(i.title) + '</b></div><p>' + esc(i.text).replace(/\n/g, '<br>') + '</p><small class="muted">Op basis van ' + esc(i.evidence) + '</small></div>';
+  return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + i.cat + '</span>' + (i.isNew ? '<span class="tag new">nieuw</span>' : '') + '<b>' + esc(i.title) + '</b></div><p>' + esc(i.text).replace(/\n/g, '<br>') + '</p><small class="muted">Op basis van ' + esc(i.evidence) + '</small></div>';
 }
 function renderInsights() {
   const ins = buildInsights(30);
   let h = header('Inzicht en advies', 'Laatste 30 dagen · offline berekend');
-  h += '<p class="muted small">Dit zijn verbanden in je eigen cijfers, geen oorzaken en geen diagnose. Hoe meer dagen volledig ingevuld, hoe betrouwbaarder.</p>';
+  h += '<div class="inrow wrap"><a class="btn ghost" href="#/week">Weekrapport</a><a class="btn ghost" href="#/experimenten">Experimenten</a><a class="btn ghost" href="#/rapport">Rapport maken</a></div>';
+  h += '<div class="card tip"><b>Tip van de dag</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
+  h += '<p class="muted small">Dit zijn verbanden in je eigen cijfers, geen oorzaken en geen diagnose. Hoe meer dagen volledig ingevuld, hoe betrouwbaarder. <b>Nieuw</b> = sinds je laatste bezoek veranderd.</p>';
+  const seen = new Set(DB.settings.seenIns || []);
+  ins.forEach(i => { i.sig = (i.title + '|' + i.text).length + ':' + i.title; i.isNew = seen.size > 0 && !seen.has(i.sig); });
+  ins.sort((a, b) => (b.isNew - a.isNew) || ({ tip: 0, info: 1, good: 2 }[a.tone] - { tip: 0, info: 1, good: 2 }[b.tone]));
+  DB.settings.seenIns = ins.map(i => i.sig); save();
   h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.</p>';
   h += '<h2 class="sec">Diepere analyse met AI</h2>';
   if (DB.settings.apiKey) {
@@ -743,6 +763,7 @@ function renderMore(sub) {
   h += '<div class="card"><h3>Back-up en import</h3><p class="muted small">Alles staat enkel op deze gsm. Maak geregeld een back-up (bv. wekelijks naar Drive).</p>' +
     '<div class="inrow wrap"><button class="btn" data-act="exportData">Back-up maken</button><label class="btn ghost">Back-up of dagboek importeren<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
     '<div class="inrow wrap"><label class="btn ghost">Markdown-dagboek inlezen (AI)<input type="file" accept=".md,.txt,text/plain,text/markdown" hidden data-chg="importMd"></label><button class="btn ghost" data-act="shareWeek">Weeksamenvatting delen</button></div>' +
+    '<div class="inrow wrap"><a class="btn ghost" href="#/rapport">Rapport voor diëtist, psycholoog, coach of arts</a></div>' +
     '<button class="link" data-act="redoIntake">Intake opnieuw doen</button> · <button class="link danger" data-act="wipe">Alles wissen</button></div>';
   h += installCard();
   h += '<p class="muted small center">Voedingsdagboek · werkt offline · versie ' + APP_VERSION + '</p>';
@@ -952,7 +973,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
@@ -963,7 +984,7 @@ function boot() {
   window.addEventListener('online', () => cloudSync(true));
   try { runMigrations(); } catch (e) { console.warn('migratie', e); }
   try { if (dedupeLocal()) save(); } catch (e) { console.warn(e); }
-  setTimeout(() => cloudSync(true), 1500);
+  setTimeout(() => { checkMembership(); cloudSync(true); }, 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && (location.hash === '' || location.hash === '#/')) render(); });
   render();
 }

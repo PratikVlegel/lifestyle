@@ -170,6 +170,7 @@ function buildInsights(n) {
   const missing = rangeKeys(completeKey(), 7).filter(k => !DB.days[k] || !(DB.days[k].meals || []).length).length;
   if (missing >= 3) add('registratie', 'Gaten in de registratie', missing + ' van de laatste 7 dagen hebben geen maaltijden. Hoe vollediger, hoe betrouwbaarder de analyses.', '7 dagen', 'info');
 
+  if (typeof moreInsights === 'function') { try { moreInsights(n, recent, add); } catch (e) { console.warn('inzichten', e); } }
   return out;
 }
 

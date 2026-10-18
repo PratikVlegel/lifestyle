@@ -80,7 +80,7 @@ async function fetchAllRemote() {
 }
 let SYNCING = false;
 async function cloudSync(quiet) {
-  if (!cloudReady() || !navigator.onLine || SYNCING) return;
+  if (!cloudReady() || !navigator.onLine || SYNCING || !DB.settings.member) return;
   SYNCING = true;
   try {
     const sharing = DB.settings.share !== false;
