@@ -530,7 +530,7 @@ function renderPreps() {
   h += list.map(p => {
     const { per } = prepTotals(p);
     return '<a class="card prepc' + (p.left > 0 ? '' : ' empty') + '" href="#/prep/' + p.id + '"><div class="pc-h"><b>' + esc(p.name) + '</b><span class="pill">' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' / ' + p.portions + ' over' : p.portions + ' porties') + '</span></div>' +
-      '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + fmtNum(per[n]) + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
+      '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + (prepKnows(p, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
       '<small class="muted">per portie · gemaakt ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + '</small></a>';
   }).join('');
   h += '<a class="card prepc" href="#/bieb"><div class="pc-h"><b>Productenbibliotheek</b><span class="pill">' + DB.foods.length + '</span></div><small class="muted">Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.' + (cloudReady() && DB.settings.share !== false ? ' Gedeeld over je toestellen en met andere gebruikers.' : '') + '</small></a>';
@@ -562,6 +562,7 @@ function renderPrep(id) {
   if (!P.isNew) h += '<div class="inrow"><button class="link" data-act="dupPrep">Opnieuw maken (kopie)</button><button class="link danger" data-act="delPrep">Verwijderen</button></div>';
   view().innerHTML = h;
 }
+function prepKnows(p, n) { return (p.ingredients || []).some(g => g.per && isNum(g.per[n])); }
 function ingSummary(g) {
   const t = ingTotals(g);
   if (!isNum(t.kcal)) return 'Nog geen kcal.';
@@ -570,7 +571,7 @@ function ingSummary(g) {
 function prepTotalsHtml() {
   const { tot, per, missing } = prepTotals(PREP);
   const p = Math.max(1, Number(PREP.portions) || 1);
-  let h = '<div class="pt-h"><b>Per portie</b><small>' + p + ' porties</small></div><div class="macro big">' + NUTR.map(n => '<span><b>' + fmtNum(per[n]) + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>';
+  let h = '<div class="pt-h"><b>Per portie</b><small>' + p + ' porties</small></div><div class="macro big">' + NUTR.map(n => '<span><b>' + (prepKnows(PREP, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>';
   h += '<small class="muted">Hele prep ≈ ' + fmtNum(tot.kcal) + ' kcal, ' + fmtNum(tot.protein) + ' g eiwit' + (isNum(PREP.cooked) ? ' · ≈ ' + fmtNum(PREP.cooked / p) + ' g bereid per portie' : '') + '.';
   const miss = NUTR.filter(n => missing[n]).map(n => NUTR_LABEL[n]);
   if (miss.length) h += ' Ontbreekt bij sommige ingrediënten: ' + miss.join(', ') + ' (telt als 0).';
@@ -854,9 +855,9 @@ ACT.importFile = async el => {
   try {
     const obj = JSON.parse(await f.text());
     const n = Object.keys(obj.days || {}).length;
-    const mode = Object.keys(DB.days).length && !confirm(n + ' dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.') ? 'replace' : 'merge';
+    const mode = obj.kind === 'prep-update' ? 'merge' : Object.keys(DB.days).length && !confirm(n + ' dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.') ? 'replace' : 'merge';
     if (mode === 'replace' && !confirm('Zeker? Alles op deze gsm wordt vervangen.')) return;
-    importJSON(obj, mode); toast(n + ' dagen ingelezen.'); go('#/');
+    importJSON(obj, mode); toast(obj.kind === 'prep-update' ? (importJSON.lastUpdated || 0) + ' mealpreps bijgewerkt.' : n + ' dagen ingelezen.'); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
   } catch (e) { alert('Import mislukt: ' + e.message); }
   el.value = '';
 };
@@ -940,7 +941,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.1.5';
+const APP_VERSION = '1.1.6';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

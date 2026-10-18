@@ -217,7 +217,8 @@ function dueReminder() {
 /* ---------- import / export ---------- */
 function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: Object.assign({}, DB.settings, { apiKey: '' }) }), null, 1); }
 function importJSON(obj, mode) {
-  if (!obj || typeof obj !== 'object' || !obj.days) throw new Error('Dit lijkt geen back-up van deze app.');
+  if (!obj || typeof obj !== 'object' || !(obj.days || obj.preps || obj.foods)) throw new Error('Dit lijkt geen back-up van deze app.');
+  obj.days = obj.days || {};
   if (mode === 'replace') {
     const key = DB.settings.apiKey;
     DB = migrate(obj);
@@ -232,8 +233,34 @@ function importJSON(obj, mode) {
         for (const m of d.meals || []) if (!ids.has(m.id)) cur.meals.push(m);
       }
     }
-    const pids = new Set(DB.preps.map(p => p.id));
-    for (const p of obj.preps || []) if (!pids.has(p.id)) DB.preps.push(p);
+    const updated = new Set();
+    for (const p of obj.preps || []) {
+      const i = DB.preps.findIndex(x => x.id === p.id);
+      if (i < 0) DB.preps.push(p);
+      else if ((p.rev || 0) > (DB.preps[i].rev || 0)) {
+        const left = DB.preps[i].left;            // je huidige voorraad blijft staan
+        DB.preps[i] = Object.assign({}, p, { left: isNum(left) ? left : p.left });
+        updated.add(p.id);
+      }
+    }
+    // Maaltijden uit bijgewerkte preps: ontbrekende eiwit/koolhydraten/vet/vezels aanvullen (kcal blijft zoals genoteerd).
+    if (obj.recalcMeals && updated.size) {
+      for (const d of Object.values(DB.days)) for (const m of d.meals || []) {
+        if (!m.prepId || !updated.has(m.prepId) || !isNum(m.portion)) continue;
+        const it = itemFromPrep(prepById(m.prepId), m.portion);
+        for (const n of ['protein', 'carbs', 'fat', 'fiber']) if (!isNum(m[n])) m[n] = it[n];
+        if (!isNum(m.kcal)) m.kcal = it.kcal;
+        delete m.lb;
+      }
+    }
+    // Losse maaltijden aanvullen met standaardwaarden (alleen velden die nog leeg zijn).
+    for (const pt of obj.mealPatch || []) {
+      for (const d of Object.values(DB.days)) for (const m of d.meals || []) {
+        if (!m.desc || !m.desc.startsWith(pt.desc)) continue;
+        for (const [k, v] of Object.entries(pt.set)) if (!isNum(m[k])) m[k] = v;
+      }
+    }
+    importJSON.lastUpdated = updated.size;
     const fids = new Set(DB.foods.map(f => f.id));
     for (const f of obj.foods || []) if (!fids.has(f.id)) DB.foods.push(f);
     if (obj.profile && !DB.intakeDone) DB.profile = Object.assign(DB.profile, obj.profile);
