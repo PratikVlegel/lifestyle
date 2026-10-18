@@ -1,5 +1,5 @@
 /* Service worker: houdt de app offline beschikbaar. Verhoog VERSION bij elke update. */
-const VERSION = 'vd-1.1.2';
+const VERSION = 'vd-1.1.3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js', 'js/ocr.js', 'js/cloud.js', 'js/library.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -13,8 +13,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return; // API's niet cachen
   // Eerst het netwerk (zodat updates binnenkomen), anders de cache.
+  // cache: 'no-cache' omzeilt de 10 minuten browsercache van GitHub Pages: de browser vraagt
+  // steeds aan de server of het bestand veranderd is (meestal een klein 304-antwoord).
   e.respondWith(
-    fetch(e.request).then(res => {
+    fetch(url.href, { cache: 'no-cache', credentials: 'same-origin' }).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); }
       return res;
     }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('index.html')))
