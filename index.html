@@ -123,6 +123,13 @@ input[type=checkbox]{width:22px;height:22px;min-height:0;accent-color:var(--acce
 input:disabled{opacity:.45}
 input.check{border-color:var(--lentil);background:color-mix(in srgb,var(--lentil) 12%,var(--surface2))}
 #bibq{margin:8px 0}
+.prepimg{width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin:4px 0 8px;display:block}
+.prepthumb{width:100%;height:120px;object-fit:cover;border-radius:10px;margin-bottom:8px;display:block}
+.stars{display:flex;gap:4px}
+.stars button{appearance:none;border:0;background:none;font-size:2rem;line-height:1;color:var(--line);cursor:pointer;padding:2px 4px}
+.stars button.on{color:var(--lentil)}
+.card.fb{border-color:var(--lentil);border-left:4px solid var(--lentil)}
+.quick.q4{grid-template-columns:repeat(2,1fr)}
 .amt{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}
 .amt-q{display:grid;grid-template-columns:52px 1fr 52px;gap:8px;align-items:center}
 .amt-q input{text-align:center;font-size:1.25rem;font-weight:700;min-height:52px}
@@ -204,11 +211,14 @@ nav.tabs a.on{color:var(--accent)}
 <div id="toast" hidden role="status"></div>
 <script src="js/config.js"></script>
 <script src="js/store.js"></script>
+<script src="js/migrate.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/insights.js"></script>
 <script src="js/ocr.js"></script>
 <script src="js/cloud.js"></script>
 <script src="js/app.js"></script>
 <script src="js/library.js"></script>
+<script src="js/activity.js"></script>
+<script src="js/share.js"></script>
 </body>
 </html>

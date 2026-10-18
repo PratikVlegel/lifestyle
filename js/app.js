@@ -16,7 +16,7 @@ function render() {
   const h = location.hash.replace(/^#\/?/, '');
   const [page, a, b] = h.split('/');
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && (page === 'prep' || page === 'bieb')) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -32,6 +32,8 @@ function render() {
       case 'meer': return renderMore(a);
       case 'intake': return renderIntake(a || '1');
       case 'bieb': return renderLibrary();
+      case 'recepten': return renderRecipes();
+      case 'recept': return renderRecipe(a);
       default: return renderHome();
     }
   } catch (e) {
@@ -70,7 +72,7 @@ function header(title, sub, back) {
 }
 
 /* ================= home ================= */
-const KPI_ORDER = ['kcal', 'protein', 'water', 'steps', 'sleep', 'mood', 'energy', 'weight', 'fiber', 'caffeine'];
+const KPI_ORDER = ['kcal', 'protein', 'water', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fiber', 'caffeine', 'fat'];
 function renderHome() {
   const k = todayKey();
   const due = dueReminder();
@@ -80,7 +82,8 @@ function renderHome() {
     h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">Check-in klaar</span><span class="due-l">' + esc(due.label) + ' · ' + due.time + '</span><span class="due-go">Invullen ›</span></button>';
   }
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(x.r.label) + '</button>').join('') + '</div>';
-  h += '<div class="quick"><button class="btn ghost" data-act="quickWater">+ glas water</button><button class="btn ghost" data-act="quickCoffee">+ koffie</button><button class="btn ghost" data-act="quickEat">+ eten</button></div>';
+  h += feedbackCard();
+  h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">+ eten</button><button class="btn ghost" data-act="quickAct">+ activiteit</button><button class="btn ghost" data-act="quickWater">+ glas water</button><button class="btn ghost" data-act="quickCoffee">+ koffie</button></div>';
   h += '<h2 class="sec">Kerncijfers</h2><div class="kpis">' + KPI_ORDER.map(kpiTile).join('') + '</div>';
   const day = getDay(k);
   h += '<h2 class="sec">Gegeten vandaag</h2>' + mealsList(day, k, false);
@@ -90,7 +93,7 @@ function kpiTile(key) {
   const M = METRICS[key];
   const k = todayKey();
   const ser = metricSeries(key, k, 14);
-  const evening = ['steps', 'sleep', 'mood', 'energy'].includes(key);
+  const evening = ['steps', 'burn', 'sleep', 'mood', 'energy'].includes(key);
   let cur = ser[ser.length - 1], when = 'vandaag';
   if (!isNum(cur.v) && (evening || key === 'weight')) {
     const last = [...ser].reverse().find(x => isNum(x.v));
@@ -154,7 +157,7 @@ function nutrLine(m) {
 }
 
 /* ================= KPI-detail ================= */
-const KPI_CAT = { kcal: 'voeding', protein: 'voeding', fiber: 'voeding', water: 'voeding', steps: 'activiteit', sleep: 'slaap', mood: 'stemming', energy: 'stemming', weight: 'gewicht', caffeine: 'slaap' };
+const KPI_CAT = { kcal: 'voeding', protein: 'voeding', fiber: 'voeding', water: 'voeding', steps: 'activiteit', burn: 'activiteit', fat: 'voeding', sleep: 'slaap', mood: 'stemming', energy: 'stemming', weight: 'gewicht', caffeine: 'slaap' };
 function renderKpi(key) {
   const M = METRICS[key]; if (!M) return go('#/');
   const ser = metricSeries(key, todayKey(), PERIOD);
@@ -193,6 +196,10 @@ function renderKpi(key) {
   if (key === 'caffeine') {
     const pts = pairs(PERIOD, d => d.caffeine, d => d.sleepH, 1);
     h += '<div class="card"><h3>Cafeïne en de nacht erna</h3>' + scatterChart(pts, { xLabel: 'shots cafeïne', yLabel: 'slaap volgende nacht (u)' }) + '</div>';
+  }
+  if (key === 'burn') {
+    h += '<div class="card"><h3>Vandaag</h3>' + activitiesHtml(getDay(todayKey()), todayKey(), true) + '<button class="btn ghost" data-act="quickAct">+ activiteit</button>' +
+      '<p class="muted small">Geschat extra verbruik bovenop rust, op basis van je gewicht (' + fmtNum(currentWeight(), 1) + ' kg). Stappen: ≈ 0,5 kcal per kg per km. Activiteiten: MET-waarden. Het is een ruwe schatting en geen reden om meer of minder te eten.</p></div>';
   }
   if (key === 'steps') {
     const wk = [1, 2, 3, 4, 5, 6, 0].map(w => ({ w, v: avg(ser.filter(x => parseKey(x.k).getDay() === w).map(x => x.v)) }));
@@ -259,6 +266,7 @@ function renderCheckin(rid, dateKey) {
       choice('vape', 'Vapen', ['niet', 'paar keer', 'om de 3 u', 'om de 2 u', 'elk uur']) +
       field('alcohol', 'Alcohol (glazen)', 'number', { unit: 'glazen', step: '1', unknown: 'onbekend', bare: true }) +
       (Number(CI.f.alcohol) > 0 ? '<label class="fld"><span>Wat gedronken?</span><input type="text" data-ci="alcoholNote" value="' + esc(CI.f.alcoholNote || '') + '"></label>' : '') + '</div>';
+    h += '<div class="card"><h3>Andere activiteiten vandaag?</h3><p class="muted small">Fietsen, fitness, zwemmen, padel… Wandelen telt al mee via je stappen.</p>' + activitiesHtml(getDay(CI.k), CI.k, true) + '<button class="chip add" data-act="ciAct">+ activiteit</button></div>';
     h += slotBlock('na', 'Iets gegeten of gedronken na het avondeten?');
     h += '<label class="fld card"><span>Notitie voor vandaag (optioneel)</span><textarea data-ci="notes" rows="2">' + esc(CI.f.notes || '') + '</textarea></label>';
   } else {
@@ -281,6 +289,7 @@ function newCheckin(r, k) {
   if (r.kind === 'vrij') f.slot = slotForNow();
   return { rid: r.id, kind: r.kind, k, time: r.kind === 'vrij' ? nowTime() : r.time, f, items: {}, ans: {}, glasses: 0, shots: 0 };
 }
+ACT.ciAct = () => openActivitySheet(CI.k, a => { const d = getDay(CI.k, true); d.activities = (d.activities || []).concat(a); save(); rerenderCI(); });
 ACT.ciDate = el => { go('#/checkin/' + CI.rid + '/' + el.dataset.k); };
 
 function field(name, label, type, o) {
@@ -480,6 +489,7 @@ function renderDay(k) {
   h += mealsList(d, k, true);
   h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + SLOTS[s].toLowerCase() + '</button>').join('') + '</div>';
   const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow"><input type="' + (step === 'text' ? 'text' : 'number') + '" inputmode="decimal" step="' + (step || 'any') + '" data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">' + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
+  h += '<div class="card"><h3>Beweging</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">+ activiteit</button></div>';
   h += '<div class="card"><h3>Cijfers</h3><p class="muted small">"?" = onbekend. Slaap = de nacht ervóór.</p><div class="grid2">' +
     f('weight', 'Gewicht', 'kg', '0.1') + f('sleepH', 'Slaap', 'u', '0.25') + f('energy', 'Energie', '/10', '1') + f('mood', 'Stemming', '/10', '1') +
     f('steps', 'Stappen', '', '1') + f('waterMl', 'Water', 'l', '0.25') + f('caffeine', 'Cafeïne', 'shots', '1') + f('alcohol', 'Alcohol', 'glazen', '1') + '</div>' +
@@ -525,13 +535,13 @@ ACT.saveMeal = el => {
 /* ================= mealprep ================= */
 function renderPreps() {
   let h = header('Mealprep', 'Bereken je preps uit etiketten en hoeveelheden');
-  h += '<button class="btn" data-act="newPrep">+ Nieuwe mealprep berekenen</button>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="newPrep">+ Nieuwe mealprep</button><a class="btn ghost" href="#/recepten">Gedeelde recepten</a></div>';
   const list = DB.preps.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   h += list.map(p => {
     const { per } = prepTotals(p);
-    return '<a class="card prepc' + (p.left > 0 ? '' : ' empty') + '" href="#/prep/' + p.id + '"><div class="pc-h"><b>' + esc(p.name) + '</b><span class="pill">' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' / ' + p.portions + ' over' : p.portions + ' porties') + '</span></div>' +
+    return '<a class="card prepc' + (p.left > 0 ? '' : ' empty') + '" href="#/prep/' + p.id + '">' + (prepPhotoSrc(p) ? '<img class="prepthumb" src="' + esc(prepPhotoSrc(p)) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(p.name) + '</b><span class="pill">' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' / ' + p.portions + ' over' : p.portions + ' porties') + '</span></div>' +
       '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + (prepKnows(p, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
-      '<small class="muted">per portie · gemaakt ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + '</small></a>';
+      '<small class="muted">per portie · gemaakt ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + (p.feedback ? ' · ' + esc(feedbackSummary(p.feedback)) : '') + (p.sharedId ? ' · gedeeld' : '') + '</small></a>';
   }).join('');
   h += '<a class="card prepc" href="#/bieb"><div class="pc-h"><b>Productenbibliotheek</b><span class="pill">' + DB.foods.length + '</span></div><small class="muted">Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.' + (cloudReady() && DB.settings.share !== false ? ' Gedeeld over je toestellen en met andere gebruikers.' : '') + '</small></a>';
   view().innerHTML = h;
@@ -547,6 +557,7 @@ function renderPrep(id) {
     '<div class="grid2"><label class="fld"><span>Porties</span><input type="number" inputmode="numeric" data-pp="portions" value="' + P.portions + '"></label><label class="fld"><span>Nog over</span><input type="number" inputmode="decimal" step="0.25" data-pp="left" value="' + (isNum(P.left) ? P.left : '') + '"></label></div><label class="fld"><span>Gemaakt op</span><input type="date" data-pp="date" value="' + esc(P.date || '') + '"></label>' +
     '<label class="fld"><span>Planning (optioneel)</span><input data-pp="plan" value="' + esc(P.plan || '') + '" placeholder="bv. lunch ma–wo"></label>' +
     '<label class="fld"><span>Gewicht bereid, hele pot (optioneel)</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="cooked" value="' + (isNum(P.cooked) ? P.cooked : '') + '"><em>g</em></div></label></div>';
+  h += prepExtrasHtml(P);
   h += '<h2 class="sec">Ingrediënten</h2>';
   h += P.ingredients.map((g, i) => '<div class="card ing" data-i="' + i + '">' +
     '<div class="inrow"><input class="grow" data-pp="ing.' + i + '.name" value="' + esc(g.name) + '" placeholder="Ingrediënt" list="foodlist"><button class="iconbtn sm" data-act="delIng" data-i="' + i + '" aria-label="Verwijder">✕</button></div>' +
@@ -857,7 +868,7 @@ ACT.importFile = async el => {
     const n = Object.keys(obj.days || {}).length;
     const mode = obj.kind === 'prep-update' ? 'merge' : Object.keys(DB.days).length && !confirm(n + ' dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.') ? 'replace' : 'merge';
     if (mode === 'replace' && !confirm('Zeker? Alles op deze gsm wordt vervangen.')) return;
-    importJSON(obj, mode); toast(obj.kind === 'prep-update' ? (importJSON.lastUpdated || 0) + ' mealpreps bijgewerkt.' : n + ' dagen ingelezen.'); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
+    importJSON(obj, mode); runMigrations(); toast(obj.kind === 'prep-update' ? (importJSON.lastUpdated || 0) + ' mealpreps bijgewerkt.' : n + ' dagen ingelezen.'); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
   } catch (e) { alert('Import mislukt: ' + e.message); }
   el.value = '';
 };
@@ -941,7 +952,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.1.7';
+const APP_VERSION = '1.2.0';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
@@ -950,6 +961,7 @@ function boot() {
   window.addEventListener('online', upd); window.addEventListener('offline', upd); upd();
   setInterval(tickReminders, 20000);
   window.addEventListener('online', () => cloudSync(true));
+  try { runMigrations(); } catch (e) { console.warn('migratie', e); }
   try { if (dedupeLocal()) save(); } catch (e) { console.warn(e); }
   setTimeout(() => cloudSync(true), 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && (location.hash === '' || location.hash === '#/')) render(); });

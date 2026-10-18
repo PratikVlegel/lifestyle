@@ -147,6 +147,25 @@ function buildInsights(n) {
     add('gewicht', 'Gewichtsverloop', t, w.length + ' wegingen', 'info');
   }
 
+  /* --- Mealpreps: wat werkt voor jou --- */
+  const fbs = DB.preps.filter(p => p.feedback);
+  if (fbs.length) {
+    const big = fbs.filter(p => p.feedback.portion === 'te groot' || p.feedback.eat === 'moeilijk');
+    const hungry = fbs.filter(p => p.feedback.fullness === 'snel weer honger');
+    const fav = fbs.filter(p => p.feedback.again === 'ja' && (p.feedback.taste || 0) >= 4);
+    let t = '';
+    if (fav.length) t += 'Favorieten om opnieuw te maken: ' + fav.map(p => p.name).join(', ') + '. ';
+    if (big.length) t += 'Te groot of moeilijk op te eten: ' + big.map(p => p.name).join(', ') + '. Verdeel zo\'n prep over meer porties of minder volume (minder groenten of rijst per portie), eerder dan maaltijden over te slaan. ';
+    if (hungry.length) t += 'Snel weer honger na: ' + hungry.map(p => p.name).join(', ') + '. Meer eiwit of vezels per portie helpt meestal om langer verzadigd te blijven.';
+    if (t) add('voeding', 'Wat je van je mealpreps vond', t.trim(), fbs.length + ' beoordeelde mealprep' + (fbs.length > 1 ? 's' : ''), big.length || hungry.length ? 'tip' : 'good');
+  }
+  /* --- Beweging --- */
+  const burns = recent.map(x => ({ k: x.k, v: dayBurn(x.d, x.k) })).filter(x => isNum(x.v));
+  if (burns.length >= 3) {
+    const acts = recent.reduce((n, x) => n + (x.d.activities || []).length, 0);
+    add('activiteit', 'Beweging', 'Gemiddeld ≈ ' + fmtNum(avg(burns.map(x => x.v))) + ' kcal extra per dag door bewegen (stappen' + (acts ? ' en ' + acts + ' andere activiteit' + (acts > 1 ? 'en' : '') : '') + '). Dat is een ruwe schatting; zie het als een maat voor hoe actief je was, niet als iets om met eten te verrekenen.', burns.length + ' dagen', 'info');
+  }
+
   /* --- Registratie --- */
   const missing = rangeKeys(completeKey(), 7).filter(k => !DB.days[k] || !(DB.days[k].meals || []).length).length;
   if (missing >= 3) add('registratie', 'Gaten in de registratie', missing + ' van de laatste 7 dagen hebben geen maaltijden. Hoe vollediger, hoe betrouwbaarder de analyses.', '7 dagen', 'info');

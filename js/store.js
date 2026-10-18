@@ -121,7 +121,7 @@ function metricSeries(key, endKey, n) {
   const M = METRICS[key];
   return rangeKeys(endKey, n).map(k => {
     const d = DB.days[k];
-    return { k, v: M.get(d), lb: M.lb ? !!M.lb(d) : false };
+    return { k, v: M.get(d, k), lb: M.lb ? !!M.lb(d) : false };
   });
 }
 function avg(arr) { const a = arr.filter(isNum); return a.length ? a.reduce((s, x) => s + x, 0) / a.length : null; }
