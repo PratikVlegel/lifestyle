@@ -23,7 +23,7 @@ ACT.redeem = async el => {
     const ok = await sb('/rest/v1/rpc/redeem_invite', { method: 'POST', body: { p_code: code } });
     if (ok === true) {
       DB.settings.member = true; DB.settings.inviteCode = code.split('-')[0]; delete DB.settings.pendingCode; save();
-      toast('Welkom!'); cloudSync(true);
+      toast('Welkom!'); cloudSync(true); checkAdmin();
       $('nav.tabs').hidden = false;
       go(DB.intakeDone ? '#/' : '#/intake');
     } else { DB.settings.pendingCode = code; renderInvite('Deze code klopt niet, is ingetrokken of al te vaak gebruikt.'); }

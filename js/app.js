@@ -37,6 +37,7 @@ function render() {
       case 'week': return renderWeek(a);
       case 'experimenten': return renderExperiments();
       case 'lijst': return renderShop();
+      case 'uitnodigen': return renderAdmin();
       case 'rapport': return renderReport();
       case 'recept': return renderRecipe(a);
       default: return renderHome();
@@ -736,6 +737,7 @@ function mdLite(t) {
 /* ================= meer / instellingen ================= */
 function renderMore(sub) {
   let h = header('Meer', '');
+  if (DB.settings.admin) h += '<a class="card fb wk" href="#/uitnodigen"><b>Vrienden uitnodigen</b><p class="small">Maak een persoonlijke code en stuur de uitnodiging meteen door.</p></a>';
   const G = DB.goals, P = DB.profile, S = DB.settings;
   h += '<div class="card"><h3>Herinneringen</h3><p class="muted small">Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.</p>';
   h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="aan"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(r.label) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="verwijder">✕</button></div>').join('');
@@ -973,7 +975,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
@@ -984,7 +986,7 @@ function boot() {
   window.addEventListener('online', () => cloudSync(true));
   try { runMigrations(); } catch (e) { console.warn('migratie', e); }
   try { if (dedupeLocal()) save(); } catch (e) { console.warn(e); }
-  setTimeout(() => { checkMembership(); cloudSync(true); }, 1500);
+  setTimeout(() => { checkMembership().then(checkAdmin); cloudSync(true); }, 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && (location.hash === '' || location.hash === '#/')) render(); });
   render();
 }
