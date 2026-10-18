@@ -1,21 +1,24 @@
 {
+  "id": "/lifestyle/",
   "name": "Voedingsdagboek",
   "short_name": "Dagboek",
   "description": "Offline voedingsdagboek met check-ins, mealprep-calculator, KPI's en advies.",
-  "start_url": "./#/",
-  "scope": "./",
+  "lang": "nl-BE",
+  "dir": "ltr",
+  "start_url": "/lifestyle/",
+  "scope": "/lifestyle/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "background_color": "#F2F5EF",
   "theme_color": "#2F6247",
-  "lang": "nl",
+  "categories": ["health", "food", "lifestyle"],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/lifestyle/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/lifestyle/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/lifestyle/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Check-in", "url": "./#/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Mealprep", "url": "./#/preps", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Mealprep", "url": "/lifestyle/#/preps" },
+    { "name": "Bibliotheek", "url": "/lifestyle/#/bieb" }
   ]
 }
