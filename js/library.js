@@ -181,16 +181,57 @@ function keepFood(food) {
   return food;
 }
 
-/* ---------- hoeveelheid kiezen: gram of eenheid ---------- */
+/* ---------- hoeveelheid kiezen: aantal × eenheid, met live berekening ---------- */
 function amountRow(f, prefix) {
-  const units = f.units || [];
-  return '<div class="inrow"><input type="number" inputmode="decimal" placeholder="aantal" id="' + prefix + 'q_' + f.id + '" value="' + (units.length ? 1 : (f.unitG || '')) + '"><select id="' + prefix + 'u_' + f.id + '">' +
-    units.map(u => '<option value="' + u.g + '">' + esc(u.n) + ' (' + fmtNum(u.g, 1) + ' g)</option>').join('') + '<option value="1"' + (units.length ? '' : ' selected') + '>gram</option></select></div>';
+  const units = (f.units || []).filter(u => isNum(u.g) && u.g > 0);
+  const opts = units.map(u => ({ n: u.n, g: u.g })).concat([{ n: 'gram', g: 1 }]);
+  const first = opts[0];
+  const q = first.g === 1 ? (f.lastG || 100) : 1;
+  const id = prefix + '_' + f.id;
+  return '<div class="amt" id="amt_' + id + '" data-fid="' + f.id + '" data-g="' + first.g + '">' +
+    '<div class="amt-q"><button type="button" class="amt-b" data-act="amtStep" data-id="' + id + '" data-d="-1" aria-label="minder">−</button>' +
+    '<input type="number" inputmode="decimal" min="0" step="any" id="q_' + id + '" value="' + q + '" aria-label="aantal">' +
+    '<button type="button" class="amt-b" data-act="amtStep" data-id="' + id + '" data-d="1" aria-label="meer">+</button></div>' +
+    '<div class="seg amt-u">' + opts.map((u, i) => '<button type="button" class="' + (i === 0 ? 'on' : '') + '" data-act="amtUnit" data-id="' + id + '" data-g="' + u.g + '">' + esc(u.n) + (u.g !== 1 ? ' <small>' + fmtNum(u.g, u.g % 1 ? 1 : 0) + ' g</small>' : '') + '</button>').join('') + '</div>' +
+    '<div class="amt-sum" id="s_' + id + '">' + amtSummary(f, q * first.g) + '</div></div>';
 }
+function amtSummary(f, g) {
+  if (!(g > 0)) return 'Vul een hoeveelheid in.';
+  const p = f.per || {};
+  return '= ' + fmtNum(g, g % 1 ? 1 : 0) + ' g · ≈ ' + fmtNum((p.kcal || 0) * g / 100) + ' kcal' + (isNum(p.protein) ? ' · ' + fmtNum(p.protein * g / 100, 1) + ' g eiwit' : '');
+}
+function amtUpdate(id) {
+  const box = $('#amt_' + id); if (!box) return;
+  const f = DB.foods.find(x => x.id === box.dataset.fid);
+  const q = Number(($('#q_' + id).value || '').replace(',', '.'));
+  $('#s_' + id).textContent = amtSummary(f, q * Number(box.dataset.g));
+}
+ACT.amtStep = el => {
+  const inp = $('#q_' + el.dataset.id), box = $('#amt_' + el.dataset.id);
+  const gram = box.dataset.g === '1';
+  const step = gram ? 10 : (Number(inp.value) < 1 || (Number(inp.value) === 1 && el.dataset.d === '-1') ? 0.5 : 1);
+  inp.value = Math.max(0, Math.round((Number(inp.value || 0) + step * Number(el.dataset.d)) * 10) / 10);
+  amtUpdate(el.dataset.id);
+};
+ACT.amtUnit = el => {
+  const box = $('#amt_' + el.dataset.id), inp = $('#q_' + el.dataset.id);
+  const wasGram = box.dataset.g === '1', toGram = el.dataset.g === '1';
+  box.dataset.g = el.dataset.g;
+  box.querySelectorAll('.amt-u button').forEach(b => b.classList.toggle('on', b === el));
+  if (toGram && !wasGram) { const f = DB.foods.find(x => x.id === box.dataset.fid); inp.value = f.lastG || 100; }
+  if (!toGram && wasGram) inp.value = 1;
+  amtUpdate(el.dataset.id);
+};
+document.addEventListener('input', e => { if (e.target.id && e.target.id.startsWith('q_')) amtUpdate(e.target.id.slice(2)); });
 function readAmount(f, prefix) {
-  const q = Number((($('#' + prefix + 'q_' + f.id) || {}).value || '').replace(',', '.'));
-  const u = Number(($('#' + prefix + 'u_' + f.id) || {}).value || 1);
-  const sel = $('#' + prefix + 'u_' + f.id);
-  const label = sel && sel.selectedOptions[0] && u !== 1 ? q + ' × ' + sel.selectedOptions[0].text.replace(/ \(.*/, '') : null;
-  return q > 0 ? { g: Math.round(q * u * 10) / 10, label } : null;
+  const id = prefix + '_' + f.id, box = $('#amt_' + id);
+  if (!box) return null;
+  const q = Number(($('#q_' + id).value || '').replace(',', '.'));
+  const per = Number(box.dataset.g);
+  if (!(q > 0)) return null;
+  const btn = box.querySelector('.amt-u button.on');
+  const unitName = btn ? btn.firstChild.textContent.trim() : 'gram';
+  const g = Math.round(q * per * 10) / 10;
+  if (per === 1) f.lastG = g;
+  return { g, label: per !== 1 ? fmtNum(q, q % 1 ? 1 : 0) + ' × ' + unitName : null };
 }

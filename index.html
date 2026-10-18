@@ -123,6 +123,14 @@ input[type=checkbox]{width:22px;height:22px;min-height:0;accent-color:var(--acce
 input:disabled{opacity:.45}
 input.check{border-color:var(--lentil);background:color-mix(in srgb,var(--lentil) 12%,var(--surface2))}
 #bibq{margin:8px 0}
+.amt{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}
+.amt-q{display:grid;grid-template-columns:52px 1fr 52px;gap:8px;align-items:center}
+.amt-q input{text-align:center;font-size:1.25rem;font-weight:700;min-height:52px}
+.amt-b{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;height:52px;font-size:1.5rem;cursor:pointer}
+.amt-u{margin:0;flex-wrap:wrap;border-radius:14px}
+.amt-u button{flex:1 1 auto;min-width:72px}
+.amt-u small{color:var(--muted);font-weight:500;margin-left:2px}
+.amt-sum{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .inrow{display:flex;gap:8px;align-items:center;margin:8px 0}
 .inrow.wrap{flex-wrap:wrap}
 .inrow input{flex:1;min-width:0}

@@ -404,7 +404,7 @@ function renderPicker(msg) {
 function libResults(q) {
   const list = libSearch(q, 40);
   if (!list.length) return '<p class="muted">Niets gevonden. Scan de barcode, neem een foto van het etiket of maak een nieuw product.</p>';
-  return list.map(f => '<div class="pick"><div><b>' + esc(f.name) + (f.brand ? ' <span class="muted">· ' + esc(f.brand) + '</span>' : '') + '</b><small>' + fmtNum(f.per.kcal) + ' kcal · ' + fmtNum(f.per.protein, 1) + ' g eiwit per 100 g</small></div>' + amountRow(f, 'p') + '<button class="btn ghost" data-act="pickFood" data-id="' + f.id + '">Toevoegen</button></div>').join('');
+  return list.map(f => '<div class="pick"><div><b>' + esc(f.name) + (f.brand ? ' <span class="muted">· ' + esc(f.brand) + '</span>' : '') + '</b><small>' + fmtNum(f.per.kcal) + ' kcal · ' + fmtNum(f.per.protein, 1) + ' g eiwit per 100 g</small></div>' + amountRow(f, 'p') + '<button class="btn" data-act="pickFood" data-id="' + f.id + '">Toevoegen</button></div>').join('');
 }
 ACT.libSearch = el => { $('#libres').innerHTML = libResults(el.value); };
 document.addEventListener('keyup', e => { if (e.target.id === 'libq') $('#libres').innerHTML = libResults(e.target.value); });
@@ -940,7 +940,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.1.4';
+const APP_VERSION = '1.1.5';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
