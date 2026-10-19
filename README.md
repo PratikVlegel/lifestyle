@@ -18,7 +18,7 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `js/charts.js` | SVG-grafieken (zonder externe bibliotheken) |
 | `js/insights.js` | Offline advies, optionele AI-analyse |
 | `js/app.js` | Schermen, check-ins, mealprep, instellingen |
-| `js/training.js` | Offline basisweek voor trainingsdoelen |
+| `js/training.js` | Offline basisweek en meerweeks marathon- en HYROX-programma |
 | `js/library.js` | Productenbibliotheek, producteditor, eenheden, barcode |
 | `js/ocr.js` | Gratis tekstherkenning van etiketten op het toestel |
 | `js/cloud.js` | Gedeelde producten, recepten, beoordelingen en foto's via Supabase (anoniem account) |
