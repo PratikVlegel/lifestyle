@@ -2305,4 +2305,28 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'De merknaam mag maximaal 120 tekens bevatten.': 'Der Markenname darf höchstens 120 Zeichen enthalten.',
   'Controleer de naam en het gewicht van elke eenheid.': 'Prüfe Name und Gewicht jeder Einheit.'
 });
+Object.assign(UI_EXTRA_TRANSLATIONS['nl-BE'], {
+  'Je hebt {count} cyclusdagen vastgelegd; op {rated} daarvan heb je minstens één symptoom beoordeeld. Na vijf beoordeelde dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.': 'Je hebt {count} cyclusdagen vastgelegd; op {rated} daarvan heb je minstens één symptoom beoordeeld. Na vijf beoordeelde dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.',
+  'Op dagen waarop je een symptoom beoordeelde, noteerde je soms matige of ernstige klachten:': 'Op dagen waarop je een symptoom beoordeelde, noteerde je soms matige of ernstige klachten:',
+  '{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.': '{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.',
+  'Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.': 'Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Je hebt {count} cyclusdagen vastgelegd; op {rated} daarvan heb je minstens één symptoom beoordeeld. Na vijf beoordeelde dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.': 'You have logged {count} cycle days and rated at least one symptom on {rated} of them. After five rated days, the app can summarise what you more often marked as moderate or severe.',
+  'Op dagen waarop je een symptoom beoordeelde, noteerde je soms matige of ernstige klachten:': 'On days when you rated a symptom, you sometimes recorded moderate or severe symptoms:',
+  '{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.': '{symptom}: moderate or severe on {count} of {total} days you rated it.',
+  'Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.': 'You did not record a moderate or severe score for the symptoms you rated. This only describes the scores you entered.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Je hebt {count} cyclusdagen vastgelegd; op {rated} daarvan heb je minstens één symptoom beoordeeld. Na vijf beoordeelde dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.': 'Vous avez enregistré {count} jours de cycle et évalué au moins un symptôme pendant {rated} d’entre eux. Après cinq jours évalués, l’application peut résumer les symptômes que vous avez le plus souvent notés comme modérés ou sévères.',
+  'Op dagen waarop je een symptoom beoordeelde, noteerde je soms matige of ernstige klachten:': 'Les jours où vous avez évalué un symptôme, vous avez parfois noté des symptômes modérés ou sévères :',
+  '{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.': '{symptom} : modéré ou sévère pendant {count} des {total} jours où vous l’avez évalué.',
+  'Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.': 'Vous n’avez noté aucun symptôme modéré ou sévère parmi ceux que vous avez évalués. Cela décrit uniquement les scores que vous avez saisis.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Je hebt {count} cyclusdagen vastgelegd; op {rated} daarvan heb je minstens één symptoom beoordeeld. Na vijf beoordeelde dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.': 'Du hast {count} Zyklustage erfasst und an {rated} davon mindestens ein Symptom bewertet. Nach fünf bewerteten Tagen kann die App zusammenfassen, was du häufiger als mittelschwer oder stark eingestuft hast.',
+  'Op dagen waarop je een symptoom beoordeelde, noteerde je soms matige of ernstige klachten:': 'An Tagen, an denen du ein Symptom bewertet hast, hast du manchmal mittelschwere oder starke Beschwerden erfasst:',
+  '{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.': '{symptom}: mittelschwer oder stark an {count} von {total} Tagen, an denen du es bewertet hast.',
+  'Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.': 'Bei den bewerteten Symptomen hast du keine mittelschwere oder starke Ausprägung erfasst. Das beschreibt nur die von dir eingegebenen Bewertungen.'
+});
 if (currentLocale() === 'nl-BE') applyLocale();

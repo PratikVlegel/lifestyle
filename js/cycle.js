@@ -117,10 +117,14 @@ function cyclePatterns(c) {
   const entries = Object.entries(c.logs).filter(([k, v]) => cycleDateValid(k) && v && typeof v === 'object').sort(([a], [b]) => a.localeCompare(b));
   h += cycleSupplementPatterns(entries);
   h += '<h3>' + tr('Symptomen in je eigen woorden') + '</h3>';
-  if (entries.length < 5) h += '<p class="muted">' + trf('Je hebt {count} dagen vastgelegd. Na vijf of meer dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.', { count: entries.length }) + '</p>';
+  const symptomEntries = entries.filter(([, x]) => CYCLE_SYMPTOMS.some(([key]) => Number.isInteger(x[key]) && x[key] >= 0 && x[key] <= 3));
+  if (symptomEntries.length < 5) h += '<p class="muted">' + trf('Je hebt {count} cyclusdagen vastgelegd; op {rated} daarvan heb je minstens één symptoom beoordeeld. Na vijf beoordeelde dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.', { count: entries.length, rated: symptomEntries.length }) + '</p>';
   else {
-    const counts = CYCLE_SYMPTOMS.map(([key, label]) => [label, entries.filter(([, x]) => x[key] >= 2).length]).filter(x => x[1]).sort((a, b) => b[1] - a[1]);
-    h += counts.length ? '<p>' + tr('Op de geregistreerde dagen noteerde je matige of ernstige ervaringen op:') + '</p><ul>' + counts.map(([label, count]) => '<li>' + tr(label) + ' · ' + count + ' ' + tr('van') + ' ' + entries.length + ' ' + tr('dagen') + '</li>').join('') + '</ul>' : '<p>' + tr('In je ingevulde dagen koos je geen matige of ernstige score. Dat zegt alleen iets over wat je hier hebt bijgehouden.') + '</p>';
+    const counts = CYCLE_SYMPTOMS.map(([key, label]) => {
+      const scored = entries.filter(([, x]) => Number.isInteger(x[key]) && x[key] >= 0 && x[key] <= 3);
+      return { label, count: scored.filter(([, x]) => x[key] >= 2).length, total: scored.length };
+    }).filter(x => x.total > 0).sort((a, b) => (b.count / b.total) - (a.count / a.total));
+    h += counts.some(x => x.count > 0) ? '<p>' + tr('Op dagen waarop je een symptoom beoordeelde, noteerde je soms matige of ernstige klachten:') + '</p><ul>' + counts.filter(x => x.count > 0).map(({ label, count, total }) => '<li>' + trf('{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.', { symptom: tr(label), count, total }) + '</li>').join('') + '</ul>' : '<p>' + tr('Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.') + '</p>';
     const moodRows = entries.map(([k, x]) => ({ x, mood: DB.days[k] && DB.days[k].mood })).filter(x => isNum(x.mood));
     const high = moodRows.filter(x => CYCLE_SYMPTOMS.some(([key]) => x.x[key] >= 2)).map(x => x.mood), low = moodRows.filter(x => CYCLE_SYMPTOMS.every(([key]) => isNum(x.x[key]) && x.x[key] < 2)).map(x => x.mood);
     if (high.length >= 5 && low.length >= 5) h += '<div class="cycle-mood"><b>' + tr('Stemming op dagen met geregistreerde klachten') + '</b><p>' + tr('Dagen met één of meer klachten als matig/ernstig:') + ' ' + fmtNum(moodMedian(high), 1) + '/10 (' + high.length + ' ' + tr('dagen') + '). ' + tr('Dagen zonder zo’n geregistreerde klacht:') + ' ' + fmtNum(moodMedian(low), 1) + '/10 (' + low.length + ' ' + tr('dagen') + ').</p><small class="muted">' + tr('Dit is alleen een beschrijving van jouw ingevulde dagen; het toont geen oorzaak en sluit andere factoren niet uit.') + '</small></div>';
