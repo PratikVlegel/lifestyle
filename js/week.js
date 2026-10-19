@@ -56,7 +56,7 @@ function weekCard() {
   if (DB.settings.weekSeen && DB.settings.weekSeen >= end) return '';
   if (!((dow === 0 && hour >= 18) || dow === 1 || dow === 2)) return '';
   if (rangeKeys(end, 7).filter(k => DB.days[k]).length < 3) return '';
-  return '<a class="card fb wk" href="#/week"><b>Je weekrapport staat klaar</b><p class="small">Hoe was je week tegenover de vorige? Kcal, eiwit, slaap, stemming, beweging en wat opvalt.</p></a>';
+  return '<a class="card fb wk" href="#/week"><b>' + tr('Je weekrapport staat klaar') + '</b><p class="small">' + tr('Hoe was je week tegenover de vorige? Kcal, eiwit, slaap, stemming, beweging en wat opvalt.') + '</p></a>';
 }
 
 /* ---------- experimenten ---------- */
@@ -79,19 +79,19 @@ function renderExperiments() {
     const E = EXPERIMENTS.find(x => x.id === act.id);
     const endK = addDays(act.start, act.days - 1);
     const doneDays = Object.values(act.log || {}).filter(v => v === true).length;
-    h += '<div class="card fb"><b>Bezig: ' + esc(E.title) + '</b><p class="small">' + esc(E.do) + '</p><p class="small muted">' + fmtDay(act.start) + ' – ' + fmtDay(endK) + ' · ' + doneDays + ' van de ' + act.days + ' dagen gelukt. Je antwoordt elke avond bij de dagopname.</p>' +
-      (todayKey() > endK ? '<button class="btn" data-act="expClose">Bekijk resultaat</button>' : '<button class="link danger" data-act="expStop">Stoppen</button>') + '</div>';
+    h += '<div class="card fb"><b>' + tr('Bezig:') + ' ' + esc(tr(E.title)) + '</b><p class="small">' + esc(tr(E.do)) + '</p><p class="small muted">' + fmtDay(act.start) + ' – ' + fmtDay(endK) + ' · ' + trf('{done} van de {total} dagen gelukt. Je antwoordt elke avond bij de dagopname.', { done: doneDays, total: act.days }) + '</p>' +
+      (todayKey() > endK ? '<button class="btn" data-act="expClose">' + tr('Bekijk resultaat') + '</button>' : '<button class="link danger" data-act="expStop">' + tr('Stoppen') + '</button>') + '</div>';
   }
   const done = DB.experiments.filter(e => e.closed);
-  if (done.length) h += '<h2 class="sec">Resultaten</h2>' + done.slice().reverse().map(e => '<div class="card"><b>' + esc((EXPERIMENTS.find(x => x.id === e.id) || {}).title || e.id) + '</b><small class="muted"> · ' + fmtDay(e.start) + '</small>' + expResultHtml(e) + '</div>').join('');
+  if (done.length) h += '<h2 class="sec">' + tr('Resultaten') + '</h2>' + done.slice().reverse().map(e => '<div class="card"><b>' + esc(tr((EXPERIMENTS.find(x => x.id === e.id) || {}).title || e.id)) + '</b><small class="muted"> · ' + fmtDay(e.start) + '</small>' + expResultHtml(e) + '</div>').join('');
   if (!act) {
-    h += '<h2 class="sec">Kies een experiment</h2><p class="muted small">De app vergelijkt de dagen waarop het lukte met je twee weken ervoor. Eén experiment tegelijk, zo blijft het meetbaar.</p>';
-    h += EXPERIMENTS.map(E => '<div class="card"><b>' + esc(E.title) + '</b><p class="small">' + esc(E.do) + '</p><small class="muted">Meet: ' + E.m.map(x => DVARS[x].l).join(', ') + '</small><div><button class="btn ghost" data-act="expStart" data-id="' + E.id + '">Start 7 dagen</button></div></div>').join('');
+    h += '<h2 class="sec">' + tr('Kies een experiment') + '</h2><p class="muted small">' + tr('De app vergelijkt de dagen waarop het lukte met je twee weken ervoor. Eén experiment tegelijk, zo blijft het meetbaar.') + '</p>';
+    h += EXPERIMENTS.map(E => '<div class="card"><b>' + esc(tr(E.title)) + '</b><p class="small">' + esc(tr(E.do)) + '</p><small class="muted">' + tr('Meet:') + ' ' + E.m.map(x => tr(DVARS[x].l)).join(', ') + '</small><div><button class="btn ghost" data-act="expStart" data-id="' + E.id + '">' + tr('Start 7 dagen') + '</button></div></div>').join('');
   }
   view().innerHTML = h;
 }
-ACT.expStart = el => { DB.experiments = DB.experiments || []; DB.experiments.push({ id: el.dataset.id, start: todayKey(), days: 7, log: {} }); save(); toast('Gestart. Elke avond vraagt de dagopname of het gelukt is.'); render(); };
-ACT.expStop = () => { const a = DB.experiments.find(e => !e.closed); if (!confirm('Experiment stoppen?')) return; a.closed = true; a.stopped = true; save(); render(); };
+ACT.expStart = el => { DB.experiments = DB.experiments || []; DB.experiments.push({ id: el.dataset.id, start: todayKey(), days: 7, log: {} }); save(); toast(tr('Gestart. Elke avond vraagt de dagopname of het gelukt is.')); render(); };
+ACT.expStop = () => { const a = DB.experiments.find(e => !e.closed); if (!confirm(tr('Experiment stoppen?'))) return; a.closed = true; a.stopped = true; save(); render(); };
 ACT.expClose = () => { const a = DB.experiments.find(e => !e.closed); a.closed = true; save(); render(); };
 function expResult(e) {
   const E = EXPERIMENTS.find(x => x.id === e.id);
@@ -105,16 +105,16 @@ function expResult(e) {
   });
 }
 function expResultHtml(e) {
-  if (e.stopped) return '<p class="small muted">Vroegtijdig gestopt.</p>';
+  if (e.stopped) return '<p class="small muted">' + tr('Vroegtijdig gestopt.') + '</p>';
   const r = expResult(e);
-  if (!r[0].n) return '<p class="small muted">Geen dagen als gelukt aangeduid.</p>';
-  return '<div class="table small">' + r.map(x => '<div class="tr"><span>' + DVARS[x.name].l + '</span><b>' + (isNum(x.a) ? fmtV(x.name, x.a) : '–') + '</b><small class="muted" style="width:auto">ervoor ' + (isNum(x.b) ? fmtV(x.name, x.b) : '–') + '</small></div>').join('') + '</div><p class="small muted">Op ' + r[0].n + ' geslaagde dagen. Met zo weinig dagen is dit een eerste aanwijzing, geen bewijs.</p>';
+  if (!r[0].n) return '<p class="small muted">' + tr('Geen dagen als gelukt aangeduid.') + '</p>';
+  return '<div class="table small">' + r.map(x => '<div class="tr"><span>' + tr(DVARS[x.name].l) + '</span><b>' + (isNum(x.a) ? fmtV(x.name, x.a) : '–') + '</b><small class="muted" style="width:auto">' + tr('ervoor') + ' ' + (isNum(x.b) ? fmtV(x.name, x.b) : '–') + '</small></div>').join('') + '</div><p class="small muted">' + trf('Op {count} geslaagde dagen. Met zo weinig dagen is dit een eerste aanwijzing, geen bewijs.', { count: r[0].n }) + '</p>';
 }
 /* Vraag in de dagopname */
 function expQuestionHtml() {
   const a = (DB.experiments || []).find(e => !e.closed);
   if (!a || CI.k < a.start || CI.k > addDays(a.start, a.days - 1)) return '';
   const E = EXPERIMENTS.find(x => x.id === a.id), v = (a.log || {})[CI.k];
-  return '<div class="card fb"><h3>Experiment: ' + esc(E.title) + '</h3><div class="fld"><span>' + esc(E.q) + '</span><div class="chips"><button class="chip ' + (v === true ? 'on' : '') + '" data-act="expLog" data-v="1">ja</button><button class="chip ' + (v === false ? 'on' : '') + '" data-act="expLog" data-v="0">nee</button></div></div></div>';
+  return '<div class="card fb"><h3>' + tr('Experiment:') + ' ' + esc(tr(E.title)) + '</h3><div class="fld"><span>' + esc(tr(E.q)) + '</span><div class="chips"><button class="chip ' + (v === true ? 'on' : '') + '" data-act="expLog" data-v="1">' + tr('ja') + '</button><button class="chip ' + (v === false ? 'on' : '') + '" data-act="expLog" data-v="0">' + tr('nee') + '</button></div></div></div>';
 }
 ACT.expLog = el => { const a = DB.experiments.find(e => !e.closed); a.log = a.log || {}; a.log[CI.k] = el.dataset.v === '1'; save(); rerenderCI(); };
