@@ -13,9 +13,11 @@ let PICK_CB = null;     // callback van de itemkiezer
 function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
 window.addEventListener('hashchange', () => { if (!$('#sheet').hidden) closeSheet(); render(); });
 function applyPersonalSettings() {
-  const S = DB.settings || {};
-  document.documentElement.dataset.palette = ['forest', 'ocean', 'plum'].includes(S.palette) ? S.palette : 'forest';
+  const S = INTAKE && location.hash.startsWith('#/intake') ? INTAKE.settings : DB.settings || {};
+  document.documentElement.dataset.palette = ['forest', 'ocean', 'plum', 'sunset', 'slate'].includes(S.palette) ? S.palette : 'forest';
   document.documentElement.dataset.textSize = ['compact', 'normal', 'large'].includes(S.textSize) ? S.textSize : 'normal';
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.content = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2F6247';
 }
 function render() {
   applyPersonalSettings();
@@ -102,9 +104,15 @@ function renderHome() {
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(x.r.label) + '</button>').join('') + '</div>';
   const homeCards = { week: weekCard(), training: activeTrainingHomeCard(), mood: moodHomeCard(), feedback: feedbackCard() };
   const homeOrders = { food: ['week', 'feedback', 'training', 'mood'], movement: ['training', 'week', 'feedback', 'mood'], wellbeing: ['mood', 'week', 'feedback', 'training'], balanced: ['week', 'training', 'mood', 'feedback'] };
-  h += (homeOrders[DB.settings.homeFocus] || homeOrders.balanced).map(key => homeCards[key]).join('');
+  h += '<div class="home-focus-list">' + (homeOrders[DB.settings.homeFocus] || homeOrders.balanced).map(key => homeCards[key]).join('') + '</div>';
   h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
-  h += '<h2 class="sec">' + tr('Kerncijfers') + '</h2><div class="kpis">' + KPI_ORDER.map(kpiTile).join('') + '</div>';
+  const focusKpis = {
+    food: ['kcal', 'protein', 'fiber', 'water', 'caffeine', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fat'],
+    movement: ['steps', 'burn', 'sleep', 'kcal', 'protein', 'water', 'fiber', 'mood', 'energy', 'weight', 'caffeine', 'fat'],
+    wellbeing: ['mood', 'energy', 'sleep', 'water', 'steps', 'kcal', 'protein', 'fiber', 'burn', 'weight', 'caffeine', 'fat'],
+    balanced: KPI_ORDER
+  };
+  h += '<h2 class="sec">' + tr('Kerncijfers') + '</h2><div class="kpis">' + (focusKpis[DB.settings.homeFocus] || focusKpis.balanced).map(kpiTile).join('') + '</div>';
   const day = getDay(k);
   h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
   h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
@@ -905,7 +913,7 @@ function renderMore(sub) {
   h += '<div class="card"><h3>' + tr('Gedeelde bibliotheek') + '</h3><p class="muted small">' + tr('Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.') + '</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> ' + tr('Mijn productbibliotheek synchroniseren (producten delen en ophalen)') + '</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">' + tr('Bibliotheek openen') + '</a><button class="btn ghost" data-act="syncNow">' + tr('Nu bijwerken') + '</button></div>' : '<p class="note">' + tr('Niet ingesteld.') + '</p>') + '</div>';
   h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
-  h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. ' + esc(aiDataDisclosure()) + ' Je betaalt per gebruik. De sleutel wordt lokaal in je browser opgeslagen en zit niet in back-ups.</p>' +
+  h += '<div class="card"><h3>' + tr('AI (optioneel)') + '</h3><p class="muted small">' + tr('With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.') + ' ' + esc(aiDataDisclosure()) + ' ' + tr('You pay Anthropic for each request. Your key is stored in this browser and is excluded from backups.') + '</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
 
@@ -921,9 +929,9 @@ function renderMore(sub) {
 }
 function personalizationCard(S) {
   const options = (current, values) => values.map(([v, l]) => '<option value="' + v + '"' + (current === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('');
-  return '<div class="card"><h3>' + tr('Maak de app persoonlijk') + '</h3><p class="muted small">' + tr('Kies wat op je startscherm eerst komt. Je kunt alles later aanpassen; je dagboek blijft privé.') + '</p>' +
+  return '<div class="card"><h3>' + tr('Maak de app persoonlijk') + '</h3><p class="muted small">' + tr('Je focus bepaalt welke kaarten en kerncijfers bovenaan Vandaag staan. Kleur en tekstgrootte werken door in de hele app.') + '</p>' +
     '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="personalize" data-p="homeFocus">' + options(S.homeFocus || 'balanced', [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']]) + '</select></label>' +
-    '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="personalize" data-p="palette">' + options(S.palette || 'forest', [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim']]) + '</select></label>' +
+    '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="personalize" data-p="palette">' + options(S.palette || 'forest', [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen']]) + '</select></label>' +
     '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="personalize" data-p="textSize">' + options(S.textSize || 'normal', [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']]) + '</select></label>' +
     '<small class="muted">' + tr('Je keuze verandert alleen de weergave op dit toestel.') + '</small></div>';
 }
@@ -1023,7 +1031,7 @@ ACT.language = el => {
   DB.settings.language = el.value; save(); applyLocale(); refreshWebPushSchedule(true); render();
 };
 ACT.personalize = el => {
-  const choices = { homeFocus: ['balanced', 'food', 'movement', 'wellbeing'], palette: ['forest', 'ocean', 'plum'], textSize: ['compact', 'normal', 'large'] };
+  const choices = { homeFocus: ['balanced', 'food', 'movement', 'wellbeing'], palette: ['forest', 'ocean', 'plum', 'sunset', 'slate'], textSize: ['compact', 'normal', 'large'] };
   const key = el.dataset.p;
   if (!choices[key] || !choices[key].includes(el.value)) { render(); return; }
   DB.settings[key] = el.value; save(); applyPersonalSettings(); render();
@@ -1131,7 +1139,7 @@ function renderIntake(step) {
     const S = I.settings;
     h = header('Maak de app persoonlijk', 'Optioneel · later aanpasbaar') + '<div class="card"><p>' + tr('Kies wat je eerst wilt zien en hoe de app eruitziet. Dit verandert alleen de weergave op dit toestel.') + '</p>' +
       '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="intakePersonalize" data-p="homeFocus">' + [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']].map(([v, l]) => '<option value="' + v + '"' + (S.homeFocus === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
-      '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="intakePersonalize" data-p="palette">' + [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim']].map(([v, l]) => '<option value="' + v + '"' + (S.palette === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
+      '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="intakePersonalize" data-p="palette">' + [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen']].map(([v, l]) => '<option value="' + v + '"' + (S.palette === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
       '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="intakePersonalize" data-p="textSize">' + [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']].map(([v, l]) => '<option value="' + v + '"' + (S.textSize === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label></div>' +
       '<button class="btn big" data-act="intakeDone">' + tr('Klaar, start het dagboek') + '</button><button class="link" data-act="intakeDone">' + tr('Overslaan en starten') + '</button>';
   }
@@ -1160,7 +1168,7 @@ function mifflin(I) {
   const f = { zittend: 1.2, licht: 1.375, matig: 1.55, actief: 1.725 }[I.profile.activity] || 1.2;
   return Math.round((10 * w + 6.25 * hgt - 5 * a + (I.profile.sex === 'v' ? -161 : 5)) * f / 10) * 10;
 }
-ACT.intakePersonalize = el => { INTAKE.settings[el.dataset.p] = el.value; };
+ACT.intakePersonalize = el => { INTAKE.settings[el.dataset.p] = el.value; applyPersonalSettings(); };
 ACT.intakeDone = () => {
   DB.profile = INTAKE.profile; DB.goals = INTAKE.goals; DB.reminders = INTAKE.reminders.sort((a, b) => a.time.localeCompare(b.time));
   DB.settings.homeFocus = INTAKE.settings.homeFocus; DB.settings.palette = INTAKE.settings.palette; DB.settings.textSize = INTAKE.settings.textSize;
@@ -1185,7 +1193,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.1';
+const APP_VERSION = '1.10.2';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

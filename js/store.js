@@ -113,6 +113,7 @@ const METRICS = {
   kcal: { label: 'Kcal', unit: 'kcal', chart: 'bar', dec: 0, get: d => vOf(dayNutr(d, 'kcal')), lb: d => { const r = dayNutr(d, 'kcal'); return r && r.lb; }, goal: () => DB.goals.kcal, sum: true },
   protein: { label: 'Eiwit', unit: 'g', chart: 'bar', dec: 0, get: d => vOf(dayNutr(d, 'protein')), lb: d => { const r = dayNutr(d, 'protein'); return r && r.lb; }, goal: () => DB.goals.protein, sum: true },
   fiber: { label: 'Vezels', unit: 'g', chart: 'bar', dec: 0, get: d => vOf(dayNutr(d, 'fiber')), lb: d => { const r = dayNutr(d, 'fiber'); return r && r.lb; }, goal: () => DB.goals.fiber, sum: true },
+  fat: { label: 'Vet', unit: 'g', chart: 'bar', dec: 0, get: d => vOf(dayNutr(d, 'fat')), lb: d => { const r = dayNutr(d, 'fat'); return r && r.lb; }, sum: true },
   water: { label: 'Water', unit: 'l', chart: 'bar', dec: 1, get: d => d && isNum(d.waterMl) ? d.waterMl / 1000 : null, goal: () => DB.goals.waterMl / 1000 },
   steps: { label: 'Stappen', unit: '', chart: 'bar', dec: 0, get: d => d && isNum(d.steps) ? d.steps : null, goal: () => DB.goals.stepsMin, goal2: () => DB.goals.stepsMax },
   sleep: { label: 'Slaap', unit: 'u', chart: 'bar', dec: 1, get: d => d && isNum(d.sleepH) ? d.sleepH : null, goal: () => DB.goals.sleepH },

@@ -84,64 +84,158 @@ ACT.shopShare = () => { const S = shopState(); shareText('Boodschappen\n' + shop
 /* ---------- rapporten per doelgroep ---------- */
 const AUDIENCES = {
   dietist: { label: 'Diëtist', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'gewicht', 'drinken'] },
-  psycholoog: { label: 'Psycholoog', parts: ['stemming', 'slaap', 'ritme', 'honger', 'notities', 'middelen'] },
+  psycholoog: { label: 'Psycholoog', parts: ['stemming', 'slaap', 'ritme', 'honger', 'middelen', 'notities'] },
   coach: { label: 'Sportcoach', parts: ['beweging', 'voeding', 'slaap', 'gewicht', 'energie'] },
   arts: { label: 'Huisarts', parts: ['profiel', 'slaap', 'gewicht', 'middelen', 'stemming', 'voeding'] },
   alles: { label: 'Alles', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'beweging', 'slaap', 'stemming', 'energie', 'notities', 'middelen', 'gewicht', 'drinken'] }
 };
+const REPORT_NICOTINE_FORMS = {
+  cigarette: 'Sigaretten', vape: 'Vape', nicotineGum: 'Nicotinekauwgom', nicotinePouch: 'Nicotinezakjes of snus',
+  nicotinePatch: 'Nicotinepleister', heatedTobacco: 'Verhitte tabak', otherNicotine: 'Andere nicotinevorm'
+};
+const REPORT_OLD_VAPE = { 'niet': 'niet', 'paar keer': 'paar keer', 'om de 3 u': 'om de 3 u', 'om de 2 u': 'om de 2 u', 'elk uur': 'elk uur' };
+function alcoholReport(dateKeys) {
+  const values = dateKeys.map(k => DB.days[k]?.alcohol).filter(v => isNum(v) && v >= 0);
+  if (!values.length) return tr('No alcohol entries were recorded in this period; missing entries are unknown.');
+  const total = values.reduce((s, v) => s + v, 0), zero = values.filter(v => v === 0).length;
+  return esc(trf('{total} glasses across {logged} logged days; average {average} glasses per logged day. {zero} logged days had zero; {unknown} days are unknown or unrecorded.', {
+    total: fmtNum(total, 1), logged: values.length, average: fmtNum(total / values.length, 1), zero, unknown: dateKeys.length - values.length
+  }));
+}
+function nicotineReport(dateKeys) {
+  const formCounts = {}, oldVapeCounts = {}, labels = REPORT_NICOTINE_FORMS;
+  let usedDays = 0, noUseDays = 0, knownDays = 0;
+  for (const k of dateKeys) {
+    const d = DB.days[k]; if (!d) continue;
+    if (Object.hasOwn(d, 'nicotineForms')) {
+      if (!Array.isArray(d.nicotineForms)) continue;
+      knownDays++;
+      if (d.nicotineForms.length) usedDays++; else noUseDays++;
+      for (const form of d.nicotineForms) if (labels[form]) formCounts[form] = (formCounts[form] || 0) + 1;
+      continue;
+    }
+    if (!Object.hasOwn(REPORT_OLD_VAPE, d.vape)) continue;
+    knownDays++;
+    oldVapeCounts[d.vape] = (oldVapeCounts[d.vape] || 0) + 1;
+    if (d.vape === 'niet') noUseDays++;
+    else { usedDays++; formCounts.vape = (formCounts.vape || 0) + 1; }
+  }
+  const unknown = dateKeys.length - knownDays;
+  const summary = esc(trf('{used} days with at least one nicotine form logged; {none} days explicitly logged as none; {unknown} of {total} days unknown or unrecorded.', { used: usedDays, none: noUseDays, unknown, total: dateKeys.length }));
+  const forms = Object.entries(formCounts).map(([key, count]) => '<li>' + esc(tr(labels[key])) + ': ' + esc(trf('{count} days', { count })) + '</li>').join('');
+  const oldScale = Object.entries(oldVapeCounts).map(([value, count]) => '<li>' + esc(tr(value)) + ': ' + esc(trf('{count} days', { count })) + '</li>').join('');
+  return '<p>' + summary + '</p>' + (forms ? '<p>' + tr('Recorded nicotine forms (a day can include more than one):') + '</p><ul>' + forms + '</ul>' : '') +
+    (oldScale ? '<p>' + tr('Older vaping frequency entries (days):') + '</p><ul>' + oldScale + '</ul><p class="small">' + tr('These older options are rough frequency descriptions, not a count of puffs or a nicotine dose. Current nicotine entries record the form, not the amount used.') + '</p>' : '');
+}
+function reportMoodMedian(values) {
+  const sorted = values.slice().sort((a, b) => a - b), middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+function reportSubstanceMood(dateKeys) {
+  if (!DB.settings.moodInsights) return '<p class="muted small">' + tr('Mood comparisons are off. Enable them in Mood and habits if you want this report to compare substances with mood.') + '</p>';
+  const comparisons = [
+    { label: 'alcohol', get: d => isNum(d.alcohol) && d.alcohol >= 0 ? d.alcohol > 0 : null },
+    { label: 'nicotine', get: d => Object.hasOwn(d, 'nicotineForms') ? Array.isArray(d.nicotineForms) ? d.nicotineForms.length > 0 : null : Object.hasOwn(REPORT_OLD_VAPE, d.vape) ? d.vape !== 'niet' : null }
+  ];
+  const rows = comparisons.map(({ label, get }) => {
+    const yes = [], no = [];
+    for (const key of dateKeys) {
+      const d = DB.days[key]; if (!d || !isNum(d.mood) || d.mood < 0 || d.mood > 10) continue;
+      const present = get(d); if (present === true) yes.push(d.mood); else if (present === false) no.push(d.mood);
+    }
+    if (yes.length < 5 || no.length < 5) return '<p class="muted small">' + esc(trf('{label}: not enough mood-scored days for a comparison (at least 5 in each group are needed).', { label: tr(label) })) + '</p>';
+    return '<p>' + esc(trf('Median mood was {withMood}/10 on days with {label} logged ({withDays} days) and {withoutMood}/10 on days with none logged ({withoutDays} days). This describes co-occurrence, not cause.', {
+      withMood: fmtNum(reportMoodMedian(yes), 1), label: tr(label), withDays: yes.length, withoutMood: fmtNum(reportMoodMedian(no), 1), withoutDays: no.length
+    })) + '</p>';
+  }).join('');
+  return '<p class="muted small">' + tr('These optional comparisons use only days with both a mood score and a known substance entry. Missing entries are excluded; a pattern does not show cause or effect.') + '</p>' + rows;
+}
 let REP = { a: 'dietist', n: 14 };
 function renderReport() {
   let h = '<div class="noprint">' + header('Rapport', 'Alleen wat relevant is, klaar om te printen of te delen', true);
-  h += '<div class="chips">' + Object.entries(AUDIENCES).map(([k, v]) => '<button class="chip ' + (REP.a === k ? 'on' : '') + '" data-act="repA" data-a="' + k + '">' + v.label + '</button>').join('') + '</div>';
-  h += '<div class="seg">' + [7, 14, 30].map(n => '<button class="' + (REP.n === n ? 'on' : '') + '" data-act="repN" data-n="' + n + '">' + n + ' dagen</button>').join('') + '</div>';
-  h += '<div class="inrow wrap"><button class="btn" data-act="repPrint">Afdrukken / PDF</button><button class="btn ghost" data-act="repShare">Deel als tekst</button></div></div>';
+  h += '<div class="chips">' + Object.entries(AUDIENCES).map(([k, v]) => '<button class="chip ' + (REP.a === k ? 'on' : '') + '" data-act="repA" data-a="' + k + '">' + tr(v.label) + '</button>').join('') + '</div>';
+  h += '<div class="seg">' + [7, 14, 30].map(n => '<button class="' + (REP.n === n ? 'on' : '') + '" data-act="repN" data-n="' + n + '">' + trf('{count} days', { count: n }) + '</button>').join('') + '</div>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="repPrint">' + tr('Afdrukken / PDF') + '</button><button class="btn ghost" data-act="repShare">' + tr('Deel als tekst') + '</button></div></div>';
   h += '<article class="report" id="report">' + reportHtml(REP.a, REP.n) + '</article>';
   view().innerHTML = h;
 }
 ACT.repA = el => { REP.a = el.dataset.a; render(); };
 ACT.repN = el => { REP.n = Number(el.dataset.n); render(); };
 ACT.repPrint = () => window.print();
-ACT.repShare = () => shareText(document.getElementById('report').innerText, 'Rapport ' + AUDIENCES[REP.a].label);
+ACT.repShare = () => shareText(document.getElementById('report').innerText, trf('Report for {audience}', { audience: tr(AUDIENCES[REP.a].label) }));
 function reportHtml(aud, n) {
-  const end = completeKey(), keys = rangeKeys(end, n).filter(k => DB.days[k]);
+  const end = completeKey(), periodKeys = rangeKeys(end, n), keys = periodKeys.filter(k => DB.days[k]);
   const P = DB.profile, G = DB.goals, A = AUDIENCES[aud];
-  const avgOf = name => avg(keys.map(k => dv(name, k)).filter(isNum));
-  const cntOf = name => keys.filter(k => isNum(dv(name, k))).length;
-  const row = (l, v) => '<tr><td>' + esc(tr(l)) + '</td><td>' + v + '</td></tr>';
+  const reportSlotKcal = (key, name) => {
+    const d = DB.days[key];
+    if (!d || d.kcalOverride) return null;
+    const slots = name === 'dayKcal' ? ['ontbijt', 'tussen1', 'lunch', 'tussen2'] : ['avond', 'na'];
+    const values = (d.meals || []).filter(m => slots.includes(m.slot) && !m.nothing && isNum(m.kcal) && !(Array.isArray(m.lb) && m.lb.includes('kcal'))).map(m => m.kcal);
+    return values.length ? values.reduce((sum, value) => sum + value, 0) : null;
+  };
+  const valueOnDay = (name, key) => ['dayKcal', 'eveKcal'].includes(name) ? reportSlotKcal(key, name) : dv(name, key);
+  const avgOf = name => avg(keys.map(k => valueOnDay(name, k)).filter(isNum));
+  const cntOf = name => keys.filter(k => isNum(valueOnDay(name, k))).length;
+  const reportValue = (name, value) => {
+    const D = DVARS[name];
+    const unit = D.u === 'u' ? tr('hours') : D.u === 'glazen' ? tr('glasses') : D.u === 'shots' ? tr('servings') : D.u;
+    return fmtNum(value, D.d) + (unit ? ' ' + unit : '');
+  };
+  const row = (l, v) => '<tr><th scope="row">' + esc(tr(l)) + '</th><td>' + v + '</td></tr>';
   const sec = (t, body) => body ? '<section><h3>' + esc(tr(t)) + '</h3>' + body + '</section>' : '';
   const tbl = rows => '<table>' + rows.filter(Boolean).join('') + '</table>';
-  const mv = (name, extra) => { const v = avgOf(name); return isNum(v) ? fmtV(name, v) + ' <small>(' + cntOf(name) + ' d' + (extra ? ', ' + extra : '') + ')</small>' : '–'; };
-  let h = '<header><h2>Rapport voor ' + esc(A.label.toLowerCase()) + '</h2><p>' + esc(P.name || '') + ' · ' + fmtDay(addDays(end, -(n - 1))) + ' – ' + fmtDay(end) + ' · ' + keys.length + ' dagen met gegevens</p><p class="small">Zelf geregistreerd. Kcal en voedingswaarden zijn ruwe schattingen; "–" = onbekend. Slaap hoort bij de nacht vóór de dag.</p></header>';
+  const mv = (name, extra) => { const v = avgOf(name); return isNum(v) ? reportValue(name, v) + ' <small>(' + trf('{count} logged days', { count: cntOf(name) }) + (extra ? ', ' + extra : '') + ')</small>' : '–'; };
+  let h = '<header><h2>' + esc(trf('Report for {audience}', { audience: tr(A.label).toLocaleLowerCase(currentLocale()) })) + '</h2><p>' + esc(P.name || '') + ' · ' + fmtDay(periodKeys[0]) + ' – ' + fmtDay(end) + ' · ' + trf('{count} days with data', { count: keys.length }) + '</p><p class="small">' + tr('Self-reported. Calories and nutrition values are rough estimates; “–” means unknown. Sleep refers to the night before that day.') + (A.parts.includes('stemming') ? ' ' + tr('Mood scores are daily self-reflections, not a validated psychological assessment.') : '') + '</p></header>';
   for (const part of A.parts) {
-    if (part === 'profiel') h += sec('Profiel en doelen', '<p>' + esc([P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : ''].filter(Boolean).join(', ')) + '. Doelen: ' + G.kcal + ' kcal, ' + G.protein + ' g eiwit, ' + G.fiber + ' g vezels, ' + fmtNum(G.waterMl / 1000, 1) + ' l water, ' + G.stepsMin + '–' + G.stepsMax + ' stappen.</p>' + (P.notes ? '<p class="small">' + esc(P.notes) + '</p>' : ''));
-    if (part === 'voeding') h += sec('Voeding (gemiddeld per volledige dag)', tbl([row('Kcal', mv('kcal')), row('Eiwit', mv('protein')), row('Vezels', mv('fiber')), row('Kcal vóór het avondeten', mv('dayKcal')), row('Kcal vanaf het avondeten', mv('eveKcal'))]));
-    if (part === 'drinken') h += sec('Drinken', tbl([row('Water', mv('water')), row('Cafeïne', mv('caffeine')), row('Alcohol', mv('alcohol'))]));
-    if (part === 'maaltijden') h += sec('Wat er gegeten werd', '<table class="days">' + keys.slice().reverse().map(k => { const d = DB.days[k], kc = dayNutr(d, 'kcal'); return '<tr><td><b>' + fmtDay(k, true) + '</b><br><small>' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : 'kcal ?') + '</small></td><td>' + SLOT_ORDER.map(s => (d.meals || []).filter(m => m.slot === s).map(m => '<div><small>' + tr(SLOTS[s]) + (m.time ? ' ' + m.time : '') + ':</small> ' + (m.nothing ? tr('niets') : esc(m.desc)) + (d.hunger && isNum(d.hunger[s]) ? ' <small>(' + tr('honger') + ' ' + d.hunger[s] + '/5)</small>' : '') + '</div>').join('')).join('') + '</td></tr>'; }).join('') + '</table>');
+    if (part === 'profiel') {
+      const profileSummary = [P.sex === 'v' ? tr('vrouw') : P.sex === 'm' ? tr('man') : '', P.age ? trf('{count} years', { count: P.age }) : '', P.heightCm ? P.heightCm + ' cm' : ''].filter(Boolean).join(', ');
+      h += sec('Profiel en doelen', '<p>' + (profileSummary ? esc(profileSummary) + '. ' : '') + esc(trf('Goals: {kcal} kcal, {protein} g protein, {fiber} g fibre, {water} l water, {stepsMin}–{stepsMax} steps.', { kcal: G.kcal, protein: G.protein, fiber: G.fiber, water: fmtNum(G.waterMl / 1000, 1), stepsMin: G.stepsMin, stepsMax: G.stepsMax })) + '</p>' + (P.notes ? '<p class="small">' + esc(P.notes) + '</p>' : ''));
+    }
+    if (part === 'voeding') h += sec('Voeding (gemiddeld op dagen met berekenbare waarden)', '<p class="small muted">' + tr('Averages use only days with a calculable value; incomplete entries may be missing. Estimated values are not a clinical nutrition assessment.') + '</p>' + tbl([row('Kcal', mv('kcal')), row('Eiwit', mv('protein')), row('Vezels', mv('fiber')), row('Kcal uit geregistreerde maaltijden vóór het avondeten', mv('dayKcal')), row('Kcal uit geregistreerde maaltijden vanaf het avondeten', mv('eveKcal'))]));
+    if (part === 'drinken') h += sec('Drinken', '<p class="small muted">' + tr('Coffee servings and glasses are self-reported; serving size can vary. Missing entries are not counted as zero.') + '</p>' + tbl([row('Water', mv('water')), row('Koffie (porties)', mv('caffeine')), row('Alcohol', alcoholReport(periodKeys))]));
+    if (part === 'maaltijden') {
+      const mealDays = keys.slice().reverse().filter(k => (DB.days[k].meals || []).length);
+      const mealCards = mealDays.map(k => {
+        const d = DB.days[k], kc = dayNutr(d, 'kcal');
+        const meals = SLOT_ORDER.map(s => (d.meals || []).filter(m => m.slot === s).map(m => '<div class="report-meal"><b>' + esc(tr(SLOTS[s]) + (m.time ? ' · ' + m.time : '')) + '</b><p>' + (m.nothing ? esc(tr('niets')) : esc(m.desc)) + '</p>' + (d.hunger && isNum(d.hunger[s]) ? '<small>' + esc(tr('honger')) + ' ' + d.hunger[s] + '/5</small>' : '') + '</div>').join('')).join('');
+        return '<article class="report-day"><div class="report-dayhead"><b>' + fmtDay(k, true) + '</b><span>' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('kcal ?')) + '</span></div>' + meals + '</article>';
+      }).join('');
+      h += sec('Wat er gegeten werd', '<p class="small muted">' + tr('Only recorded meals are shown. An unlisted meal or day is unknown, not proof that nothing was eaten.') + '</p>' + (mealCards ? '<div class="report-days">' + mealCards + '</div>' : '<p>' + tr('No meal entries were recorded in this period.') + '</p>') + '<p class="small muted">' + trf('{count} days with meal entries', { count: mealDays.length }) + '</p>');
+    }
     if (part === 'ritme') {
-      const late = keys.filter(k => (DB.days[k].meals || []).some(m => m.slot === 'na' && !m.nothing)).length;
-      const noLunch = keys.filter(k => (DB.days[k].meals || []).some(m => m.slot === 'lunch' && m.nothing)).length;
-      h += sec('Eetritme', '<p>Gegeten na het avondeten op ' + late + ' van ' + keys.length + ' dagen; lunch overgeslagen op ' + noLunch + ' dagen.</p>');
+      const mealKeys = keys.filter(k => (DB.days[k].meals || []).length);
+      const late = mealKeys.filter(k => (DB.days[k].meals || []).some(m => m.slot === 'na' && !m.nothing)).length;
+      const noLunch = mealKeys.filter(k => (DB.days[k].meals || []).some(m => m.slot === 'lunch' && m.nothing)).length;
+      h += sec('Eetritme', '<p>' + esc(trf('Food was logged after dinner on {late} of {days} days with meal entries; lunch was explicitly marked as skipped on {lunch} of those days.', { late, days: mealKeys.length, lunch: noLunch })) + '</p>');
     }
     if (part === 'honger') h += sec('Honger en trek (1–5)', tbl([row('Honger vóór het avondeten', mv('hungerDinner')), row('Trek \'s avonds', mv('hungerEve'))]));
-    if (part === 'preps') { const f = DB.preps.filter(p => p.feedback); if (f.length) h += sec('Mealpreps: eigen beoordeling', '<ul>' + f.map(p => '<li>' + esc(p.name) + ': ' + esc(feedbackSummary(p.feedback)) + (p.feedback.note ? ' · "' + esc(p.feedback.note) + '"' : '') + '</li>').join('') + '</ul>'); }
+    if (part === 'preps') {
+      const f = DB.preps.filter(p => p.feedback && p.date && periodKeys.includes(p.date));
+      if (f.length) h += sec('Mealpreps: eigen beoordeling', '<p class="small muted">' + tr('Feedback is linked to the meal prep; the date it was eaten is not recorded.') + '</p><ul>' + f.map(p => '<li><b>' + esc(p.name) + '</b> · ' + fmtDay(p.date) + ': ' + esc(feedbackSummary(p.feedback)) + (p.feedback.note ? ' · "' + esc(p.feedback.note) + '"' : '') + '</li>').join('') + '</ul>');
+    }
     if (part === 'beweging') {
-      const types = {}; keys.forEach(k => (DB.days[k].activities || []).forEach(a => { types[a.type] = (types[a.type] || 0) + a.min; }));
-      h += sec('Beweging', tbl([row('Stappen', mv('steps')), row('Extra verbruik (schatting)', mv('burn')), row('Activiteiten', Object.keys(types).length ? Object.entries(types).map(([t, m]) => (ACTIVITIES[t] || ACTIVITIES.anders).label + ' ' + m + ' min').join(', ') : 'geen gelogd')]));
+      const types = {}; keys.forEach(k => (DB.days[k].activities || []).forEach(a => { const item = types[a.type] || (types[a.type] = { minutes: 0, sessions: 0, timedSessions: 0 }); if (isNum(a.min)) { item.minutes += a.min; item.timedSessions++; } item.sessions++; }));
+      const activitySummary = Object.keys(types).length
+        ? Object.entries(types).map(([t, v]) => esc(tr((ACTIVITIES[t] || ACTIVITIES.anders).label)) + ': ' + (v.timedSessions ? trf('{minutes} min recorded across {count} sessions', { minutes: v.minutes, count: v.timedSessions }) + (v.timedSessions < v.sessions ? ' · ' + trf('duration missing for {count} sessions', { count: v.sessions - v.timedSessions }) : '') : trf('{count} sessions; duration not recorded', { count: v.sessions }))).join('; ')
+        : esc(tr('geen gelogd'));
+      h += sec('Beweging', '<p class="small muted">' + tr('Activity minutes are totals for this period, based on recorded sessions only.') + '</p>' + tbl([
+        row('Stappen', mv('steps')),
+        row('Extra verbruik (schatting)', mv('burn')),
+        row('Activiteiten', activitySummary)
+      ]));
     }
     if (part === 'energie') h += sec('Energie', tbl([row('Energie', mv('energy'))]));
     if (part === 'slaap') {
       const cp = keys.map(k => DB.days[k].cpap).filter(Boolean);
-      h += sec('Slaap', tbl([row('Slaap (nacht ervoor)', mv('sleepH')), row('Nachten < 6 u', String(keys.filter(k => isNum(dv('sleepH', k)) && dv('sleepH', k) < 6).length)), row('CPAP', cp.length ? 'hele nacht ' + cp.filter(c => /hele|ja/.test(c)).length + '×, deels ' + cp.filter(c => /deel|vanaf/.test(c)).length + '×, niet ' + cp.filter(c => c === 'nee').length + '×' : '–')]));
+      const full = cp.filter(c => /hele|ja/.test(c)).length, partial = cp.filter(c => /deel|vanaf/.test(c)).length, no = cp.filter(c => c === 'nee').length;
+      h += sec('Slaap', tbl([row('Slaap (nacht ervoor)', mv('sleepH')), row('Nachten < 6 u', trf('{count} of {total} recorded nights', { count: keys.filter(k => isNum(dv('sleepH', k)) && dv('sleepH', k) < 6).length, total: cntOf('sleepH') })), row('CPAP', cp.length ? trf('{full} full night, {partial} part night, {no} no use, {unknown} other ({count} recorded nights)', { full, partial, no, unknown: cp.length - full - partial - no, count: cp.length }) : '–')]));
     }
-    if (part === 'stemming') h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', String(keys.filter(k => isNum(dv('mood', k)) && dv('mood', k) <= 5).length))]));
+    if (part === 'stemming') h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', trf('{count} of {total} mood-scored days', { count: keys.filter(k => isNum(dv('mood', k)) && dv('mood', k) <= 5).length, total: cntOf('mood') }))]));
     if (part === 'notities') { const ns = keys.slice().reverse().filter(k => DB.days[k].moodNote || DB.days[k].notes); if (ns.length) h += sec('Notities', '<ul>' + ns.map(k => '<li><b>' + fmtDay(k) + (isNum(DB.days[k].mood) ? ' (' + DB.days[k].mood + '/10)' : '') + ':</b> ' + esc([DB.days[k].moodNote, DB.days[k].notes].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>'); }
-    if (part === 'middelen') {
-      const vp = keys.map(k => DB.days[k].vape).filter(Boolean);
-      h += sec('Cafeïne, alcohol, vapen', tbl([row('Cafeïne', mv('caffeine')), row('Alcohol', mv('alcohol', 'totaal ' + keys.reduce((s, k) => s + (isNum(dv('alcohol', k)) ? dv('alcohol', k) : 0), 0) + ' glazen')), row('Vapen', vp.length ? Object.entries(vp.reduce((o, v) => (o[v] = (o[v] || 0) + 1, o), {})).map(([v, c]) => v + ' ' + c + '×').join(', ') : '–')]));
-    }
+    if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4><p>' + alcoholReport(periodKeys) + '</p></div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
     if (part === 'gewicht') {
       const w = keys.map(k => ({ k, v: DB.days[k].weight })).filter(x => isNum(x.v));
-      h += sec('Gewicht (vóór ontbijt)', w.length ? '<p>' + w.map(x => fmtDay(x.k) + ': ' + fmtNum(x.v, 1) + ' kg').join(' · ') + '</p><p class="small">Gemiddeld ' + fmtNum(avg(w.map(x => x.v)), 1) + ' kg over ' + w.length + ' wegingen.</p>' : '<p>Geen wegingen.</p>');
+      h += sec('Gewicht (vóór ontbijt)', w.length ? '<p>' + w.map(x => fmtDay(x.k) + ': ' + fmtNum(x.v, 1) + ' kg').join(' · ') + '</p><p class="small">' + trf('Average {weight} kg across {count} weigh-ins.', { weight: fmtNum(avg(w.map(x => x.v)), 1), count: w.length }) + '</p>' : '<p>' + tr('No weigh-ins recorded.') + '</p>');
     }
   }
   return h;

@@ -12,6 +12,7 @@ const DVARS = {
   kcal: { l: 'kcal', u: 'kcal', d: 0, f: d => { const r = dayNutr(d, 'kcal'); return r && !r.lb ? r.v : null; } },
   protein: { l: 'eiwit', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'protein'); return r && !r.lb ? r.v : null; } },
   fiber: { l: 'vezels', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'fiber'); return r && !r.lb ? r.v : null; } },
+  fat: { l: 'vet', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'fat'); return r && !r.lb ? r.v : null; } },
   water: { l: 'water', u: 'l', d: 1, f: d => isNum(d.waterMl) ? d.waterMl / 1000 : null },
   caffeine: { l: 'cafeïne', u: 'shots', d: 1, f: d => isNum(d.caffeine) ? d.caffeine : null },
   alcohol: { l: 'alcohol', u: 'glazen', d: 1, f: d => isNum(d.alcohol) ? d.alcohol : null },
