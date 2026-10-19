@@ -44,7 +44,7 @@ function scheduledDate(now: Date, timezone: string, reminderTime: string): strin
   const target = Number(m[1]) * 60 + Number(m[2]);
   const here = localParts(now, timezone);
   const lateBy = (here.minute - target + 1440) % 1440;
-  if (lateBy > 1) return null; // tolerate a one-minute cron delay, but send at most once per local date
+  if (lateBy > 10) return null; // recover short cron delays; the delivery ledger still sends once per local date
   if (here.minute >= target) return here.date;
   const d = new Date(`${here.date}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() - 1);
