@@ -47,14 +47,14 @@ METRICS.burn = { label: 'Beweging', unit: 'kcal', chart: 'bar', dec: 0, get: (d,
 METRICS.fat = { label: 'Vet', unit: 'g', chart: 'bar', dec: 0, sum: true, get: d => vOf(dayNutr(d, 'fat')), lb: d => { const r = dayNutr(d, 'fat'); return r && r.lb; } };
 
 function activityLine(a, k) {
-  return (ACTIVITIES[a.type] || ACTIVITIES.anders).label + (a.note ? ' (' + a.note + ')' : '') + ' · ' + a.min + ' min ' + a.int + ' · ≈ ' + fmtNum(activityKcal(a, k)) + ' kcal';
+  return tr((ACTIVITIES[a.type] || ACTIVITIES.anders).label) + (a.note ? ' (' + a.note + ')' : '') + ' · ' + a.min + ' ' + tr('min') + ' ' + tr(a.int) + ' · ≈ ' + fmtNum(activityKcal(a, k)) + ' kcal';
 }
 function activitiesHtml(d, k, editable) {
   const acts = (d && d.activities) || [];
-  let h = acts.map(a => '<div class="it"><div><b>' + esc((ACTIVITIES[a.type] || ACTIVITIES.anders).label) + (a.note ? ' <span class="muted">· ' + esc(a.note) + '</span>' : '') + '</b><small>' + a.min + ' min · ' + a.int + ' · ≈ ' + fmtNum(activityKcal(a, k)) + ' kcal extra</small></div>' +
-    (editable ? '<button class="iconbtn sm" data-act="delAct" data-k="' + k + '" data-id="' + a.id + '" aria-label="Verwijder">✕</button>' : '') + '</div>').join('');
-  if (d && isNum(d.steps)) h += '<div class="it"><div><b>Stappen</b><small>' + fmtNum(d.steps) + ' stappen · ≈ ' + fmtNum(stepsKm(d.steps), 1) + ' km · ≈ ' + fmtNum(stepsKcal(d.steps, k)) + ' kcal extra</small></div></div>';
-  return h ? '<div class="items">' + h + '</div>' : '<p class="muted small">Nog geen activiteiten.</p>';
+  let h = acts.map(a => '<div class="it"><div><b>' + esc(tr((ACTIVITIES[a.type] || ACTIVITIES.anders).label)) + (a.note ? ' <span class="muted">· ' + esc(a.note) + '</span>' : '') + '</b><small>' + a.min + ' ' + tr('min') + ' · ' + tr(a.int) + ' · ≈ ' + fmtNum(activityKcal(a, k)) + ' kcal ' + tr('extra') + '</small></div>' +
+    (editable ? '<button class="iconbtn sm" data-act="delAct" data-k="' + k + '" data-id="' + a.id + '" aria-label="' + tr('Verwijder') + '">✕</button>' : '') + '</div>').join('');
+  if (d && isNum(d.steps)) h += '<div class="it"><div><b>' + tr('Stappen') + '</b><small>' + fmtNum(d.steps) + ' ' + tr('stappen') + ' · ≈ ' + fmtNum(stepsKm(d.steps), 1) + ' km · ≈ ' + fmtNum(stepsKcal(d.steps, k)) + ' kcal ' + tr('extra') + '</small></div></div>';
+  return h ? '<div class="items">' + h + '</div>' : '<p class="muted small">' + tr('Nog geen activiteiten.') + '</p>';
 }
 
 /* Sheet om een activiteit toe te voegen. */
@@ -66,28 +66,28 @@ function openActivitySheet(k, cb) {
 }
 function renderActivitySheet() {
   const A = ACT_DRAFT;
-  let h = '<div class="sheet-h"><h2>Activiteit</h2><button class="iconbtn" data-act="closeSheet" aria-label="Sluiten">✕</button></div>';
-  h += '<div class="chips">' + Object.entries(ACTIVITIES).map(([k, v]) => '<button class="chip ' + (A.type === k ? 'on' : '') + '" data-act="actType" data-t="' + k + '">' + v.label + '</button>').join('') + '</div>';
-  if (A.type === 'anders') h += '<label class="fld"><span>Wat?</span><input id="actnote" value="' + esc(A.note || '') + '" placeholder="bv. klimmen"></label>';
-  h += '<div class="fld"><span>Hoe lang?</span><div class="amt-q"><button type="button" class="amt-b" data-act="actMin" data-d="-5">−</button><input type="number" inputmode="numeric" id="actmin" value="' + A.min + '"><button type="button" class="amt-b" data-act="actMin" data-d="5">+</button></div><small class="muted">minuten</small></div>';
-  h += '<div class="fld"><span>Hoe zwaar?</span><div class="seg">' + INTENS.map(i => '<button class="' + (A.int === i ? 'on' : '') + '" data-act="actInt" data-i="' + i + '">' + i + '</button>').join('') + '</div><small class="muted">Licht: praten gaat makkelijk. Matig: praten gaat, zingen niet. Zwaar: praten lukt amper.</small></div>';
-  if (A.type === 'wandelen') h += '<p class="note small">Heb je je stappen al ingevuld? Dan telt een wandeling niet dubbel: het verbruik komt dan uit je stappen.</p>';
-  h += '<p class="muted" id="actsum">≈ ' + fmtNum(activityKcal(A, A.k)) + ' kcal extra bovenop rust (ruwe schatting, op basis van ' + fmtNum(currentWeight(A.k), 1) + ' kg)</p>';
-  h += '<button class="btn big" data-act="actSave">Bewaren</button>';
+  let h = '<div class="sheet-h"><h2>' + tr('Activiteit') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + tr('Sluiten') + '">✕</button></div>';
+  h += '<div class="chips">' + Object.entries(ACTIVITIES).map(([k, v]) => '<button class="chip ' + (A.type === k ? 'on' : '') + '" data-act="actType" data-t="' + k + '">' + tr(v.label) + '</button>').join('') + '</div>';
+  if (A.type === 'anders') h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="actnote" value="' + esc(A.note || '') + '" placeholder="' + tr('bv. klimmen') + '"></label>';
+  h += '<div class="fld"><span>' + tr('Hoe lang?') + '</span><div class="amt-q"><button type="button" class="amt-b" data-act="actMin" data-d="-5">−</button><input type="number" inputmode="numeric" id="actmin" value="' + A.min + '"><button type="button" class="amt-b" data-act="actMin" data-d="5">+</button></div><small class="muted">' + tr('minuten') + '</small></div>';
+  h += '<div class="fld"><span>' + tr('Hoe zwaar?') + '</span><div class="seg">' + INTENS.map(i => '<button class="' + (A.int === i ? 'on' : '') + '" data-act="actInt" data-i="' + i + '">' + tr(i) + '</button>').join('') + '</div><small class="muted">' + tr('Licht: praten gaat makkelijk. Matig: praten gaat, zingen niet. Zwaar: praten lukt amper.') + '</small></div>';
+  if (A.type === 'wandelen') h += '<p class="note small">' + tr('Heb je je stappen al ingevuld? Dan telt een wandeling niet dubbel: het verbruik komt dan uit je stappen.') + '</p>';
+  h += '<p class="muted" id="actsum">' + trf('≈ {kcal} kcal extra bovenop rust (ruwe schatting, op basis van {weight} kg)', { kcal: fmtNum(activityKcal(A, A.k)), weight: fmtNum(currentWeight(A.k), 1) }) + '</p>';
+  h += '<button class="btn big" data-act="actSave">' + tr('Bewaren') + '</button>';
   $('#sheet .sheet-in').innerHTML = h;
 }
 ACT.actType = el => { ACT_DRAFT.type = el.dataset.t; renderActivitySheet(); };
 ACT.actInt = el => { ACT_DRAFT.int = el.dataset.i; renderActivitySheet(); };
 ACT.actMin = el => { ACT_DRAFT.min = Math.max(5, (Number($('#actmin').value) || 0) + Number(el.dataset.d)); renderActivitySheet(); };
 document.addEventListener('input', e => {
-  if (e.target.id === 'actmin' && ACT_DRAFT) { ACT_DRAFT.min = Number(e.target.value) || 0; const s = $('#actsum'); if (s) s.textContent = '≈ ' + fmtNum(activityKcal(ACT_DRAFT, ACT_DRAFT.k)) + ' kcal extra bovenop rust (ruwe schatting)'; }
+  if (e.target.id === 'actmin' && ACT_DRAFT) { ACT_DRAFT.min = Number(e.target.value) || 0; const s = $('#actsum'); if (s) s.textContent = trf('≈ {kcal} kcal extra bovenop rust (ruwe schatting, op basis van {weight} kg)', { kcal: fmtNum(activityKcal(ACT_DRAFT, ACT_DRAFT.k)), weight: fmtNum(currentWeight(ACT_DRAFT.k), 1) }); }
   if (e.target.id === 'actnote' && ACT_DRAFT) ACT_DRAFT.note = e.target.value;
 });
 ACT.actSave = () => {
-  const A = ACT_DRAFT; if (!(A.min > 0)) return toast('Hoe lang duurde het?');
+  const A = ACT_DRAFT; if (!(A.min > 0)) return toast(tr('Hoe lang duurde het?'));
   const a = { id: A.id, type: A.type, min: A.min, int: A.int }; if (A.note) a.note = A.note.trim();
   const cb = ACT_CB; ACT_DRAFT = null; closeSheet();
-  if (cb) cb(a); else { const d = getDay(A.k, true); d.activities = (d.activities || []).concat(a); save(); toast('Activiteit bewaard'); render(); }
+  if (cb) cb(a); else { const d = getDay(A.k, true); d.activities = (d.activities || []).concat(a); save(); toast(tr('Activiteit bewaard')); render(); }
 };
 ACT.delAct = el => { const d = getDay(el.dataset.k); d.activities = (d.activities || []).filter(a => a.id !== el.dataset.id); save(); render(); };
 ACT.quickAct = () => openActivitySheet(todayKey());

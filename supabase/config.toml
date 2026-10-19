@@ -1,4 +1,4 @@
 [functions.send-reminders]
-# The scheduled job authenticates with a dedicated secret header. Do not expose
-# this function to browsers; user subscriptions are written through RLS instead.
-verify_jwt = true
+# pg_cron/pg_net sends the project API key in `apikey`, not a user JWT in
+# `Authorization`. The handler authenticates the dedicated secret header.
+verify_jwt = false

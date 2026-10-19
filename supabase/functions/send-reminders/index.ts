@@ -79,18 +79,26 @@ Deno.serve(async req => {
   if (!url || !serviceKey || !vapid.subject || !vapid.publicKey || !vapid.privateKey) return json({ error: 'push_not_configured' }, 503);
 
   const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-  const now = new Date(), max = 500, pageSize = 100;
+  const now = new Date(), pageSize = 100;
   let sent = 0, skipped = 0, failed = 0;
   const staleBefore = new Date(now.getTime() - 14 * 86400000).toISOString().slice(0, 10);
   await admin.from('webpush_deliveries').delete().lt('local_date', staleBefore);
 
-  for (let offset = 0; offset < max; offset += pageSize) {
-    const { data, error } = await admin.from('webpush_subscriptions')
+  // Keyset pagination is stable while expired endpoints are deleted below.
+  // Offset pagination would skip rows whenever a deletion shifts later pages.
+  let afterId = '';
+  let scanned = 0;
+  while (true) {
+    let query = admin.from('webpush_subscriptions')
       .select('id,endpoint,p256dh,auth_secret,timezone,language,reminders')
-      .eq('enabled', true).order('created_at').range(offset, offset + pageSize - 1);
+      .eq('enabled', true).order('id').limit(pageSize);
+    if (afterId) query = query.gt('id', afterId);
+    const { data, error } = await query;
     if (error) return json({ error: 'subscription_read_failed' }, 500);
     const devices = (data || []) as Device[];
     if (!devices.length) break;
+    afterId = devices[devices.length - 1].id;
+    scanned += devices.length;
 
     for (const d of devices) {
       if (!permittedEndpoint(d.endpoint)) { await admin.from('webpush_subscriptions').delete().eq('id', d.id); failed++; continue; }
@@ -133,5 +141,5 @@ Deno.serve(async req => {
     }
     if (devices.length < pageSize) break;
   }
-  return json({ sent, skipped, failed });
+  return json({ sent, skipped, failed, scanned });
 });
