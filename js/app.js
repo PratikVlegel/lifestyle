@@ -17,7 +17,7 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -34,6 +34,9 @@ function render() {
       case 'meer': return renderMore(a);
       case 'train': return renderTrainingPlan();
       case 'schemas': return renderTrainingHub();
+      case 'train-custom': return renderCustomTrainingBuilder();
+      case 'train-community': return renderTrainingCommunity();
+      case 'train-shared': return renderSharedTraining(a);
       case 'intake': return renderIntake(a || '1');
       case 'bieb': return renderLibrary();
       case 'recepten': return renderRecipes();
@@ -270,7 +273,7 @@ function renderCheckin(rid, dateKey) {
       field('sleepH', 'Hoeveel uur geslapen?', 'number', { unit: 'u', step: '0.25', unknown: 'onbekend', bare: true }) +
       choice('sleepQ', 'Hoe uitgerust?', ['slecht', 'matig', 'uitgerust', 'goed uitgerust']) +
       choice('cpap', 'CPAP?', ['hele nacht', 'deel van de nacht', 'nee']) + '</div>';
-    h += '<div class="card"><h3>Hoe was je dag?</h3>' + scale('energy', 'Energie') + scale('mood', 'Stemming') +
+    h += '<div class="card"><h3>Hoe was je dag?</h3>' + scale('mood', 'Stemming') + scale('energy', 'Energie') + scale('stress', 'Stress / spanning', true) +
       '<label class="fld"><span>Waarom zo? (werk, mensen, honger, slaap…)</span><input type="text" data-ci="moodNote" value="' + esc(CI.f.moodNote || '') + '" placeholder="bv. drukke dag, ruzie op het werk"></label></div>';
     h += '<div class="card"><h3>Beweging en drinken</h3>' +
       field('steps', 'Stappen', 'number', { unit: '', step: '1', unknown: 'onbekend', bare: true }) +
@@ -296,7 +299,7 @@ function newCheckin(r, k) {
   const f = {};
   if (r.kind === 'dag') {
     if (day) {
-      for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'moodNote', 'steps', 'vape', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (day[x] !== undefined && day[x] !== null) f[x] = day[x];
+      for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (day[x] !== undefined && day[x] !== null) f[x] = day[x];
       if (isNum(day.waterMl)) f.waterL = Math.round(day.waterMl / 250) / 4;
     }
   }
@@ -316,9 +319,9 @@ function field(name, label, type, o) {
 function choice(name, label, opts) {
   return '<div class="fld" data-req="' + name + '"><span>' + label + '</span><div class="chips">' + opts.concat(['onbekend']).map(o => '<button class="chip ' + (CI.f[name] === (o === 'onbekend' ? '?' : o) ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="' + esc(o === 'onbekend' ? '?' : o) + '">' + o + '</button>').join('') + '</div></div>';
 }
-function scale(name, label) {
+function scale(name, label, optional) {
   const v = CI.f[name];
-  let h = '<div class="fld" data-req="' + name + '"><span>' + label + ' /10</span><div class="scale">';
+  let h = '<div class="fld"' + (optional ? '' : ' data-req="' + name + '"') + '><span>' + label + ' /10</span><div class="scale">';
   for (let i = 1; i <= 10; i++) h += '<button class="' + (v === i ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="' + i + '" data-num="1">' + i + '</button>';
   return h + '</div><button class="chip sm ' + (v === '?' ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="?">onbekend</button></div>';
 }
@@ -385,7 +388,7 @@ ACT.ciSave = () => {
     d.meals.push(a === 'niets' ? { id: uid(), slot, nothing: true } : { id: uid(), slot, desc: 'onbekend (niet meer geweten)', kcal: null });
   }
   if (CI.kind === 'dag') {
-    for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'moodNote', 'steps', 'vape', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (f[x] !== undefined) d[x] = f[x];
+    for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (f[x] !== undefined) d[x] = f[x];
     if (f.waterL !== undefined) d.waterMl = f.waterL === '?' ? (isNum(d.waterMl) ? d.waterMl : '?') : Math.round(f.waterL * 1000);
   } else {
     if (CI.glasses) d.waterMl = (isNum(d.waterMl) ? d.waterMl : 0) + CI.glasses * DB.settings.glassMl;
@@ -527,16 +530,20 @@ ACT.pickNewFood = () => openFoodEditor(null, food => backToPicker('Bewaard: ' + 
 function renderDays() {
   const keys = Object.keys(DB.days).sort().reverse();
   let h = header('Dagboek', keys.length + ' dagen geregistreerd');
-  h += '<div class="inrow"><button class="btn" data-act="newEntry">+ Iets noteren</button><button class="btn ghost" data-act="pickDate">Andere dag</button><input type="date" id="pdate" hidden data-chg="openDate"></div>';
-  h += '<div class="card table">' + keys.map(k => {
+  h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">+ Iets noteren</button><label class="btn ghost datepick">Andere dag<input type="date" id="pdate" aria-label="Kies een dag" data-chg="openDate"></label></div>';
+  h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">Welzijn</span><h3>Hoe is het met je, los van de cijfers?</h3><p class="small">Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.</p><span class="plan-go">Stemming en gewoontes bekijken ›</span></a>';
+  const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
-    return '<a class="tr day" href="#/dag/' + k + '"><span>' + fmtDay(k, true) + '</span><b>' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : '–') + '</b><small>' +
-      [isNum(d.steps) ? fmtNum(d.steps) + ' st.' : '', isNum(d.mood) ? 'stemming ' + d.mood : '', isNum(d.sleepH) ? d.sleepH + ' u slaap' : '', isNum(d.weight) ? d.weight + ' kg' : ''].filter(Boolean).join(' · ') + '</small></a>';
-  }).join('') + '</div>';
+    const wellbeing = [isNum(d.mood) ? 'Stemming ' + d.mood + '/10' : '', isNum(d.energy) ? 'energie ' + d.energy + '/10' : '', isNum(d.stress) ? 'spanning ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
+    const context = [isNum(d.sleepH) ? d.sleepH + ' u slaap' : '', isNum(d.steps) ? fmtNum(d.steps) + ' stappen' : '', isNum(d.alcohol) && d.alcohol > 0 ? d.alcohol + ' glazen alcohol' : '', isNum(d.weight) ? d.weight + ' kg' : ''].filter(Boolean).join(' · ');
+    return '<a class="tr day" href="#/dag/' + k + '"><div class="day-line"><span>' + fmtDay(k, true) + '</span><span class="day-mood">' + (wellbeing || 'Geen stemming ingevuld') + '</span></div><small>' + (context || 'Nog geen slaap- of beweeggegevens') + '</small><span class="day-kcal">Voeding: ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal (schatting)' : 'geen dagtotaal') + '</span></a>';
+  };
+  const recent = keys.slice(0, 7), older = keys.slice(7);
+  h += recent.length ? '<div class="card table diary-days">' + recent.map(dayRow).join('') + '</div>' : '<div class="card muted">Je hebt nog geen dagen genoteerd. Begin met één maaltijd, stemming of slaapmoment; je hoeft niet alles in te vullen.</div>';
+  if (older.length) h += '<details class="card diary-older"><summary>Eerdere dagen <span class="muted">(' + older.length + ')</span></summary><div class="table">' + older.map(dayRow).join('') + '</div></details>';
   view().innerHTML = h;
 }
 ACT.newEntry = () => go('#/checkin/vrij');
-ACT.pickDate = () => { const i = $('#pdate'); i.hidden = false; i.showPicker ? i.showPicker() : i.focus(); };
 ACT.openDate = el => { if (el.value) go('#/dag/' + el.value); };
 
 function renderDay(k) {
@@ -547,7 +554,7 @@ function renderDay(k) {
   const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow"><input type="' + (step === 'text' ? 'text' : 'number') + '" inputmode="decimal" step="' + (step || 'any') + '" data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">' + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
   h += '<div class="card"><h3>Beweging</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">+ activiteit</button></div>';
   h += '<div class="card"><h3>Cijfers</h3><p class="muted small">"?" = onbekend. Slaap = de nacht ervóór.</p><div class="grid2">' +
-    f('weight', 'Gewicht', 'kg', '0.1') + f('sleepH', 'Slaap', 'u', '0.25') + f('energy', 'Energie', '/10', '1') + f('mood', 'Stemming', '/10', '1') +
+    f('weight', 'Gewicht', 'kg', '0.1') + f('sleepH', 'Slaap', 'u', '0.25') + f('energy', 'Energie', '/10', '1') + f('mood', 'Stemming', '/10', '1') + f('stress', 'Stress / spanning', '/10', '1') +
     f('steps', 'Stappen', '', '1') + f('waterMl', 'Water', 'l', '0.25') + f('caffeine', 'Cafeïne', 'shots', '1') + f('alcohol', 'Alcohol', 'glazen', '1') + '</div>' +
     f('cpap', 'CPAP', '', 'text') + f('vape', 'Vapen', '', 'text') + f('moodNote', 'Waarom zo (stemming)', '', 'text') + f('notes', 'Notitie', '', 'text') +
     (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
@@ -783,7 +790,6 @@ function renderMore(sub) {
   let h = header('Meer', '');
   if (DB.settings.admin) h += '<a class="card fb wk" href="#/uitnodigen"><b>Vrienden uitnodigen</b><p class="small">Maak een persoonlijke code en stuur de uitnodiging meteen door.</p></a>';
   const G = DB.goals, P = DB.profile, S = DB.settings;
-  h += '<a class="card fb" href="#/schemas"><b>Schema’s bekijken en beheren</b><p class="small">Volg je actieve plan, pauzeer het of stel een nieuw schema samen.</p></a>';
   h += '<a class="card" href="#/inzicht"><b>Inzicht en advies</b><p class="small">Persoonlijke patronen, onderbouwde acties en weekrapport.</p></a>';
   h += '<div class="card"><h3>Herinneringen</h3><p class="muted small">Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.</p>';
   h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="aan"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(r.label) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="verwijder">✕</button></div>').join('');
@@ -804,6 +810,7 @@ function renderMore(sub) {
 
   h += '<div class="card"><h3>Gedeelde bibliotheek</h3><p class="muted small">Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> Mijn productbibliotheek synchroniseren (producten delen en ophalen)</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">Bibliotheek openen</a><button class="btn ghost" data-act="syncNow">Nu bijwerken</button></div>' : '<p class="note">Niet ingesteld.</p>') + '</div>';
+  h += '<div class="card"><h3>Communityprofiel</h3><p class="muted small">Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en gezondheidsgegevens worden hiermee niet gedeeld.</p><label class="fld"><span>Communitynaam</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">Communitynaam opslaan</button></div>';
   h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. De analyse stuurt je profiel en maximaal 21 dagen aan relevante dagboekgegevens, inclusief notities, naar Anthropic. Een etiketfoto wordt meegestuurd; van een markdown-bestand worden maximaal 150.000 tekens verwerkt en verstuurd. Je betaalt per gebruik. De sleutel wordt lokaal in je browser opgeslagen en zit niet in back-ups.</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
@@ -1050,7 +1057,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.8.1';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

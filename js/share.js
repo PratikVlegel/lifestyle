@@ -16,6 +16,11 @@ function prepToShared(p) {
 async function sharePrepOnline(p) {
   if (!cloudReady() || !navigator.onLine) throw new Error('Delen kan alleen met internet.');
   await ensureSession();
+  if (DB.settings.member) {
+    let communityName = DB.settings.communityName;
+    if (!communityName) { communityName = prompt('Welke communitynaam mogen andere leden bij je recepten en beoordelingen zien?'); if (!communityName) throw new Error('Stel een communitynaam in om te delen.'); }
+    await saveCommunityProfile(communityName);
+  }
   const body = prepToShared(p);
   if (p.photo && (!p.photoUrl || p.photoDirty)) {
     try { p.photoUrl = await uploadPrepPhoto(p); delete p.photoDirty; save(); } catch (e) { console.warn('foto', e); }
@@ -82,29 +87,63 @@ function prepExtrasHtml(P) {
 /* ---------- gedeelde recepten bekijken ---------- */
 let RECIPE_CACHE = {};
 async function fetchRecipes() {
-  const [rows, revs] = await Promise.all([
-    sb('/rest/v1/shared_preps?select=*&order=created_at.desc&limit=100', {}),
-    sb('/rest/v1/prep_reviews?select=shared_id,taste,ease,portion,fullness,eat,again', {})
-  ]);
+  const rows = await sb('/rest/v1/shared_preps?select=*&order=created_at.desc&limit=100', {});
+  let revs = [];
+  try { revs = await sb('/rest/v1/prep_reviews?select=shared_id,taste,ease,portion,fullness,eat,again,created_by,rating,community_comment,created_at', {}); }
+  catch (e) { revs = await sb('/rest/v1/prep_reviews?select=shared_id,taste,ease,portion,fullness,eat,again', {}); }
+  let names = {};
+  try { names = await fetchCommunityProfiles(revs.map(x => x.created_by).concat(rows.map(x => x.created_by))); } catch (e) { }
   const stats = {};
   for (const r of revs) {
-    const s = stats[r.shared_id] = stats[r.shared_id] || { n: 0, taste: 0, ease: 0, again: 0, big: 0 };
-    s.n++; s.taste += r.taste || 0; s.ease += r.ease || 0; if (r.again === 'ja') s.again++; if (r.portion === 'te groot' || r.eat === 'moeilijk') s.big++;
+    const s = stats[r.shared_id] = stats[r.shared_id] || { n: 0, tasteN: 0, taste: 0, easeN: 0, ease: 0, again: 0, big: 0, ratingN: 0, rating: 0, reviews: [] };
+    if (isNum(r.taste) || isNum(r.ease) || r.again || r.portion || r.eat) s.n++;
+    if (isNum(r.taste)) { s.taste += r.taste; s.tasteN++; }
+    if (isNum(r.ease)) { s.ease += r.ease; s.easeN++; }
+    if (r.again === 'ja') s.again++; if (r.portion === 'te groot' || r.eat === 'moeilijk') s.big++;
+    if (isNum(r.rating)) { s.rating += r.rating; s.ratingN++; }
+    if (isNum(r.rating) || r.community_comment) s.reviews.push({ userId: r.created_by, rating: r.rating, comment: r.community_comment || '', author: names[r.created_by] || 'Communitylid', date: r.created_at || '' });
   }
-  for (const r of rows) { r.stats = stats[r.id] || null; RECIPE_CACHE[r.id] = r; }
+  for (const r of rows) { r.stats = stats[r.id] || null; r.authorName = names[r.created_by] || 'Communitylid'; RECIPE_CACHE[r.id] = r; }
   return rows;
 }
 function starLine(s) {
-  if (!s || !s.n) return 'nog geen beoordelingen';
-  return '★ ' + fmtNum(s.taste / s.n, 1) + ' smaak · ' + fmtNum(s.ease / s.n, 1) + ' gemak · ' + s.n + ' beoordeling' + (s.n > 1 ? 'en' : '') + (s.again ? ' · ' + Math.round(s.again / s.n * 100) + '% maakt opnieuw' : '');
+  if (!s || (!s.n && !s.ratingN)) return 'nog geen beoordelingen';
+  const parts = [];
+  if (s.tasteN) parts.push('★ ' + fmtNum(s.taste / s.tasteN, 1) + ' smaak');
+  if (s.easeN) parts.push(fmtNum(s.ease / s.easeN, 1) + '/5 gemak');
+  if (s.n) parts.push(s.n + ' gebruikservaring' + (s.n === 1 ? '' : 'en'));
+  if (s.again) parts.push(Math.round(s.again / s.n * 100) + '% maakt opnieuw');
+  if (s.ratingN) parts.push('community ★ ' + fmtNum(s.rating / s.ratingN, 1) + '/5 · ' + s.ratingN);
+  return parts.join(' · ');
 }
+function recipeCommunityReviews(r) {
+  const mine = (r.stats && r.stats.reviews || []).find(x => x.userId && x.userId === (cloudUser() || {}).id);
+  const list = (r.stats && r.stats.reviews || []).filter(x => x.comment || isNum(x.rating)).slice().reverse();
+  const isAuthor = r.created_by && r.created_by === (cloudUser() || {}).id;
+  const form = isAuthor ? '<p class="muted small">Dit is jouw recept. Andere communityleden kunnen het beoordelen.</p>' : '<h3>Jouw beoordeling</h3><p class="muted small">Geef sterren voor je indruk of ervaring. Een reactie is optioneel en wordt zichtbaar voor andere leden.</p><label class="fld"><span>Beoordeling</span><select id="recipeRating"><option value="">Kies sterren</option>' + [1, 2, 3, 4, 5].map(n => '<option value="' + n + '"' + (mine && mine.rating === n ? ' selected' : '') + '>' + '★'.repeat(n) + ' · ' + n + '/5</option>').join('') + '</select></label><label class="fld"><span>Openbare reactie (optioneel)</span><textarea id="recipeCommunityComment" maxlength="600" rows="3" placeholder="Wat vond je van dit recept?">' + esc(mine && mine.comment || '') + '</textarea></label><button class="btn" data-act="saveRecipeCommunityReview" data-id="' + esc(r.id) + '">Beoordeling plaatsen</button>';
+  return '<div class="card">' + form + (list.length ? '<h3>Reacties van leden</h3>' + list.slice(0, 12).map(x => '<p class="community-review"><b>' + esc(x.author) + '</b>' + (isNum(x.rating) ? ' · ' + '★'.repeat(x.rating) + ' ' + x.rating + '/5' : '') + (x.comment ? '<br>' + esc(x.comment) : '') + '</p>').join('') : '<p class="muted small">Nog geen openbare beoordelingen.</p>') + '</div>';
+}
+ACT.saveCommunityName = async () => {
+  try { const name = await saveCommunityProfile($('#communityName').value); $('#communityName').value = name; toast('Communitynaam opgeslagen.'); }
+  catch (e) { toast(e.message); }
+};
+ACT.saveRecipeCommunityReview = async el => {
+  const rating = Number($('#recipeRating').value), comment = $('#recipeCommunityComment').value.trim().slice(0, 600);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return toast('Kies eerst een beoordeling van 1 tot 5 sterren.');
+  try {
+    if (!DB.settings.communityName) { const name = prompt('Kies een communitynaam. Die is zichtbaar bij je beoordeling, niet je echte accountgegevens.'); if (!name) return; await saveCommunityProfile(name); }
+    await ensureSession();
+    await sb('/rest/v1/prep_reviews?on_conflict=shared_id,created_by', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { shared_id: el.dataset.id, rating, community_comment: comment || null, updated_at: new Date().toISOString() } });
+    delete RECIPE_CACHE[el.dataset.id]; toast('Je beoordeling staat bij het recept.'); await renderRecipe(el.dataset.id);
+  } catch (e) { toast('Beoordeling opslaan mislukt: ' + e.message); }
+};
 async function renderRecipes() {
   let h = header('Gedeelde recepten', 'Mealpreps van andere gebruikers', true);
   view().innerHTML = h + '<p class="muted">Laden…</p>';
   if (!navigator.onLine) { view().innerHTML = h + '<p class="note">Je bent offline. Gedeelde recepten laden kan alleen met internet.</p>'; return; }
   try {
     const rows = await fetchRecipes();
-    h += rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' porties</span></div>' +
+    h += rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' porties</span></div><small class="muted">Gedeeld door ' + esc(r.authorName) + '</small>' +
       '<div class="macro">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
       '<small class="muted">per portie · ' + starLine(r.stats) + '</small></a>').join('') : '<p class="card muted">Nog geen gedeelde recepten. Deel er zelf een via een mealprep → Deel.</p>';
   } catch (e) { h += '<p class="note">Laden mislukt: ' + esc(e.message) + '</p>'; }
@@ -117,11 +156,11 @@ async function renderRecipe(id) {
   try { if (!r || !r.stats) { await fetchRecipes(); r = RECIPE_CACHE[id]; } } catch (e) { }
   if (!r) { view().innerHTML = h + '<p class="note">Dit recept is niet gevonden' + (navigator.onLine ? '' : ' (je bent offline)') + '.</p>'; return; }
   const mine = DB.preps.find(p => p.sharedId === id);
-  h += '<div class="card">' + (r.photo_url ? '<img class="prepimg" src="' + esc(r.photo_url) + '" alt="Foto van ' + esc(r.name) + '">' : '') + '<h2>' + esc(r.name) + '</h2><p class="muted small">' + r.portions + ' porties · ' + starLine(r.stats) + '</p>' +
+  h += '<div class="card">' + (r.photo_url ? '<img class="prepimg" src="' + esc(r.photo_url) + '" alt="Foto van ' + esc(r.name) + '">' : '') + '<h2>' + esc(r.name) + '</h2><p class="muted small">Gedeeld door ' + esc(r.authorName || 'Communitylid') + ' · ' + r.portions + ' porties · ' + starLine(r.stats) + '</p>' +
     '<div class="macro big">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div><small class="muted">per portie, ruwe schatting</small>' +
     (r.stats && r.stats.big ? '<p class="note small">' + r.stats.big + ' van de ' + r.stats.n + ' vond de portie te groot of moeilijk op te eten.</p>' : '') +
     '<h3>Ingrediënten (hele prep)</h3><ul>' + (r.ingredients || []).map(g => '<li>' + esc(g.name) + (isNum(g.grams) ? ' · ' + fmtNum(g.grams) + ' g' : '') + '</li>').join('') + '</ul>' +
-    (r.note ? '<h3>Bereiding</h3><p>' + esc(r.note).replace(/\n/g, '<br>') + '</p>' : '') + '</div>';
+    (r.note ? '<h3>Bereiding</h3><p>' + esc(r.note).replace(/\n/g, '<br>') + '</p>' : '') + '</div>' + recipeCommunityReviews(r);
   h += mine ? '<a class="btn" href="#/prep/' + mine.id + '">Staat al bij je mealpreps</a>' : '<button class="btn big" data-act="addRecipe" data-id="' + id + '">Toevoegen aan mijn mealpreps</button>';
   view().innerHTML = h;
 }

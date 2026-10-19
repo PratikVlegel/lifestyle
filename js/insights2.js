@@ -56,7 +56,7 @@ function moreInsights(n, recent, add) {
   }
   if (gaps.length >= 4) {
     const g = avg(gaps), long = gaps.filter(x => x >= 360).length;
-    add('ritme', 'Je eetritme', 'Je eerste maaltijd valt gemiddeld om ' + pad(Math.floor(avg(firsts) / 60)) + ':' + pad(Math.round(avg(firsts) % 60)) + '. De langste pauze tussen twee eetmomenten is gemiddeld ' + fmtNum(g / 60, 1) + ' u' + (long ? '; op ' + long + ' dagen 6 u of langer' : '') + '. Lange pauzes overdag maken avondhonger waarschijnlijker; een klein, eiwitrijk tussendoortje overbrugt ze.', gaps.length + ' dagen met tijden', long ? 'tip' : 'info');
+    add('ritme', 'Je eetritme', 'Je eerste maaltijd valt gemiddeld om ' + pad(Math.floor(avg(firsts) / 60)) + ':' + pad(Math.round(avg(firsts) % 60)) + '. De langste pauze tussen twee eetmomenten is gemiddeld ' + fmtNum(g / 60, 1) + ' u' + (long ? '; op ' + long + ' dagen 6 u of langer' : '') + '. Wil je weten of dit voor jou uitmaakt? Noteer een week lang ook je honger en test één gepland eetmoment op dagen met een lange pauze. Dit patroon toont samenhang, geen oorzaak.', gaps.length + ' dagen met tijden', long ? 'tip' : 'info');
   }
   if (skipped >= 2 && skippedEve.length >= 1 && normalEve.length >= 2) {
     add('ritme', 'Als de lunch wegvalt', 'Op ' + skipped + ' dagen viel de lunch weg. Op die dagen at je vanaf het avondeten gemiddeld ' + fmtNum(avg(skippedEve)) + ' kcal, tegenover ' + fmtNum(avg(normalEve)) + ' kcal op dagen mét lunch.', skipped + ' dagen', avg(skippedEve) > avg(normalEve) * 1.15 ? 'tip' : 'info');
@@ -71,7 +71,7 @@ function moreInsights(n, recent, add) {
   if (per.ontbijt.length >= 3) {
     const b = avg(per.ontbijt), l = avg(per.lunch), a = avg(per.avond);
     add('voeding', 'Eiwit per maaltijd', 'Ontbijt ≈ ' + fmtNum(b) + ' g' + (isNum(l) ? ', lunch ≈ ' + fmtNum(l) + ' g' : '') + (isNum(a) ? ', avondeten ≈ ' + fmtNum(a) + ' g' : '') + '. ' +
-      (b < 15 ? 'Je ontbijt bevat weinig eiwit. 20–30 g bij het ontbijt (eieren, skyr, kwark, hüttenkäse) geeft vaak minder trek later op de dag.' : 'Mooi gespreid over de dag.'), per.ontbijt.length + ' ontbijten', b < 15 ? 'tip' : 'good');
+      (b < 15 ? 'In deze geregistreerde ontbijten staat weinig eiwit. Als je dat wilt veranderen, voeg een bron toe die je graag eet (bijvoorbeeld ei, yoghurt, tofu of bonen) en kijk of dit voor jou een prettigere maaltijd oplevert. Dit is geen individueel eiwitvoorschrift.' : 'Je geregistreerde ontbijt bevat gemiddeld een eiwitbron. Een goede registratie zegt nog niet alles over je totale voedingskwaliteit.'), per.ontbijt.length + ' ontbijten', b < 15 ? 'tip' : 'good');
   }
 
   /* 6. Mealprep-porties: lukt het om ze op te eten? */
@@ -94,10 +94,10 @@ function moreInsights(n, recent, add) {
   const sl = keys.map(k => dv('sleepH', k)).filter(isNum);
   if (sl.length >= 5) {
     const short = sl.filter(x => x < 6).length, s = sd(sl);
-    add('slaap', 'Slaapregelmaat', 'Je slaapduur schommelt met ±' + fmtNum(s, 1) + ' u (gemiddeld ' + fmtNum(avg(sl), 1) + ' u).' + (short ? ' ' + short + ' nacht' + (short > 1 ? 'en' : '') + ' korter dan 6 u.' : '') + (s > 1.2 ? ' Een vast slaap- en opstaanuur (ook in het weekend) helpt vaak meer dan langer slapen.' : ''), sl.length + ' nachten', s > 1.2 || short >= 2 ? 'tip' : 'good');
+    add('slaap', 'Slaapregelmaat', 'Je slaapduur schommelt met ±' + fmtNum(s, 1) + ' u (gemiddeld ' + fmtNum(avg(sl), 1) + ' u).' + (short ? ' ' + short + ' nacht' + (short > 1 ? 'en' : '') + ' korter dan 6 u.' : '') + (s > 1.2 ? ' Als je meer regelmaat wilt, probeer een week een haalbare vaste opstaantijd en kijk hoe je je voelt.' : ''), sl.length + ' nachten', s > 1.2 || short >= 2 ? 'tip' : 'good');
     const nextKcal = pairs(n, d => d.sleepH, d => DVARS.eveKcal.f(d)).filter(p => isNum(p.y));
     const sc = splitCompare(nextKcal, 6.5);
-    if (sc && sc.lo > sc.hi * 1.2) add('slaap', 'Korte nacht, meer avondeten', 'Na nachten korter dan 6,5 u at je vanaf het avondeten gemiddeld ' + fmtNum(sc.lo) + ' kcal, na langere nachten ' + fmtNum(sc.hi) + '. Weinig slaap verhoogt hongerhormonen; dat is biologie, geen wilskracht.', sc.nlo + ' + ' + sc.nhi + ' dagen', 'info');
+    if (sc && sc.lo > sc.hi * 1.2) add('slaap', 'Korte nacht en avondinname', 'In je registratie volgde na nachten korter dan 6,5 u gemiddeld ' + fmtNum(sc.lo) + ' kcal vanaf het avondeten, tegenover ' + fmtNum(sc.hi) + ' kcal na langere nachten. Dit kan toeval of een verschil in dagcontext zijn; het dagboek kan geen oorzaak aantonen. Kijk of een vaste maaltijdplanning op korte nachten voor jou helpt.', sc.nlo + ' + ' + sc.nhi + ' dagen', 'info');
   }
 
   /* 9. Honger en trek */
@@ -106,11 +106,11 @@ function moreInsights(n, recent, add) {
     const high = he.filter(x => x.h >= 4), low = he.filter(x => x.h <= 2);
     let t = 'Trek \'s avonds gemiddeld ' + fmtNum(avg(he.map(x => x.h)), 1) + '/5.';
     const hd = avg(high.map(x => x.day).filter(isNum)), ld = avg(low.map(x => x.day).filter(isNum));
-    if (isNum(hd) && isNum(ld)) t += ' Op avonden met veel trek at je overdag ≈ ' + fmtNum(hd) + ' kcal, op rustige avonden ≈ ' + fmtNum(ld) + ' kcal.';
+    if (isNum(hd) && isNum(ld)) t += ' Op avonden met veel trek registreerde je overdag ≈ ' + fmtNum(hd) + ' kcal, op rustige avonden ≈ ' + fmtNum(ld) + ' kcal. Dat kan een aanleiding zijn om je maaltijdritme te bekijken, maar bewijst geen oorzaak.';
     add('honger', 'Je avondtrek', t, he.length + ' avonden', isNum(hd) && isNum(ld) && hd < ld ? 'tip' : 'info');
   }
   const hb = keys.map(k => dv('hungerDinner', k)).filter(isNum);
-  if (hb.length >= 4 && avg(hb) >= 4) add('honger', 'Uitgehongerd aan tafel', 'Je komt gemiddeld met honger ' + fmtNum(avg(hb), 1) + '/5 aan het avondeten. Met veel honger eet je sneller en meer dan nodig. Een tussendoortje rond 16 u haalt de scherpste kant eraf.', hb.length + ' avonden', 'tip');
+  if (hb.length >= 4 && avg(hb) >= 4) add('honger', 'Veel honger voor het avondeten', 'Je noteerde gemiddeld ' + fmtNum(avg(hb), 1) + '/5 honger voor het avondeten. Als dat onprettig voelt, test dan op een paar dagen een geplande snack of iets meer bij de lunch. Kies wat past; een tussendoortje is geen verplichting.', hb.length + ' avonden', 'tip');
 
   /* 12. Reeksen en records */
   let streak = 0;

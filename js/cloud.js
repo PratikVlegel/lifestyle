@@ -47,6 +47,21 @@ async function ensureSession() {
 }
 function cloudUser() { const a = getAuth(); return a && a.user; }
 
+async function saveCommunityProfile(name) {
+  name = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  if (name.length < 2) throw new Error('Kies een communitynaam van minstens 2 tekens.');
+  if (!cloudReady() || !DB.settings.member || !navigator.onLine) throw new Error('Je moet online en lid van de community zijn om je naam op te slaan.');
+  await ensureSession();
+  await sb('/rest/v1/community_profiles?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { display_name: name, updated_at: new Date().toISOString() } });
+  DB.settings.communityName = name; save(); return name;
+}
+async function fetchCommunityProfiles(ids) {
+  const clean = [...new Set((ids || []).filter(x => /^[0-9a-f-]{36}$/i.test(x)))];
+  if (!clean.length) return {};
+  const rows = await sb('/rest/v1/community_profiles?select=user_id,display_name&user_id=in.(' + clean.join(',') + ')', {});
+  return Object.fromEntries(rows.map(x => [x.user_id, x.display_name]));
+}
+
 /* --- omzetten --- */
 function rowToFood(row) {
   const uid = (cloudUser() || {}).id;

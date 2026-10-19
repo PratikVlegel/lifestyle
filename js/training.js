@@ -103,33 +103,183 @@ function renderTrainingPlan() {
   if (p.category === 'events') h += renderEventGuidance(p);
   view().innerHTML = h;
 }
+function customTrainingDraft() {
+  const t = DB.training;
+  if (!t.customDraft || typeof t.customDraft !== 'object') t.customDraft = { name: 'Mijn trainingsschema', goal: 'strength', level: 'beginner', weeks: 8, days: ['ma', 'wo', 'vr'], sessions: {} };
+  const d = t.customDraft;
+  if (!d.sessions || typeof d.sessions !== 'object') d.sessions = {};
+  d.days = TRAIN_DAYS.map(([key]) => key).filter(k => Array.isArray(d.days) && d.days.includes(k));
+  for (const key of d.days) {
+    if (!d.sessions[key]) d.sessions[key] = { day: Object.fromEntries(TRAIN_DAYS)[key], title: 'Krachttraining', detail: '', exercises: [{ name: '', sets: 3, reps: '8–12', rest: 90 }] };
+    if (!Array.isArray(d.sessions[key].exercises)) d.sessions[key].exercises = [];
+  }
+  if (!Object.hasOwn(TRAIN_GOALS, d.goal) || ['rehab', 'marathon', 'hyrox'].includes(d.goal)) d.goal = 'strength';
+  if (!TRAIN_LEVELS.some(([key]) => key === d.level)) d.level = 'beginner';
+  d.weeks = Math.max(1, Math.min(24, Math.floor(Number(d.weeks) || 8)));
+  return d;
+}
+function renderCustomTrainingBuilder() {
+  const d = customTrainingDraft();
+  let h = header('Zelf samenstellen', 'Maak een weekschema met je eigen oefeningen, sets en herhalingen', true);
+  h += '<div class="card note"><b>Jij bepaalt de inhoud en opbouw</b><p class="small">Dit herhaalt jouw weekindeling; het verhoogt gewicht of herhalingen niet automatisch. Verhoog pas iets als je techniek goed blijft en je hersteld bent. Een zelfgemaakt schema is geen revalidatieadvies.</p></div>';
+  h += '<div class="card"><label class="fld"><span>Naam van je schema</span><input maxlength="60" value="' + esc(d.name) + '" data-chg="customTrainingField" data-f="name"></label>';
+  h += '<div class="grid2"><label class="fld"><span>Doel</span><select data-chg="customTrainingField" data-f="goal">' + Object.entries(TRAIN_GOALS).filter(([k]) => !['rehab', 'marathon', 'hyrox', 'race', 'race5k', 'race10k', 'half'].includes(k)).map(([k, v]) => '<option value="' + k + '"' + (d.goal === k ? ' selected' : '') + '>' + esc(v) + '</option>').join('') + '</select></label><label class="fld"><span>Niveau</span><select data-chg="customTrainingField" data-f="level">' + TRAIN_LEVELS.map(([k, v]) => '<option value="' + k + '"' + (d.level === k ? ' selected' : '') + '>' + v + '</option>').join('') + '</select></label></div>';
+  h += '<label class="fld"><span>Hoeveel weken wil je dit schema volgen?</span><input type="number" min="1" max="24" value="' + d.weeks + '" data-chg="customTrainingField" data-f="weeks"></label>';
+  h += '<fieldset class="fld"><legend>Trainingsdagen</legend><div class="custom-days">' + TRAIN_DAYS.map(([k, label]) => '<label class="check"><input type="checkbox" data-chg="customTrainingDay" data-day="' + k + '"' + (d.days.includes(k) ? ' checked' : '') + '><span class="n">' + label + '</span></label>').join('') + '</div></fieldset></div>';
+  h += d.days.map(k => {
+    const s = d.sessions[k];
+    const exercises = s.exercises.map((x, i) => '<div class="exercise-row"><label class="fld"><span>Oefening</span><input maxlength="80" placeholder="bv. goblet squat" value="' + esc(x.name || '') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="name"></label><label class="fld"><span>Sets</span><input type="number" min="1" max="10" value="' + esc(x.sets || 3) + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="sets"></label><label class="fld"><span>Herhalingen</span><input maxlength="9" value="' + esc(x.reps || '8–12') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="reps"></label><label class="fld"><span>Rust (sec)</span><input type="number" min="0" max="600" value="' + esc(x.rest ?? 90) + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="rest"></label><button class="iconbtn sm" data-act="customExerciseRemove" data-day="' + k + '" data-i="' + i + '" aria-label="Oefening verwijderen">×</button></div>').join('');
+    return '<section class="card"><h3>' + esc(s.day) + '</h3><label class="fld"><span>Naam training</span><input maxlength="60" value="' + esc(s.title) + '" data-chg="customSessionField" data-day="' + k + '" data-f="title"></label><label class="fld"><span>Notitie of uitvoering</span><textarea maxlength="500" rows="2" data-chg="customSessionField" data-day="' + k + '" data-f="detail" placeholder="Tempo, techniek, alternatief…">' + esc(s.detail || '') + '</textarea></label>' + exercises + '<button class="btn ghost" data-act="customExerciseAdd" data-day="' + k + '">+ Oefening toevoegen</button></section>';
+  }).join('');
+  h += '<button class="btn big" data-act="generateCustomTraining">Voorbeeld bekijken</button>';
+  view().innerHTML = h;
+}
+function renderCustomTrainingPreview(g) {
+  const first = g.weeks[0];
+  return '<h2 class="sec">Jouw eigen schema</h2><div class="card"><b>' + esc(g.name) + '</b><p class="muted small">' + esc((TRAIN_LEVELS.find(x => x[0] === g.level) || ['', 'Beginner'])[1]) + ' · ' + g.weeks.length + ' weken · ' + first.sessions.length + ' dagen per week</p><p class="small">Dezelfde weeksjabloon wordt herhaald. Je kunt belasting zelf geleidelijk aanpassen; er is geen automatische progressie.</p></div>' + first.sessions.map(s => '<div class="card"><h3>' + esc(s.day) + ' · ' + esc(s.title) + '</h3>' + (s.detail ? '<p>' + esc(s.detail) + '</p>' : '') + '<ul>' + s.exercises.map(x => '<li><b>' + esc(x.name) + '</b> · ' + x.sets + ' sets × ' + esc(x.reps) + ' herhalingen · ' + x.rest + ' sec rust</li>').join('') + '</ul></div>').join('');
+}
+ACT.customTrainingField = el => {
+  const d = customTrainingDraft(), f = el.dataset.f;
+  if (f === 'weeks') { const n = Number(el.value); if (!Number.isInteger(n) || n < 1 || n > 24) { el.value = d.weeks; return toast('Kies 1 tot 24 weken.'); } d.weeks = n; }
+  else d[f] = el.value.slice(0, f === 'name' ? 60 : 40);
+  DB.training.generated = null; save(); renderCustomTrainingBuilder();
+};
+ACT.customTrainingDay = el => {
+  const d = customTrainingDraft(), key = el.dataset.day;
+  if (el.checked && !d.days.includes(key)) { d.days = TRAIN_DAYS.map(([k]) => k).filter(k => d.days.includes(k) || k === key); if (!d.sessions[key]) d.sessions[key] = { day: Object.fromEntries(TRAIN_DAYS)[key], title: 'Krachttraining', detail: '', exercises: [{ name: '', sets: 3, reps: '8–12', rest: 90 }] }; }
+  else if (!el.checked) d.days = d.days.filter(k => k !== key);
+  save(); renderCustomTrainingBuilder();
+};
+ACT.customSessionField = el => { const d = customTrainingDraft(), s = d.sessions[el.dataset.day]; if (s) s[el.dataset.f] = el.value.slice(0, el.dataset.f === 'title' ? 60 : 500); save(); };
+ACT.customExerciseField = el => {
+  const d = customTrainingDraft(), x = d.sessions[el.dataset.day]?.exercises[Number(el.dataset.i)]; if (!x) return;
+  const f = el.dataset.f, value = ['sets', 'rest'].includes(f) ? Number(el.value) : el.value;
+  if (['sets', 'rest'].includes(f) && (!Number.isInteger(value) || value < (f === 'sets' ? 1 : 0) || value > (f === 'sets' ? 10 : 600))) { el.value = x[f]; return toast(f === 'sets' ? 'Sets: kies 1 tot 10.' : 'Rust: kies 0 tot 600 seconden.'); }
+  if (f === 'reps' && !/^\d{1,3}([–-]\d{1,3})?$/.test(value.trim())) { el.value = x.reps; return toast('Vul herhalingen in, bv. 8 of 8–12.'); }
+  x[f] = f === 'name' ? value.slice(0, 80) : value; save();
+};
+ACT.customExerciseAdd = el => { const d = customTrainingDraft(); if (d.sessions[el.dataset.day].exercises.length >= 20) return toast('Maximaal 20 oefeningen per training.'); d.sessions[el.dataset.day].exercises.push({ name: '', sets: 3, reps: '8–12', rest: 90 }); save(); renderCustomTrainingBuilder(); };
+ACT.customExerciseRemove = el => { const d = customTrainingDraft(); d.sessions[el.dataset.day]?.exercises.splice(Number(el.dataset.i), 1); save(); renderCustomTrainingBuilder(); };
+ACT.generateCustomTraining = () => {
+  const d = customTrainingDraft(); if (!d.name.trim()) return toast('Geef je schema een naam.'); if (!d.days.length) return toast('Kies minstens één trainingsdag.');
+  for (const day of d.days) { const s = d.sessions[day]; if (!s.exercises.length || s.exercises.some(x => !x.name.trim() || !Number.isInteger(Number(x.sets)) || !/^\d{1,3}([–-]\d{1,3})?$/.test(String(x.reps).trim()))) return toast('Vul per trainingsdag minstens één oefening, sets en herhalingen in.'); }
+  const labels = Object.fromEntries(TRAIN_DAYS), sessions = d.days.map(k => Object.assign({}, JSON.parse(JSON.stringify(d.sessions[k])), { day: labels[k] }));
+  const weeks = Array.from({ length: d.weeks }, (_, i) => ({ number: i + 1, phase: 'Eigen weekschema', focus: 'Pas je belasting alleen aan als je techniek en herstel goed blijven.', sessions: JSON.parse(JSON.stringify(sessions)) }));
+  DB.training.generated = { programType: 'custom', customPlan: true, name: d.name.trim().slice(0, 60), goal: d.goal, level: d.level, days: d.days.slice(), weeks };
+  save(); go('#/train');
+};
+
 function renderTrainingHub() {
   const plans = savedTrainingPlans(), active = activeTrainingPlan();
   let h = header('Schema’s', 'Kies, start en volg een plan op jouw tempo', true);
-  h += '<div class="card"><p>Je schema’s blijven op dit toestel bewaard. Je kan er één tegelijk actief volgen, pauzeren of stopzetten.</p><a class="btn big" href="#/train">Stel een nieuw schema samen</a></div>';
+  h += '<div class="card"><p>Je schema’s blijven op dit toestel bewaard. Je kan er één tegelijk actief volgen, pauzeren of stopzetten.</p><div class="inrow wrap"><a class="btn" href="#/train">Schema op maat</a><a class="btn ghost" href="#/train-custom">Zelf samenstellen</a></div><a class="link" href="#/train-community">Ontdek schema’s van de community ›</a></div>';
   if (active) {
     const wi = Math.min(Math.max(0, active.currentWeek - 1), active.weeks.length - 1), week = active.weeks[wi];
     const done = active.doneSessions || [], count = done.filter(k => k.startsWith(week.number + ':')).length;
-    h += '<h2 class="sec">Actief schema</h2><div class="card plan-active"><div class="plan-head"><span class="pill">WEEK ' + week.number + ' VAN ' + active.weeks.length + '</span><span class="muted small">' + esc((TRAIN_LEVELS.find(x => x[0] === active.level) || ['', ''])[1]) + '</span></div><h2 class="plan-title">' + esc(TRAIN_GOALS[active.goal] || active.name || 'Trainingsschema') + '</h2><p class="muted small">' + esc(week.phase || 'Opbouw') + (week.focus ? ' · ' + esc(week.focus) : '') + '</p><div class="prog"><i style="width:' + Math.round(count / Math.max(1, week.sessions.length) * 100) + '%"></i></div><p class="muted small">' + count + ' van ' + week.sessions.length + ' trainingen afgevinkt deze week</p>';
+    h += '<h2 class="sec">Actief schema</h2><div class="card plan-active"><div class="plan-head"><span class="pill">WEEK ' + week.number + ' VAN ' + active.weeks.length + '</span><span class="muted small">' + esc((TRAIN_LEVELS.find(x => x[0] === active.level) || ['', ''])[1]) + '</span></div><h2 class="plan-title">' + esc(active.customPlan ? active.name : TRAIN_GOALS[active.goal] || active.name || 'Trainingsschema') + '</h2><p class="muted small">' + esc(week.phase || 'Opbouw') + (week.focus ? ' · ' + esc(week.focus) : '') + '</p><div class="prog"><i style="width:' + Math.round(count / Math.max(1, week.sessions.length) * 100) + '%"></i></div><p class="muted small">' + count + ' van ' + week.sessions.length + ' trainingen afgevinkt deze week</p>';
     h += week.sessions.map((s, i) => { const key = week.number + ':' + i, checked = done.includes(key); return '<div class="plan-session' + (checked ? ' complete' : '') + '"><div><b>' + esc(s.day || 'Training ' + (i + 1)) + ' · ' + esc(s.title) + '</b><p>' + esc(s.detail) + '</p></div><button class="chip sm ' + (checked ? 'done' : '') + '" data-act="togglePlanSession" data-id="' + esc(active.id) + '" data-week="' + week.number + '" data-i="' + i + '" aria-pressed="' + checked + '">' + (checked ? '✓ Klaar' : 'Markeer klaar') + '</button></div>'; }).join('');
     if (done.length && week.sessions.every((_, i) => done.includes(week.number + ':' + i))) h += '<div class="card note"><b>Deze week is afgevinkt</b><p class="small">Kijk de afgevinkte trainingen nog even na. Je kan ze hierboven terugzetten voordat je verdergaat.</p><button class="btn big" data-act="advanceTrainingWeek" data-id="' + esc(active.id) + '">' + (active.currentWeek < active.weeks.length ? 'Open de volgende week' : 'Rond schema af') + '</button></div>';
-    h += '<div class="inrow wrap"><button class="btn ghost" data-act="pauseTrainingPlan" data-id="' + esc(active.id) + '">Pauzeer schema</button><button class="link danger" data-act="stopTrainingPlan" data-id="' + esc(active.id) + '">Zet schema stop</button></div></div>';
+    h += '<div class="inrow wrap"><button class="btn ghost" data-act="shareTrainingPlan" data-id="' + esc(active.id) + '">Deel met community</button><button class="btn ghost" data-act="pauseTrainingPlan" data-id="' + esc(active.id) + '">Pauzeer schema</button><button class="link danger" data-act="stopTrainingPlan" data-id="' + esc(active.id) + '">Zet schema stop</button></div></div>';
   } else h += '<div class="card muted">Je volgt momenteel geen actief schema. Kies hieronder een gepauzeerd schema om verder te gaan of stel een nieuw schema samen.</div>';
   const others = plans.filter(p => !active || p.id !== active.id);
   if (others.length) h += '<h2 class="sec">Opgeslagen schema’s</h2>' + others.map(p => {
     const status = { paused: 'Gepauzeerd', stopped: 'Gestopt', completed: 'Afgerond' }[p.status] || 'Opgeslagen';
     const button = p.status === 'paused' ? '<button class="btn ghost" data-act="resumeTrainingPlan" data-id="' + esc(p.id) + '">Verder volgen</button>' : p.status === 'completed' ? '<button class="btn ghost" data-act="restartTrainingPlan" data-id="' + esc(p.id) + '">Opnieuw starten</button>' : '<button class="btn ghost" data-act="resumeTrainingPlan" data-id="' + esc(p.id) + '">Opnieuw activeren</button>';
-    return '<div class="card plan-saved"><div class="plan-head"><span class="pill">' + status.toUpperCase() + '</span><span class="muted small">' + esc(p.createdAt || '') + '</span></div><b>' + esc(TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema') + '</b><p class="muted small">' + esc((TRAIN_LEVELS.find(x => x[0] === p.level) || ['', ''])[1]) + ' · ' + p.weeks.length + ' weken</p><div class="inrow wrap">' + button + '<button class="link danger" data-act="deleteTrainingPlan" data-id="' + esc(p.id) + '">Verwijder</button></div></div>';
+    return '<div class="card plan-saved"><div class="plan-head"><span class="pill">' + status.toUpperCase() + '</span><span class="muted small">' + esc(p.createdAt || '') + '</span></div><b>' + esc(p.customPlan ? p.name : TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema') + '</b><p class="muted small">' + esc((TRAIN_LEVELS.find(x => x[0] === p.level) || ['', ''])[1]) + ' · ' + p.weeks.length + ' weken</p><div class="inrow wrap">' + button + '<button class="btn ghost" data-act="shareTrainingPlan" data-id="' + esc(p.id) + '">Deel</button><button class="link danger" data-act="deleteTrainingPlan" data-id="' + esc(p.id) + '">Verwijder</button></div></div>';
   }).join('');
   if (!plans.length) h += '<p class="muted small">Als je een schema maakt en op “Start dit schema” tikt, verschijnt het hier én op Vandaag.</p>';
   view().innerHTML = h;
 }
+let TRAINING_COMMUNITY_CACHE = {};
+function publicTrainingPlan(p) {
+  const weeks = (Array.isArray(p.weeks) ? p.weeks : []).slice(0, 24).map((w, i) => ({
+    number: i + 1, phase: String(w.phase || '').slice(0, 80), focus: String(w.focus || '').slice(0, 300),
+    sessions: (Array.isArray(w.sessions) ? w.sessions : []).slice(0, 7).map(s => ({
+      day: String(s.day || '').slice(0, 30), title: String(s.title || '').slice(0, 80), detail: String(s.detail || '').slice(0, 1200),
+      exercises: (Array.isArray(s.exercises) ? s.exercises : []).slice(0, 20).map(x => ({ name: String(x.name || '').slice(0, 80), sets: Math.max(1, Math.min(10, Number(x.sets) || 1)), reps: String(x.reps || '').slice(0, 12), rest: Math.max(0, Math.min(600, Number(x.rest) || 0)) }))
+    }))
+  }));
+  if (!weeks.length || weeks.some(w => !w.sessions.length)) throw new Error('Dit schema heeft geen volledige weken om te delen.');
+  return { title: String(p.name || TRAIN_GOALS[p.goal] || 'Trainingsschema').trim().slice(0, 80), goal: String(TRAIN_GOALS[p.goal] || p.goal || 'Algemeen').slice(0, 40), level: TRAIN_LEVELS.some(([k]) => k === p.level) ? p.level : 'beginner', weeks };
+}
+ACT.shareTrainingPlan = async el => {
+  const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return;
+  if (!cloudReady() || !DB.settings.member) return toast('Schema’s delen kan na aanmelden bij de community.');
+  if (!navigator.onLine) return toast('Schema’s delen kan alleen met internet.');
+  let profileName = DB.settings.communityName;
+  if (!profileName) { profileName = prompt('Welke communitynaam mogen andere leden bij dit schema zien?'); if (!profileName) return; }
+  try {
+    profileName = await saveCommunityProfile(profileName);
+    if (!confirm('Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.')) return;
+    const body = publicTrainingPlan(p); await ensureSession();
+    let id = p.sharedId;
+    if (id) await sb('/rest/v1/shared_training_plans?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: Object.assign({}, body, { updated_at: new Date().toISOString() }) });
+    else { const rows = await sb('/rest/v1/shared_training_plans', { method: 'POST', headers: { Prefer: 'return=representation' }, body }); id = rows[0].id; p.sharedId = id; save(); }
+    const url = appBase() + '#/train-shared/' + id;
+    try { if (navigator.share) await navigator.share({ title: body.title, text: 'Trainingsschema van ' + profileName, url }); else { await navigator.clipboard.writeText(url); toast('Link gekopieerd.'); } }
+    catch (e) { if (e.name !== 'AbortError') { try { await navigator.clipboard.writeText(url); toast('Link gekopieerd.'); } catch (_) { prompt('Deel deze link:', url); } } }
+  } catch (e) { toast('Schema delen mislukt: ' + e.message); }
+};
+async function renderTrainingCommunity() {
+  let h = header('Communityschema’s', 'Ontdek schema’s die leden bewust hebben gedeeld', true);
+  view().innerHTML = h + '<p class="muted">Schema’s laden…</p>';
+  if (!cloudReady() || !DB.settings.member) { view().innerHTML = h + '<div class="card note">Log in als communitylid om gedeelde schema’s te bekijken.</div>'; return; }
+  if (!navigator.onLine) { view().innerHTML = h + '<div class="card note">Gedeelde schema’s laden kan alleen met internet.</div>'; return; }
+  try {
+    const rows = await sb('/rest/v1/shared_training_plans?select=*&order=created_at.desc&limit=100', {});
+    const reviews = rows.length ? await sb('/rest/v1/shared_training_plan_reviews?select=plan_id,rating,comment,created_by,created_at&limit=1000', {}) : [];
+    let names = {}; try { names = await fetchCommunityProfiles(rows.map(x => x.created_by).concat(reviews.map(x => x.created_by))); } catch (e) { }
+    const current = (cloudUser() || {}).id;
+    const cards = rows.map(r => {
+      const rs = reviews.filter(x => x.plan_id === r.id), stats = { n: rs.length, avg: rs.length ? rs.reduce((a, x) => a + x.rating, 0) / rs.length : null };
+      TRAINING_COMMUNITY_CACHE[r.id] = Object.assign({}, r, { authorName: names[r.created_by] || 'Communitylid', reviews: rs.map(x => Object.assign({}, x, { authorName: names[x.created_by] || 'Communitylid', mine: x.created_by === current })) });
+      const weeks = Array.isArray(r.weeks) ? r.weeks.length : 0, sessions = r.weeks?.[0]?.sessions?.length || 0;
+      return '<a class="card plan-community" href="#/train-shared/' + encodeURIComponent(r.id) + '"><div class="plan-head"><b>' + esc(r.title) + '</b><span class="pill">' + weeks + ' weken</span></div><p class="muted small">' + esc(names[r.created_by] || 'Communitylid') + ' · ' + esc(TRAIN_GOALS[r.goal] || r.goal) + ' · ' + esc((TRAIN_LEVELS.find(x => x[0] === r.level) || ['', 'Beginner'])[1]) + ' · ' + sessions + ' trainingsdagen/week</p><p class="small">' + (stats.avg === null ? 'Nog geen beoordelingen' : '★ ' + fmtNum(stats.avg, 1) + '/5 · ' + stats.n + ' beoordeling' + (stats.n === 1 ? '' : 'en')) + '</p><span class="plan-go">Schema bekijken ›</span></a>';
+    }).join('');
+    view().innerHTML = h + (cards || '<div class="card muted">Er zijn nog geen schema’s gedeeld. Deel je eigen schema om de community op gang te brengen.</div>');
+  } catch (e) { view().innerHTML = h + '<div class="card note">Gedeelde schema’s zijn nog niet beschikbaar. Controleer of de communitytabellen op Supabase zijn bijgewerkt. ' + esc(e.message) + '</div>'; }
+}
+async function renderSharedTraining(id) {
+  let h = header('Communityschema', 'Gedeeld trainingsplan', true);
+  view().innerHTML = h + '<p class="muted">Schema laden…</p>';
+  if (!cloudReady() || !DB.settings.member || !navigator.onLine) { view().innerHTML = h + '<div class="card note">Bekijk een gedeeld schema als communitylid met internetverbinding.</div>'; return; }
+  try {
+    let p = TRAINING_COMMUNITY_CACHE[id];
+    if (!p) {
+      const rows = await sb('/rest/v1/shared_training_plans?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1', {}); p = rows[0];
+      if (p) { const reviews = await sb('/rest/v1/shared_training_plan_reviews?select=plan_id,rating,comment,created_by,created_at&plan_id=eq.' + encodeURIComponent(id), {}); let names = {}; try { names = await fetchCommunityProfiles([p.created_by].concat(reviews.map(x => x.created_by))); } catch (e) { } p = Object.assign({}, p, { authorName: names[p.created_by] || 'Communitylid', reviews: reviews.map(x => Object.assign({}, x, { authorName: names[x.created_by] || 'Communitylid', mine: x.created_by === (cloudUser() || {}).id })) }); TRAINING_COMMUNITY_CACHE[id] = p; }
+    }
+    if (!p) { view().innerHTML = h + '<div class="card note">Dit schema is niet gevonden.</div>'; return; }
+    const weeks = (p.weeks || []).map(w => '<details class="card train-week"><summary><b>Week ' + w.number + ' · ' + esc(w.phase || 'Opbouw') + '</b><span class="muted small">' + esc(w.focus || '') + '</span></summary>' + (w.sessions || []).map(s => '<div class="train-session"><b>' + esc(s.day) + ' · ' + esc(s.title) + '</b>' + (s.detail ? '<p>' + esc(s.detail) + '</p>' : '') + ((s.exercises || []).length ? '<ul>' + s.exercises.map(x => '<li><b>' + esc(x.name) + '</b> · ' + x.sets + ' sets × ' + esc(x.reps) + ' herhalingen · ' + x.rest + ' sec rust</li>').join('') + '</ul>' : '') + '</div>').join('') + '</details>').join('');
+    const mine = p.reviews.find(x => x.mine), isAuthor = p.created_by && p.created_by === (cloudUser() || {}).id;
+    const reviewForm = isAuthor ? '<p class="muted small">Dit is jouw schema. Andere communityleden kunnen het beoordelen.</p>' : '<h3>Beoordeel dit schema</h3><p class="muted small">Deel je indruk met andere leden. Je beoordeling is zichtbaar onder je communitynaam.</p><label class="fld"><span>Beoordeling</span><select id="trainingRating"><option value="">Kies sterren</option>' + [1, 2, 3, 4, 5].map(n => '<option value="' + n + '"' + (mine && mine.rating === n ? ' selected' : '') + '>' + '★'.repeat(n) + ' · ' + n + '/5</option>').join('') + '</select></label><label class="fld"><span>Reactie (optioneel)</span><textarea id="trainingComment" maxlength="600" rows="3" placeholder="Wat werkte goed of wat moet iemand weten?">' + esc(mine && mine.comment || '') + '</textarea></label><button class="btn" data-act="saveTrainingReview" data-id="' + esc(id) + '">Beoordeling plaatsen</button>';
+    const reviewHtml = '<div class="card">' + reviewForm + (p.reviews.length ? '<h3>Beoordelingen</h3>' + p.reviews.slice().reverse().slice(0, 15).map(x => '<p class="community-review"><b>' + esc(x.authorName) + '</b> · ' + '★'.repeat(x.rating) + ' ' + x.rating + '/5' + (x.comment ? '<br>' + esc(x.comment) : '') + '</p>').join('') : '<p class="muted small">Nog geen beoordelingen.</p>') + '</div>';
+    h += '<div class="card plan-community"><h2>' + esc(p.title) + '</h2><p class="muted small">Gedeeld door ' + esc(p.authorName) + ' · ' + esc(TRAIN_GOALS[p.goal] || p.goal) + ' · ' + esc((TRAIN_LEVELS.find(x => x[0] === p.level) || ['', 'Beginner'])[1]) + '</p><button class="btn" data-act="copySharedTrainingPlan" data-id="' + esc(id) + '">Bewaar bij mijn schema’s</button></div>' + weeks + reviewHtml;
+    view().innerHTML = h;
+  } catch (e) { view().innerHTML = h + '<div class="card note">Schema of beoordelingen laden mislukt: ' + esc(e.message) + '</div>'; }
+}
+ACT.saveTrainingReview = async el => {
+  const rating = Number($('#trainingRating').value), comment = $('#trainingComment').value.trim().slice(0, 600);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return toast('Kies eerst een beoordeling van 1 tot 5 sterren.');
+  try {
+    if (!DB.settings.communityName) { const name = prompt('Kies een communitynaam. Die is zichtbaar bij je beoordeling, niet je echte accountgegevens.'); if (!name) return; await saveCommunityProfile(name); }
+    await ensureSession();
+    await sb('/rest/v1/shared_training_plan_reviews?on_conflict=plan_id,created_by', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { plan_id: el.dataset.id, rating, comment: comment || null, updated_at: new Date().toISOString() } });
+    delete TRAINING_COMMUNITY_CACHE[el.dataset.id]; toast('Je beoordeling staat bij het schema.'); await renderSharedTraining(el.dataset.id);
+  } catch (e) { toast('Beoordeling opslaan mislukt: ' + e.message); }
+};
+ACT.copySharedTrainingPlan = el => {
+  const shared = TRAINING_COMMUNITY_CACHE[el.dataset.id]; if (!shared) return toast('Ververs de community en probeer opnieuw.');
+  const copy = publicTrainingPlan({ name: shared.title, goal: shared.goal, level: shared.level, weeks: shared.weeks });
+  const p = { id: uid(), name: copy.title, goal: shared.goal, level: copy.level, weeks: copy.weeks, customPlan: true, status: 'paused', createdAt: todayKey(), currentWeek: 1, doneSessions: [], copiedFrom: shared.id };
+  savedTrainingPlans().unshift(p); save(); toast('Schema bewaard bij jouw schema’s.'); go('#/schemas');
+};
 function activeTrainingHomeCard() {
   const p = activeTrainingPlan();
   if (!p) return '<a class="card plan-home-empty" href="#/schemas"><b>Je trainingsschema</b><span class="muted small">Nog geen actief schema. Kies een plan en volg hier je voortgang.</span><span class="plan-go">Schema’s bekijken ›</span></a>';
   const week = p.weeks[Math.min(Math.max(0, p.currentWeek - 1), p.weeks.length - 1)];
   const done = (p.doneSessions || []).filter(k => k.startsWith(week.number + ':')).length;
-  return '<a class="card plan-home" href="#/schemas"><div class="plan-head"><span class="pill">ACTIEF · WEEK ' + week.number + '/' + p.weeks.length + '</span><b>' + esc(TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema') + '</b></div><p class="small">' + esc(week.phase || 'Opbouw') + ' · ' + done + '/' + week.sessions.length + ' trainingen afgerond</p><div class="prog"><i style="width:' + Math.round(done / Math.max(1, week.sessions.length) * 100) + '%"></i></div><span class="plan-go">Schema openen ›</span></a>';
+  return '<a class="card plan-home" href="#/schemas"><div class="plan-head"><span class="pill">ACTIEF · WEEK ' + week.number + '/' + p.weeks.length + '</span><b>' + esc(p.customPlan ? p.name : TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema') + '</b></div><p class="small">' + esc(week.phase || 'Opbouw') + ' · ' + done + '/' + week.sessions.length + ' trainingen afgerond</p><div class="prog"><i style="width:' + Math.round(done / Math.max(1, week.sessions.length) * 100) + '%"></i></div><span class="plan-go">Schema openen ›</span></a>';
 }
 ACT.startTrainingPlan = () => {
   const draft = DB.training && DB.training.generated;
@@ -139,7 +289,7 @@ ACT.startTrainingPlan = () => {
   const plans = savedTrainingPlans(), old = activeTrainingPlan();
   if (old) old.status = 'paused';
   const p = JSON.parse(JSON.stringify(draft));
-  p.id = uid(); p.name = TRAIN_GOALS[p.goal] || 'Persoonlijk schema'; p.status = 'active'; p.createdAt = todayKey(); p.currentWeek = 1; p.doneSessions = []; p.weeks = weeks;
+  p.id = uid(); p.name = draft.name || TRAIN_GOALS[p.goal] || 'Persoonlijk schema'; p.customPlan = !!draft.customPlan; p.status = 'active'; p.createdAt = todayKey(); p.currentWeek = 1; p.doneSessions = []; p.weeks = weeks;
   plans.unshift(p); DB.training.activePlanId = p.id; save(); toast(old ? 'Nieuwe schema gestart; je vorige staat op pauze.' : 'Schema gestart. Je voortgang staat op Vandaag en Schema’s.'); go('#/schemas');
 };
 ACT.pauseTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'paused'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
@@ -163,6 +313,7 @@ ACT.advanceTrainingWeek = el => {
   save(); renderTrainingHub();
 };
 function renderGeneratedTraining(g) {
+  if (g.programType === 'custom') return renderCustomTrainingPreview(g) + draftPlanActions();
   if (g.programType === 'progressive') return renderProgressiveProgram(g) + draftPlanActions();
   if (g.weeks) return renderEventProgram(g) + draftPlanActions();
   const sessions = (g.sessions || []).map(s => '<div class="card"><h3>' + esc(s.day) + ' · ' + esc(s.title) + '</h3><p>' + esc(s.detail) + '</p><p class="muted small">' + g.minutes + ' min · ' + esc(s.effort) + '</p></div>').join('');
