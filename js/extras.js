@@ -5,8 +5,8 @@
 const HUNGER_LBL = { 1: 'geen', 2: 'beetje', 3: 'normaal', 4: 'veel', 5: 'heel veel' };
 function hungerRow(slot, label) {
   const v = CI.hunger && CI.hunger[slot];
-  return '<div class="fld hunger"><span>' + label + ' <small class="muted">(optioneel)</small></span><div class="scale h5">' +
-    [1, 2, 3, 4, 5].map(i => '<button class="' + (v === i ? 'on' : '') + '" data-act="ciHunger" data-s="' + slot + '" data-v="' + i + '">' + i + '<small>' + HUNGER_LBL[i] + '</small></button>').join('') + '</div></div>';
+  return '<div class="fld hunger"><span>' + tr(label) + ' <small class="muted">(' + tr('optioneel') + ')</small></span><div class="scale h5">' +
+    [1, 2, 3, 4, 5].map(i => '<button class="' + (v === i ? 'on' : '') + '" data-act="ciHunger" data-s="' + slot + '" data-v="' + i + '">' + i + '<small>' + tr(HUNGER_LBL[i]) + '</small></button>').join('') + '</div></div>';
 }
 ACT.ciHunger = el => { CI.hunger = CI.hunger || {}; const v = Number(el.dataset.v); CI.hunger[el.dataset.s] = CI.hunger[el.dataset.s] === v ? undefined : v; rerenderCI(); };
 

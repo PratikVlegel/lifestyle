@@ -264,8 +264,8 @@ function renderCheckin(rid, dateKey) {
   if (!CI || CI.rid !== r.id || CI.k !== k) CI = newCheckin(r, k);
   const day = getDay(k);
   let h = header(r.label, fmtDay(k, true) + ' · ' + r.time, true);
-  if (day && day.done && day.done[r.id]) h += '<p class="note">Deze check-in is vandaag al ingevuld. Wat je nu bewaart, komt erbij.</p>';
-  h += '<div class="seg small">' + [addDays(todayKey(), -1), todayKey()].map(x => '<button class="' + (x === k ? 'on' : '') + '" data-act="ciDate" data-k="' + x + '">' + (x === todayKey() ? 'Vandaag' : 'Gisteren') + '</button>').join('') + '</div>';
+  if (day && day.done && day.done[r.id]) h += '<p class="note">' + tr('Deze check-in is vandaag al ingevuld. Wat je nu bewaart, komt erbij.') + '</p>';
+  h += '<div class="seg small">' + [addDays(todayKey(), -1), todayKey()].map(x => '<button class="' + (x === k ? 'on' : '') + '" data-act="ciDate" data-k="' + x + '">' + tr(x === todayKey() ? 'Vandaag' : 'Gisteren') + '</button>').join('') + '</div>';
   const kind = r.kind;
   if (kind === 'ontbijt') {
     h += field('weight', 'Gewicht vóór het ontbijt', 'number', { unit: 'kg', step: '0.1', unknown: 'niet gewogen' });
@@ -282,31 +282,31 @@ function renderCheckin(rid, dateKey) {
   } else if (kind === 'dag') {
     const miss = ['ontbijt', 'lunch', 'avond'].filter(s => !(day && day.meals.some(m => m.slot === s)));
     if (miss.length) h += '<p class="note">' + tr('Nog niet ingevuld vandaag:') + ' ' + miss.map(s => tr(SLOTS[s]).toLowerCase()).join(', ') + '. <a href="#/dag/' + k + '">' + tr('Aanvullen in het dagboek') + '</a></p>';
-    h += '<div class="card"><h3>Slaap (afgelopen nacht)</h3>' +
+    h += '<div class="card"><h3>' + tr('Slaap (afgelopen nacht)') + '</h3>' +
       field('sleepH', 'Hoeveel uur geslapen?', 'number', { unit: 'u', step: '0.25', unknown: 'onbekend', bare: true }) +
       choice('sleepQ', 'Hoe uitgerust?', ['slecht', 'matig', 'uitgerust', 'goed uitgerust']) +
       choice('cpap', 'CPAP?', ['hele nacht', 'deel van de nacht', 'nee']) + '</div>';
-    h += '<div class="card"><h3>Hoe was je dag?</h3>' + scale('mood', 'Stemming') + scale('energy', 'Energie') + scale('stress', 'Stress / spanning', true) +
-      '<label class="fld"><span>Waarom zo? (werk, mensen, honger, slaap…)</span><input type="text" data-ci="moodNote" value="' + esc(CI.f.moodNote || '') + '" placeholder="bv. drukke dag, ruzie op het werk"></label></div>';
-    h += '<div class="card"><h3>Beweging en drinken</h3>' +
+    h += '<div class="card"><h3>' + tr('Hoe was je dag?') + '</h3>' + scale('mood', 'Stemming') + scale('energy', 'Energie') + scale('stress', 'Stress / spanning', true) +
+      '<label class="fld"><span>' + tr('Waarom zo? (werk, mensen, honger, slaap…)') + '</span><input type="text" data-ci="moodNote" value="' + esc(CI.f.moodNote || '') + '" placeholder="' + tr('bv. drukke dag, ruzie op het werk') + '"></label></div>';
+    h += '<div class="card"><h3>' + tr('Beweging en drinken') + '</h3>' +
       field('steps', 'Stappen', 'number', { unit: '', step: '1', unknown: 'onbekend', bare: true }) +
-      field('waterL', 'Water vandaag in totaal', 'number', { unit: 'l', step: '0.25', unknown: 'onbekend', bare: true, hint: 'Al genoteerd: ' + (day && isNum(day.waterMl) ? fmtNum(day.waterMl / 1000, 2) + ' l' : 'niets') }) +
+      field('waterL', 'Water vandaag in totaal', 'number', { unit: 'l', step: '0.25', unknown: 'onbekend', bare: true, hint: trf('Al genoteerd: {amount}', { amount: day && isNum(day.waterMl) ? fmtNum(day.waterMl / 1000, 2) + ' l' : tr('niets') }) }) +
       field('caffeine', 'Koffie / espresso / energiedrank (shots)', 'number', { unit: 'shots', step: '1', unknown: 'onbekend', bare: true }) +
       nicotineFormChoice() +
       field('softDrinkServings', tr('Frisdrank'), 'number', { unit: tr('glazen of blikjes'), step: '0.5', unknown: tr('onbekend'), bare: true, optional: true }) +
       field('sweetsServings', tr('Snoep of zoetigheden'), 'number', { unit: tr('porties'), step: '0.5', unknown: tr('onbekend'), bare: true, optional: true }) +
       field('alcohol', 'Alcohol (glazen)', 'number', { unit: 'glazen', step: '1', unknown: 'onbekend', bare: true }) +
-      (Number(CI.f.alcohol) > 0 ? '<label class="fld"><span>Wat gedronken?</span><input type="text" data-ci="alcoholNote" value="' + esc(CI.f.alcoholNote || '') + '"></label>' : '') + '</div>';
+      (Number(CI.f.alcohol) > 0 ? '<label class="fld"><span>' + tr('Wat gedronken?') + '</span><input type="text" data-ci="alcoholNote" value="' + esc(CI.f.alcoholNote || '') + '"></label>' : '') + '</div>';
     h += expQuestionHtml();
-    h += '<div class="card"><h3>Andere activiteiten vandaag?</h3><p class="muted small">Fietsen, fitness, zwemmen, padel… Wandelen telt al mee via je stappen.</p>' + activitiesHtml(getDay(CI.k), CI.k, true) + '<button class="chip add" data-act="ciAct">+ activiteit</button></div>';
+    h += '<div class="card"><h3>' + tr('Andere activiteiten vandaag?') + '</h3><p class="muted small">' + tr('Fietsen, fitness, zwemmen, padel… Wandelen telt al mee via je stappen.') + '</p>' + activitiesHtml(getDay(CI.k), CI.k, true) + '<button class="chip add" data-act="ciAct">+ ' + tr('activiteit') + '</button></div>';
     h += slotBlock('na', 'Iets gegeten of gedronken na het avondeten?');
-    h += '<label class="fld card"><span>Notitie voor vandaag (optioneel)</span><textarea data-ci="notes" rows="2">' + esc(CI.f.notes || '') + '</textarea></label>';
+    h += '<label class="fld card"><span>' + tr('Notitie voor vandaag (optioneel)') + '</span><textarea data-ci="notes" rows="2">' + esc(CI.f.notes || '') + '</textarea></label>';
   } else {
     h += '<label class="fld card"><span>' + tr('Moment') + '</span><select data-ci="slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (CI.f.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label>';
     h += slotBlock(CI.f.slot || slotForNow(), 'Wat at of dronk je?');
     h += drinks();
   }
-  h += '<div class="err" id="cierr" hidden></div><button class="btn big" data-act="ciSave">Bewaren</button>';
+  h += '<div class="err" id="cierr" hidden></div><button class="btn big" data-act="ciSave">' + tr('Bewaren') + '</button>';
   view().innerHTML = h;
 }
 function newCheckin(r, k) {
@@ -329,8 +329,8 @@ ACT.ciDate = el => { go('#/checkin/' + CI.rid + '/' + el.dataset.k); };
 function field(name, label, type, o) {
   const v = CI.f[name];
   const unk = v === '?';
-  const inner = '<span>' + label + '</span><div class="inrow"><input type="' + type + '" inputmode="decimal" step="' + (o.step || 'any') + '" data-ci="' + name + '" value="' + (unk || v === undefined ? '' : esc(v)) + '"' + (unk ? ' disabled' : '') + '>' + (o.unit ? '<em>' + o.unit + '</em>' : '') +
-    '<button class="chip sm ' + (unk ? 'on' : '') + '" data-act="ciUnknown" data-f="' + name + '">' + o.unknown + '</button></div>' + (o.hint ? '<small class="muted">' + esc(o.hint) + '</small>' : '');
+  const inner = '<span>' + tr(label) + '</span><div class="inrow"><input type="' + type + '" inputmode="decimal" step="' + (o.step || 'any') + '" data-ci="' + name + '" value="' + (unk || v === undefined ? '' : esc(v)) + '"' + (unk ? ' disabled' : '') + '>' + (o.unit ? '<em>' + tr(o.unit) + '</em>' : '') +
+    '<button class="chip sm ' + (unk ? 'on' : '') + '" data-act="ciUnknown" data-f="' + name + '">' + tr(o.unknown) + '</button></div>' + (o.hint ? '<small class="muted">' + esc(o.hint) + '</small>' : '');
   const req = o.optional ? '' : ' data-req="' + name + '"';
   return o.bare ? '<label class="fld"' + req + '>' + inner + '</label>' : '<label class="fld card"' + req + '>' + inner + '</label>';
 }
@@ -343,35 +343,35 @@ function nicotineFormChoice() {
     '<button class="chip ' + (CI.f.nicotineForms === '?' ? 'on' : '') + '" data-act="ciNicotine" data-v="unknown">' + tr('onbekend') + '</button></div><small class="muted">' + tr('Je kunt meerdere vormen kiezen. Geen registratie blijft onbekend.') + '</small></div>';
 }
 function choice(name, label, opts) {
-  return '<div class="fld" data-req="' + name + '"><span>' + label + '</span><div class="chips">' + opts.concat(['onbekend']).map(o => '<button class="chip ' + (CI.f[name] === (o === 'onbekend' ? '?' : o) ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="' + esc(o === 'onbekend' ? '?' : o) + '">' + o + '</button>').join('') + '</div></div>';
+  return '<div class="fld" data-req="' + name + '"><span>' + tr(label) + '</span><div class="chips">' + opts.concat(['onbekend']).map(o => '<button class="chip ' + (CI.f[name] === (o === 'onbekend' ? '?' : o) ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="' + esc(o === 'onbekend' ? '?' : o) + '">' + tr(o) + '</button>').join('') + '</div></div>';
 }
 function scale(name, label, optional) {
   const v = CI.f[name];
-  let h = '<div class="fld"' + (optional ? '' : ' data-req="' + name + '"') + '><span>' + label + ' /10</span><div class="scale">';
+  let h = '<div class="fld"' + (optional ? '' : ' data-req="' + name + '"') + '><span>' + tr(label) + ' /10</span><div class="scale">';
   for (let i = 1; i <= 10; i++) h += '<button class="' + (v === i ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="' + i + '" data-num="1">' + i + '</button>';
-  return h + '</div><button class="chip sm ' + (v === '?' ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="?">onbekend</button></div>';
+  return h + '</div><button class="chip sm ' + (v === '?' ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="?">' + tr('onbekend') + '</button></div>';
 }
 function slotBlock(slot, q) {
   const items = CI.items[slot] || [];
   const a = CI.ans[slot];
-  let h = '<div class="card slotblock" data-req="slot:' + slot + '"><h3>' + q + '</h3>';
+  let h = '<div class="card slotblock" data-req="slot:' + slot + '"><h3>' + tr(q) + '</h3>';
   if (items.length) {
-    h += '<div class="items">' + items.map((it, i) => '<div class="it"><div><b>' + esc(it.desc) + '</b><small>' + nutrLine(it) + '</small></div><button class="iconbtn sm" data-act="ciDelItem" data-s="' + slot + '" data-i="' + i + '" aria-label="Verwijder">✕</button></div>').join('') + '</div>';
+    h += '<div class="items">' + items.map((it, i) => '<div class="it"><div><b>' + esc(it.desc) + '</b><small>' + nutrLine(it) + '</small></div><button class="iconbtn sm" data-act="ciDelItem" data-s="' + slot + '" data-i="' + i + '" aria-label="' + tr('Verwijder') + '">✕</button></div>').join('') + '</div>';
   }
   h += '<div class="chips">' +
-    '<button class="chip add" data-act="ciAdd" data-s="' + slot + '">+ toevoegen</button>' +
-    (yesterdayItems(slot).length && !items.length ? '<button class="chip" data-act="ciSame" data-s="' + slot + '">↺ zelfde als gisteren</button>' : '') +
-    (items.length ? '' : '<button class="chip ' + (a === 'niets' ? 'on' : '') + '" data-act="ciAns" data-s="' + slot + '" data-v="niets">niets gegeten</button><button class="chip ' + (a === '?' ? 'on' : '') + '" data-act="ciAns" data-s="' + slot + '" data-v="?">weet ik niet</button>') + '</div>';
-  if (items.length) h += '<label class="fld"><span>Hoe laat?</span><input type="time" data-ci="time_' + slot + '" value="' + esc(CI.f['time_' + slot] || defaultTime(slot)) + '"></label>';
+    '<button class="chip add" data-act="ciAdd" data-s="' + slot + '">+ ' + tr('toevoegen') + '</button>' +
+    (yesterdayItems(slot).length && !items.length ? '<button class="chip" data-act="ciSame" data-s="' + slot + '">↺ ' + tr('zelfde als gisteren') + '</button>' : '') +
+    (items.length ? '' : '<button class="chip ' + (a === 'niets' ? 'on' : '') + '" data-act="ciAns" data-s="' + slot + '" data-v="niets">' + tr('niets gegeten') + '</button><button class="chip ' + (a === '?' ? 'on' : '') + '" data-act="ciAns" data-s="' + slot + '" data-v="?">' + tr('weet ik niet') + '</button>') + '</div>';
+  if (items.length) h += '<label class="fld"><span>' + tr('Hoe laat?') + '</span><input type="time" data-ci="time_' + slot + '" value="' + esc(CI.f['time_' + slot] || defaultTime(slot)) + '"></label>';
   if (['ontbijt', 'lunch', 'avond'].includes(slot) && a !== 'niets') h += hungerRow(slot, 'Hoeveel honger had je vlak ervoor?');
   if (slot === 'na') h += hungerRow('na', 'Hoeveel trek had je na het avondeten?');
   return h + '</div>';
 }
 function defaultTime(slot) { return ['tussen1', 'tussen2', 'na'].includes(slot) ? '' : CI.time; }
 function drinks() {
-  return '<div class="card"><h3>Gedronken sinds de vorige check-in</h3>' +
-    '<div class="stepper"><span>Glazen water (' + DB.settings.glassMl + ' ml)</span><button data-act="ciStep" data-f="glasses" data-d="-1">−</button><b>' + CI.glasses + '</b><button data-act="ciStep" data-f="glasses" data-d="1">+</button></div>' +
-    '<div class="stepper"><span>Koffie / espresso (shots)</span><button data-act="ciStep" data-f="shots" data-d="-1">−</button><b>' + CI.shots + '</b><button data-act="ciStep" data-f="shots" data-d="1">+</button></div></div>';
+  return '<div class="card"><h3>' + tr('Gedronken sinds de vorige check-in') + '</h3>' +
+    '<div class="stepper"><span>' + tr('Glazen water') + ' (' + DB.settings.glassMl + ' ml)</span><button data-act="ciStep" data-f="glasses" data-d="-1">−</button><b>' + CI.glasses + '</b><button data-act="ciStep" data-f="glasses" data-d="1">+</button></div>' +
+    '<div class="stepper"><span>' + tr('Koffie / espresso (shots)') + '</span><button data-act="ciStep" data-f="shots" data-d="-1">−</button><b>' + CI.shots + '</b><button data-act="ciStep" data-f="shots" data-d="1">+</button></div></div>';
 }
 function ciInput(el) {
   const f = el.dataset.ci;
@@ -453,34 +453,34 @@ function openPicker(cb) { PICK_CB = cb; renderPicker(); $('#sheet').hidden = fal
 function closeSheet() { $('#sheet').hidden = true; document.body.classList.remove('noscroll'); stopScan(); }
 ACT.closeSheet = closeSheet;
 function renderPicker(msg) {
-  let h = '<div class="sheet-h"><h2>Eten toevoegen</h2><button class="iconbtn" data-act="closeSheet" aria-label="Sluiten">✕</button></div>';
-  h += '<div class="seg">' + [['vaak', 'Vaak'], ['prep', 'Mealprep'], ['lib', 'Bibliotheek'], ['vrij', 'Vrij']].map(([k, l]) => '<button class="' + (PICK_TAB === k ? 'on' : '') + '" data-act="pickTab" data-t="' + k + '">' + l + '</button>').join('') + '</div>';
+  let h = '<div class="sheet-h"><h2>' + tr('Eten toevoegen') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + tr('Sluiten') + '">✕</button></div>';
+  h += '<div class="seg">' + [['vaak', 'Vaak'], ['prep', 'Mealprep'], ['lib', 'Bibliotheek'], ['vrij', 'Vrij']].map(([k, l]) => '<button class="' + (PICK_TAB === k ? 'on' : '') + '" data-act="pickTab" data-t="' + k + '">' + tr(l) + '</button>').join('') + '</div>';
   if (msg) h += '<p class="note">' + esc(msg) + '</p>';
   if (PICK_TAB === 'vaak') {
     h += favResults();
   } else if (PICK_TAB === 'prep') {
     const preps = DB.preps.slice().sort((a, b) => (b.left > 0) - (a.left > 0) || (b.date || '').localeCompare(a.date || ''));
-    if (!preps.length) h += '<p class="muted">Nog geen mealpreps. Maak er een in het tabblad Mealprep.</p>';
+    if (!preps.length) h += '<p class="muted">' + tr('Nog geen mealpreps. Maak er een in het tabblad Mealprep.') + '</p>';
     h += preps.map(p => {
       const { per } = prepTotals(p);
-      return '<div class="pick"><div><b>' + esc(p.name) + '</b><small>≈ ' + fmtNum(per.kcal) + ' kcal · ' + fmtNum(per.protein) + ' g eiwit per portie · ' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' over' : '') + '</small></div><div class="chips">' +
+      return '<div class="pick"><div><b>' + esc(p.name) + '</b><small>≈ ' + fmtNum(per.kcal) + ' kcal · ' + fmtNum(per.protein) + ' g ' + tr('eiwit per portie') + ' · ' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' ' + tr('over') : '') + '</small></div><div class="chips">' +
         [[1, '1'], [0.75, '¾'], [2 / 3, '⅔'], [0.5, '½'], [1 / 3, '⅓'], [0.25, '¼']].map(([v, l]) => '<button class="chip" data-act="pickPrep" data-id="' + p.id + '" data-p="' + v + '">' + l + '</button>').join('') + '</div></div>';
     }).join('');
   } else if (PICK_TAB === 'lib') {
-    h += '<input type="search" id="libq" placeholder="Zoek in je bibliotheek">';
-    h += '<div class="chips"><button class="chip" data-act="scanFood">Scan barcode</button><label class="chip">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="pickPhoto"></label><button class="chip add" data-act="pickNewFood">+ nieuw product</button></div>';
+    h += '<input type="search" id="libq" placeholder="' + tr('Zoek in je bibliotheek') + '">';
+    h += '<div class="chips"><button class="chip" data-act="scanFood">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="pickPhoto"></label><button class="chip add" data-act="pickNewFood">+ ' + tr('nieuw product') + '</button></div>';
     h += '<div id="libres">' + libResults('') + '</div>';
   } else {
-    h += '<label class="fld"><span>Wat?</span><input id="vdesc" type="text" placeholder="bv. croissant, mixgrill met frieten"></label>' +
-      '<div class="grid3"><label class="fld"><span>kcal</span><input id="vkcal" type="number" inputmode="decimal"></label><label class="fld"><span>eiwit g</span><input id="vprot" type="number" inputmode="decimal"></label><label class="fld"><span>vezels g</span><input id="vfib" type="number" inputmode="decimal"></label></div>' +
-      '<p class="muted small">Weet je de kcal niet? Laat leeg; dan telt de dag als ondergrens (≥).</p><button class="btn" data-act="pickFree">Toevoegen</button>';
+    h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="vdesc" type="text" placeholder="' + tr('bv. croissant, mixgrill met frieten') + '"></label>' +
+      '<div class="grid3"><label class="fld"><span>kcal</span><input id="vkcal" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('eiwit g') + '</span><input id="vprot" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('vezels g') + '</span><input id="vfib" type="number" inputmode="decimal"></label></div>' +
+      '<p class="muted small">' + tr('Weet je de kcal niet? Laat leeg; dan telt de dag als ondergrens (≥).') + '</p><button class="btn" data-act="pickFree">' + tr('Toevoegen') + '</button>';
   }
   $('#sheet .sheet-in').innerHTML = h;
 }
 function libResults(q) {
   const list = libSearch(q, 40);
-  if (!list.length) return '<p class="muted">Niets gevonden. Scan de barcode, neem een foto van het etiket of maak een nieuw product.</p>';
-  return list.map(f => '<div class="pick"><div><b>' + esc(f.name) + (f.brand ? ' <span class="muted">· ' + esc(f.brand) + '</span>' : '') + '</b><small>' + fmtNum(f.per.kcal) + ' kcal · ' + fmtNum(f.per.protein, 1) + ' g eiwit per 100 g</small></div>' + amountRow(f, 'p') + '<button class="btn" data-act="pickFood" data-id="' + f.id + '">Toevoegen</button></div>').join('');
+  if (!list.length) return '<p class="muted">' + tr('Niets gevonden. Scan de barcode, neem een foto van het etiket of maak een nieuw product.') + '</p>';
+  return list.map(f => '<div class="pick"><div><b>' + esc(f.name) + (f.brand ? ' <span class="muted">· ' + esc(f.brand) + '</span>' : '') + '</b><small>' + fmtNum(f.per.kcal) + ' kcal · ' + fmtNum(f.per.protein, 1) + ' g ' + tr('eiwit per 100 g') + '</small></div>' + amountRow(f, 'p') + '<button class="btn" data-act="pickFood" data-id="' + f.id + '">' + tr('Toevoegen') + '</button></div>').join('');
 }
 ACT.libSearch = el => { $('#libres').innerHTML = libResults(el.value); };
 document.addEventListener('keyup', e => { if (e.target.id === 'libq') $('#libres').innerHTML = libResults(e.target.value); });
@@ -992,7 +992,7 @@ async function runDiag() {
   const el = $('#diag');
   if (el) el.innerHTML = out.map(d => '<div class="tr"><span>' + (d[1] ? '✓ ' : '✗ ') + esc(d[0]) + '</span><small>' + esc(d[2]) + '</small></div>').join('');
 }
-function gfield(p, l, v, type) { return '<label class="fld"><span>' + l + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="setG" data-p="' + p + '"></label>'; }
+function gfield(p, l, v, type) { return '<label class="fld"><span>' + tr(l) + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="setG" data-p="' + p + '"></label>'; }
 const NUM_LIMITS = {
   'profile.age': [1, 120], 'profile.heightCm': [50, 300], 'profile.startWeight': [20, 500], weight: [20, 500],
   'goals.kcal': [0, 15000], 'goals.protein': [0, 1000], 'goals.fiber': [0, 1000], 'goals.waterMl': [0, 30000],
@@ -1118,25 +1118,25 @@ function renderIntake(step) {
   const I = INTAKE;
   let h = '';
   if (step === '1') {
-    h = '<div class="hero"><h1>Voedingsdagboek</h1><p>Je eigen dagboek voor eten, drinken, slaap, stemming en stappen. Werkt offline, alles blijft op je gsm.</p></div>' +
-      '<div class="card"><h3>Heb je al een dagboek?</h3><p class="muted small">Importeer het bestand dat je kreeg (.json). Dan staan je dagen, mealpreps, doelen en check-in-tijden er meteen in.</p><label class="btn">Dagboek importeren<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
-      '<div class="card"><h3>Nieuw beginnen</h3><p class="muted small">Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.</p><button class="btn ghost" data-act="intakeGo" data-s="2">Start intake</button></div>' + installCard();
+    h = '<div class="hero"><h1>' + tr('Voedingsdagboek') + '</h1><p>' + tr('Je eigen dagboek voor eten, drinken, slaap, stemming en stappen. Werkt offline, alles blijft op je gsm.') + '</p></div>' +
+      '<div class="card"><h3>' + tr('Heb je al een dagboek?') + '</h3><p class="muted small">' + tr('Importeer het bestand dat je kreeg (.json). Dan staan je dagen, mealpreps, doelen en check-in-tijden er meteen in.') + '</p><label class="btn">' + tr('Dagboek importeren') + '<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
+      '<div class="card"><h3>' + tr('Nieuw beginnen') + '</h3><p class="muted small">' + tr('Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.') + '</p><button class="btn ghost" data-act="intakeGo" data-s="2">' + tr('Start intake') + '</button></div>' + installCard();
   } else if (step === '2') {
     h = header('Over jou', 'Stap 1 van 3') + '<div class="card"><div class="grid2">' +
       ifield('profile.name', 'Naam', I.profile.name, 'text') +
-      '<label class="fld"><span>Geslacht</span><select data-chg="intakeSet" data-p="profile.sex"><option value="m"' + (I.profile.sex === 'm' ? ' selected' : '') + '>man</option><option value="v"' + (I.profile.sex === 'v' ? ' selected' : '') + '>vrouw</option></select></label>' +
+      '<label class="fld"><span>' + tr('Geslacht') + '</span><select data-chg="intakeSet" data-p="profile.sex"><option value="m"' + (I.profile.sex === 'm' ? ' selected' : '') + '>' + tr('man') + '</option><option value="v"' + (I.profile.sex === 'v' ? ' selected' : '') + '>' + tr('vrouw') + '</option></select></label>' +
       ifield('profile.age', 'Leeftijd', I.profile.age) + ifield('profile.heightCm', 'Lengte (cm)', I.profile.heightCm) + ifield('weight', 'Gewicht nu (kg, optioneel)', I.weight) +
-      '<label class="fld"><span>Activiteit</span><select data-chg="intakeSet" data-p="profile.activity">' + [['zittend', 'zittend werk'], ['licht', 'licht actief'], ['matig', 'matig actief'], ['actief', 'actief']].map(([v, l]) => '<option value="' + v + '"' + (I.profile.activity === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label></div>' +
-      '<label class="fld"><span>Wat moet de app weten? (medisch, werk, gewoontes, wat je wil bereiken)</span><textarea rows="4" data-chg="intakeSet" data-p="profile.notes" placeholder="bv. CPAP voor slaapapneu, bureauwerk, vaak honger \'s avonds">' + esc(I.profile.notes || '') + '</textarea></label></div>' +
+      '<label class="fld"><span>' + tr('Activiteit') + '</span><select data-chg="intakeSet" data-p="profile.activity">' + [['zittend', 'zittend werk'], ['licht', 'licht actief'], ['matig', 'matig actief'], ['actief', 'actief']].map(([v, l]) => '<option value="' + v + '"' + (I.profile.activity === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label></div>' +
+      '<label class="fld"><span>' + tr('Wat moet de app weten? (medisch, werk, gewoontes, wat je wil bereiken)') + '</span><textarea rows="4" data-chg="intakeSet" data-p="profile.notes" placeholder="' + tr('bv. CPAP voor slaapapneu, bureauwerk, vaak honger \'s avonds') + '">' + esc(I.profile.notes || '') + '</textarea></label></div>' +
       '<button class="btn big" data-act="intakeGo" data-s="3">' + tr('Verder') + '</button>';
   } else if (step === '3') {
     const bmr = mifflin(I);
-    h = header('Je doelen', 'Stap 2 van 3') + '<div class="card">' + (bmr ? '<p class="note">Onderhoud volgens de formule ≈ ' + fmtNum(bmr) + ' kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.</p>' : '') + '<div class="grid2">' +
+    h = header('Je doelen', 'Stap 2 van 3') + '<div class="card">' + (bmr ? '<p class="note">' + trf('Onderhoud volgens de formule ≈ {bmr} kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.', { bmr: fmtNum(bmr) }) + '</p>' : '') + '<div class="grid2">' +
       ifield('goals.kcal', 'Kcal per dag', I.goals.kcal) + ifield('goals.protein', 'Eiwit (g)', I.goals.protein) + ifield('goals.fiber', 'Vezels (g)', I.goals.fiber) + ifield('goals.waterMl', 'Water (ml)', I.goals.waterMl) +
       ifield('goals.stepsMin', 'Stappen min.', I.goals.stepsMin) + ifield('goals.stepsMax', 'Stappen max.', I.goals.stepsMax) + ifield('goals.sleepH', 'Slaap (u)', I.goals.sleepH) + ifield('goals.caffeineMax', 'Max. cafeïne (shots)', I.goals.caffeineMax) + '</div></div>' +
       '<button class="btn big" data-act="intakeGo" data-s="4">' + tr('Verder') + '</button>';
   } else if (step === '4') {
-    h = header('Je check-ins', 'Stap 3 van 3') + '<div class="card"><p class="muted small">Op deze momenten vraagt de app wat je at, dronk en hoe je je voelt. Je kan ze later altijd aanpassen.</p>' +
+    h = header('Je check-ins', 'Stap 3 van 3') + '<div class="card"><p class="muted small">' + tr('Op deze momenten vraagt de app wat je at, dronk en hoe je je voelt. Je kan ze later altijd aanpassen.') + '</p>' +
       I.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="intakeRem" data-f="on" data-i="' + i + '"><input type="time" value="' + r.time + '" data-chg="intakeRem" data-f="time" data-i="' + i + '"><span>' + esc(r.label) + '</span></div>').join('') + '</div>' +
       '<button class="btn big" data-act="intakeGo" data-s="5">' + tr('Verder') + '</button>';
   } else if (step === '5') {
@@ -1150,7 +1150,7 @@ function renderIntake(step) {
   view().innerHTML = h;
   if (step === '1') runDiag();
 }
-function ifield(p, l, v, type) { return '<label class="fld"><span>' + l + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="intakeSet" data-p="' + p + '"></label>'; }
+function ifield(p, l, v, type) { return '<label class="fld"><span>' + tr(l) + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="intakeSet" data-p="' + p + '"></label>'; }
 ACT.intakeSet = el => {
   const parts = el.dataset.p.split('.');
   let v = el.value;
@@ -1197,7 +1197,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.4';
+const APP_VERSION = '1.10.5';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

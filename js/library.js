@@ -188,14 +188,14 @@ function keepFood(food) {
 /* ---------- hoeveelheid kiezen: aantal × eenheid, met live berekening ---------- */
 function amountRow(f, prefix) {
   const units = (f.units || []).filter(u => isNum(u.g) && u.g > 0);
-  const opts = units.map(u => ({ n: u.n, g: u.g })).concat([{ n: 'gram', g: 1 }]);
+  const opts = units.map(u => ({ n: u.n, g: u.g })).concat([{ n: tr('gram'), g: 1 }]);
   const first = opts[0];
   const q = first.g === 1 ? (f.lastG || 100) : 1;
   const id = prefix + '_' + f.id;
   return '<div class="amt" id="amt_' + id + '" data-fid="' + f.id + '" data-g="' + first.g + '">' +
-    '<div class="amt-q"><button type="button" class="amt-b" data-act="amtStep" data-id="' + id + '" data-d="-1" aria-label="minder">−</button>' +
-    '<input type="number" inputmode="decimal" min="0" step="any" id="q_' + id + '" value="' + q + '" aria-label="aantal">' +
-    '<button type="button" class="amt-b" data-act="amtStep" data-id="' + id + '" data-d="1" aria-label="meer">+</button></div>' +
+    '<div class="amt-q"><button type="button" class="amt-b" data-act="amtStep" data-id="' + id + '" data-d="-1" aria-label="' + tr('minder') + '">−</button>' +
+    '<input type="number" inputmode="decimal" min="0" step="any" id="q_' + id + '" value="' + q + '" aria-label="' + tr('aantal') + '">' +
+    '<button type="button" class="amt-b" data-act="amtStep" data-id="' + id + '" data-d="1" aria-label="' + tr('meer') + '">+</button></div>' +
     '<div class="seg amt-u">' + opts.map((u, i) => '<button type="button" class="' + (i === 0 ? 'on' : '') + '" data-act="amtUnit" data-id="' + id + '" data-g="' + u.g + '">' + esc(u.n) + (u.g !== 1 ? ' <small>' + fmtNum(u.g, u.g % 1 ? 1 : 0) + ' g</small>' : '') + '</button>').join('') + '</div>' +
     '<div class="amt-sum" id="s_' + id + '">' + amtSummary(f, q * first.g) + '</div></div>';
 }
