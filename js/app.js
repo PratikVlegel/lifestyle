@@ -258,7 +258,7 @@ function nutrLine(m) {
   if (isNum(m.protein)) p.push(fmtNum(m.protein) + ' g ' + tr('eiwit'));
   if (isNum(m.carbs)) p.push(fmtNum(m.carbs) + ' g ' + tr('koolh.'));
   if (isNum(m.fat)) p.push(fmtNum(m.fat) + ' g ' + tr('vet'));
-  if (isNum(m.fiber)) p.push(fmtNum(m.fiber) + ' g vezels');
+  if (isNum(m.fiber)) p.push(fmtNum(m.fiber) + ' g ' + tr('vezels'));
   return p.join(' · ');
 }
 
@@ -1354,7 +1354,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.53';
+const APP_VERSION = '1.10.54';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
