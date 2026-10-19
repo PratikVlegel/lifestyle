@@ -260,7 +260,7 @@ function validateImportData(obj) {
     if (value !== undefined && value !== null && !Number.isInteger(value)) fail('profiel of doelen bevatten een waarde die geen geheel getal is.');
   }
   if (obj.goals && Number.isFinite(obj.goals.stepsMin) && Number.isFinite(obj.goals.stepsMax) && obj.goals.stepsMax < obj.goals.stepsMin) fail('het stappendoelmaximum is lager dan het minimum.');
-  const ranges = { weight: [20, 500], sleepH: [0, 24], mood: [1, 10], energy: [1, 10], stress: [1, 10], steps: [0, 200000], waterMl: [0, 30000], caffeine: [0, 100], alcohol: [0, 50] };
+  const ranges = { weight: [20, 500], sleepH: [0, 24], mood: [1, 10], energy: [1, 10], stress: [1, 10], steps: [0, 200000], waterMl: [0, 30000], caffeine: [0, 100], alcohol: [0, 50], softDrinkServings: [0, 100], sweetsServings: [0, 100] };
   for (const [key, day] of Object.entries(days)) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !record(day)) fail('een dag heeft een ongeldige datum of structuur.');
     const date = new Date(key + 'T00:00:00Z');
@@ -269,6 +269,7 @@ function validateImportData(obj) {
     if ((day.meals || []).length > 100) fail('er staan meer dan 100 maaltijden op ' + key + '.');
     if (day.done !== undefined && day.done !== null && !record(day.done)) fail('de herinneringen van ' + key + ' hebben een ongeldig formaat.');
     for (const [field, bounds] of Object.entries(ranges)) numeric(day[field], bounds, key + ' · ' + field);
+    if (day.nicotineForms !== undefined && day.nicotineForms !== null && (!Array.isArray(day.nicotineForms) || day.nicotineForms.length > 7 || day.nicotineForms.some(v => !['cigarette', 'vape', 'nicotineGum', 'nicotinePouch', 'nicotinePatch', 'heatedTobacco', 'otherNicotine'].includes(v)) || new Set(day.nicotineForms).size !== day.nicotineForms.length)) fail(key + ' · nicotineForms bevat een ongeldige keuze.');
     if (day.weight !== undefined && day.weight !== null && day.weight !== '?' && (typeof day.weight !== 'number' || !Number.isFinite(day.weight) || day.weight < 20 || day.weight > 500)) fail(key + ' · gewicht bevat een ongeldige waarde.');
     if (day.kcalOverride !== undefined && day.kcalOverride !== null) {
       if (!record(day.kcalOverride)) fail(key + ' · kcal heeft een ongeldig formaat.');

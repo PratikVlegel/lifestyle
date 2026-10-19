@@ -279,7 +279,9 @@ function renderCheckin(rid, dateKey) {
       field('steps', 'Stappen', 'number', { unit: '', step: '1', unknown: 'onbekend', bare: true }) +
       field('waterL', 'Water vandaag in totaal', 'number', { unit: 'l', step: '0.25', unknown: 'onbekend', bare: true, hint: 'Al genoteerd: ' + (day && isNum(day.waterMl) ? fmtNum(day.waterMl / 1000, 2) + ' l' : 'niets') }) +
       field('caffeine', 'Koffie / espresso / energiedrank (shots)', 'number', { unit: 'shots', step: '1', unknown: 'onbekend', bare: true }) +
-      choice('vape', 'Vapen', ['niet', 'paar keer', 'om de 3 u', 'om de 2 u', 'elk uur']) +
+      nicotineFormChoice() +
+      field('softDrinkServings', tr('Frisdrank'), 'number', { unit: tr('glazen of blikjes'), step: '0.5', unknown: tr('onbekend'), bare: true, optional: true }) +
+      field('sweetsServings', tr('Snoep of zoetigheden'), 'number', { unit: tr('porties'), step: '0.5', unknown: tr('onbekend'), bare: true, optional: true }) +
       field('alcohol', 'Alcohol (glazen)', 'number', { unit: 'glazen', step: '1', unknown: 'onbekend', bare: true }) +
       (Number(CI.f.alcohol) > 0 ? '<label class="fld"><span>Wat gedronken?</span><input type="text" data-ci="alcoholNote" value="' + esc(CI.f.alcoholNote || '') + '"></label>' : '') + '</div>';
     h += expQuestionHtml();
@@ -299,7 +301,9 @@ function newCheckin(r, k) {
   const f = {};
   if (r.kind === 'dag') {
     if (day) {
-      for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (day[x] !== undefined && day[x] !== null) f[x] = day[x];
+      for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'nicotineForms', 'softDrinkServings', 'sweetsServings', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (day[x] !== undefined && day[x] !== null) f[x] = day[x];
+      if (day.nicotineForms === null) f.nicotineForms = '?';
+      if (f.nicotineForms === undefined && Object.hasOwn({ 'niet': 0, 'paar keer': 1, 'om de 3 u': 2, 'om de 2 u': 3, 'elk uur': 4 }, day.vape)) f.nicotineForms = day.vape === 'niet' ? [] : ['vape'];
       if (isNum(day.waterMl)) f.waterL = Math.round(day.waterMl / 250) / 4;
     }
   }
@@ -314,7 +318,16 @@ function field(name, label, type, o) {
   const unk = v === '?';
   const inner = '<span>' + label + '</span><div class="inrow"><input type="' + type + '" inputmode="decimal" step="' + (o.step || 'any') + '" data-ci="' + name + '" value="' + (unk || v === undefined ? '' : esc(v)) + '"' + (unk ? ' disabled' : '') + '>' + (o.unit ? '<em>' + o.unit + '</em>' : '') +
     '<button class="chip sm ' + (unk ? 'on' : '') + '" data-act="ciUnknown" data-f="' + name + '">' + o.unknown + '</button></div>' + (o.hint ? '<small class="muted">' + esc(o.hint) + '</small>' : '');
-  return o.bare ? '<label class="fld" data-req="' + name + '">' + inner + '</label>' : '<label class="fld card" data-req="' + name + '">' + inner + '</label>';
+  const req = o.optional ? '' : ' data-req="' + name + '"';
+  return o.bare ? '<label class="fld"' + req + '>' + inner + '</label>' : '<label class="fld card"' + req + '>' + inner + '</label>';
+}
+const NICOTINE_LABELS = { cigarette: 'Sigaretten', vape: 'Vape', nicotineGum: 'Nicotinekauwgom', nicotinePouch: 'Nicotinezakjes of snus', nicotinePatch: 'Nicotinepleister', heatedTobacco: 'Verhitte tabak', otherNicotine: 'Andere nicotinevorm' };
+const NICOTINE_FORMS = Object.keys(NICOTINE_LABELS);
+function nicotineFormChoice() {
+  const selected = Array.isArray(CI.f.nicotineForms) ? CI.f.nicotineForms : [];
+  return '<div class="fld"><span>' + tr('Nicotine gebruikt? Kies alle vormen die vandaag passen.') + '</span><div class="chips"><button class="chip ' + (Array.isArray(CI.f.nicotineForms) && !selected.length ? 'on' : '') + '" data-act="ciNicotine" data-v="none">' + tr('Geen nicotine') + '</button>' +
+    NICOTINE_FORMS.map(v => '<button class="chip ' + (selected.includes(v) ? 'on' : '') + '" data-act="ciNicotine" data-v="' + v + '">' + tr(NICOTINE_LABELS[v]) + '</button>').join('') +
+    '<button class="chip ' + (CI.f.nicotineForms === '?' ? 'on' : '') + '" data-act="ciNicotine" data-v="unknown">' + tr('onbekend') + '</button></div><small class="muted">' + tr('Je kunt meerdere vormen kiezen. Geen registratie blijft onbekend.') + '</small></div>';
 }
 function choice(name, label, opts) {
   return '<div class="fld" data-req="' + name + '"><span>' + label + '</span><div class="chips">' + opts.concat(['onbekend']).map(o => '<button class="chip ' + (CI.f[name] === (o === 'onbekend' ? '?' : o) ? 'on' : '') + '" data-act="ciChoice" data-f="' + name + '" data-v="' + esc(o === 'onbekend' ? '?' : o) + '">' + o + '</button>').join('') + '</div></div>';
@@ -354,6 +367,17 @@ function ciInput(el) {
   if (f === 'alcohol') { const show = Number(el.value) > 0; if (show !== !!document.querySelector('[data-ci="alcoholNote"]')) { const y = scrollY; renderCheckin(CI.rid, CI.k); scrollTo(0, y); const n = document.querySelector('[data-ci="alcohol"]'); if (n) { n.focus(); } } }
 }
 function rerenderCI() { const y = scrollY; renderCheckin(CI.rid, CI.k); scrollTo(0, y); }
+ACT.ciNicotine = el => {
+  const v = el.dataset.v;
+  if (v === 'unknown') CI.f.nicotineForms = '?';
+  else if (v === 'none') CI.f.nicotineForms = Array.isArray(CI.f.nicotineForms) && !CI.f.nicotineForms.length ? undefined : [];
+  else {
+    const forms = new Set(Array.isArray(CI.f.nicotineForms) ? CI.f.nicotineForms : []);
+    if (forms.has(v)) forms.delete(v); else forms.add(v);
+    CI.f.nicotineForms = [...forms];
+  }
+  rerenderCI();
+};
 ACT.ciUnknown = el => { const f = el.dataset.f; CI.f[f] = CI.f[f] === '?' ? undefined : '?'; rerenderCI(); };
 ACT.ciChoice = el => { const f = el.dataset.f; const v = el.dataset.num ? Number(el.dataset.v) : el.dataset.v; CI.f[f] = CI.f[f] === v ? undefined : v; rerenderCI(); };
 ACT.ciAns = el => { const s = el.dataset.s; CI.ans[s] = CI.ans[s] === el.dataset.v ? undefined : el.dataset.v; rerenderCI(); };
@@ -362,7 +386,7 @@ ACT.ciDelItem = el => { const s = el.dataset.s; CI.items[s].splice(Number(el.dat
 ACT.ciAdd = el => { const s = el.dataset.s; openPicker(items => { CI.items[s] = (CI.items[s] || []).concat(items); CI.ans[s] = undefined; rerenderCI(); }); };
 
 ACT.ciSave = () => {
-  for (const f of ['weight', 'sleepH', 'waterL', 'steps', 'caffeine', 'alcohol']) {
+  for (const f of ['weight', 'sleepH', 'waterL', 'steps', 'caffeine', 'alcohol', 'softDrinkServings', 'sweetsServings']) {
     const v = CI.f[f];
     if (typeof v === 'number') {
       const err = numericError(f, v, DB);
@@ -395,7 +419,7 @@ ACT.ciSave = () => {
     d.meals.push(a === 'niets' ? { id: uid(), slot, nothing: true } : { id: uid(), slot, desc: 'onbekend (niet meer geweten)', kcal: null });
   }
   if (CI.kind === 'dag') {
-    for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (f[x] !== undefined) d[x] = f[x];
+    for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'nicotineForms', 'softDrinkServings', 'sweetsServings', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (f[x] !== undefined) d[x] = x === 'nicotineForms' && f[x] === '?' ? null : f[x];
     if (f.waterL !== undefined) d.waterMl = f.waterL === '?' ? (isNum(d.waterMl) ? d.waterMl : '?') : Math.round(f.waterL * 1000);
   } else {
     if (CI.glasses) d.waterMl = (isNum(d.waterMl) ? d.waterMl : 0) + CI.glasses * DB.settings.glassMl;
@@ -570,7 +594,7 @@ function renderDay(k) {
     '<p class="muted small">' + tr('Je stemming wordt niet automatisch met andere gegevens vergeleken. Dat kan je zelf apart inschakelen bij Stemming en gewoontes.') + '</p></div>' +
     '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
     f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
-    f('cpap', 'CPAP', '', 'text') + f('vape', tr('Vapen'), '', 'text') + f('notes', tr('Notitie'), '', 'text') +
+    f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'text') +
     (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
     '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">Check-ins gedaan: ' + DB.reminders.filter(r => d.done[r.id]).map(r => r.label).join(', ') + '</p>';
@@ -595,6 +619,26 @@ ACT.saveDay = el => {
     d[n] = v;
   });
   save(); toast('Bewaard'); render();
+};
+function dayNicotineChoice(d, k) {
+  let selected = Array.isArray(d.nicotineForms) ? d.nicotineForms : [];
+  const hasField = Object.hasOwn(d, 'nicotineForms');
+  if (!hasField && Object.hasOwn({ 'niet': 0, 'paar keer': 1, 'om de 3 u': 2, 'om de 2 u': 3, 'elk uur': 4 }, d.vape)) selected = d.vape === 'niet' ? [] : ['vape'];
+  const known = hasField || Object.hasOwn({ 'niet': 0, 'paar keer': 1, 'om de 3 u': 2, 'om de 2 u': 3, 'elk uur': 4 }, d.vape);
+  return '<div class="fld"><span>' + tr('Nicotine gebruikt? Kies alle vormen die vandaag passen.') + '</span><div class="chips"><button class="chip ' + (known && Array.isArray(d.nicotineForms) && !selected.length || known && !hasField && d.vape === 'niet' ? 'on' : '') + '" data-act="dayNicotine" data-k="' + k + '" data-v="none">' + tr('Geen nicotine') + '</button>' + NICOTINE_FORMS.map(v => '<button class="chip ' + (selected.includes(v) ? 'on' : '') + '" data-act="dayNicotine" data-k="' + k + '" data-v="' + v + '">' + tr(NICOTINE_LABELS[v]) + '</button>').join('') + '<button class="chip ' + (d.nicotineForms === null ? 'on' : '') + '" data-act="dayNicotine" data-k="' + k + '" data-v="unknown">' + tr('onbekend') + '</button></div><small class="muted">' + tr('Je kunt meerdere vormen kiezen. Geen registratie blijft onbekend.') + '</small></div>';
+}
+ACT.dayNicotine = el => {
+  const d = getDay(el.dataset.k, true), v = el.dataset.v;
+  let existing = Array.isArray(d.nicotineForms) ? d.nicotineForms : [];
+  if (!Object.hasOwn(d, 'nicotineForms') && Object.hasOwn({ 'niet': 0, 'paar keer': 1, 'om de 3 u': 2, 'om de 2 u': 3, 'elk uur': 4 }, d.vape) && d.vape !== 'niet') existing = ['vape'];
+  if (v === 'unknown') d.nicotineForms = null;
+  else if (v === 'none') d.nicotineForms = [];
+  else {
+    const forms = new Set(existing);
+    if (forms.has(v)) forms.delete(v); else forms.add(v);
+    d.nicotineForms = [...forms];
+  }
+  save(); renderDay(el.dataset.k);
 };
 ACT.dropOverride = el => { delete getDay(el.dataset.k).kcalOverride; save(); render(); };
 ACT.delMeal = el => { const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id); if (!confirm('Verwijderen: ' + (m.desc || 'item') + '?')) return; if (m.prepId) usePortion(m.prepId, -m.portion); d.meals = d.meals.filter(x => x !== m); save(); render(); };
@@ -773,7 +817,7 @@ async function shareText(txt, title) {
 
 /* ================= inzicht ================= */
 function aiDataDisclosure() {
-  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.');
+  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, nicotinevormen, suikerhoudende frisdrank, snoep en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.');
 }
 function insightCard(i) {
   return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + tr(i.cat) + '</span>' + (i.isNew ? '<span class="tag new">' + tr('nieuw') + '</span>' : '') + '<b>' + esc(tr(i.title)) + '</b></div><p>' + esc(tr(i.text)).replace(/\n/g, '<br>') + '</p><small class="muted">' + tr('Op basis van {evidence}').replace('{evidence}', tr(i.evidence)) + '</small></div>';
@@ -929,7 +973,7 @@ const NUM_LIMITS = {
   'goals.stepsMin': [0, 200000], 'goals.stepsMax': [0, 200000], 'goals.sleepH': [0, 24], 'goals.caffeineMax': [0, 100],
   'settings.glassMl': [1, 10000],
   sleepH: [0, 24], waterL: [0, 30], waterMl: [0, 30000], steps: [0, 200000],
-  caffeine: [0, 100], alcohol: [0, 50], mood: [1, 10], energy: [1, 10], stress: [1, 10],
+  caffeine: [0, 100], alcohol: [0, 50], softDrinkServings: [0, 100], sweetsServings: [0, 100], mood: [1, 10], energy: [1, 10], stress: [1, 10],
   kcal: [0, 20000], protein: [0, 1000], fiber: [0, 1000]
 };
 const NUM_INTEGERS = new Set(['profile.age', 'goals.kcal', 'goals.waterMl', 'goals.stepsMin', 'goals.stepsMax', 'goals.caffeineMax', 'settings.glassMl', 'steps', 'caffeine', 'alcohol']);

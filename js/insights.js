@@ -180,13 +180,13 @@ function aiContext(n) {
     if (!d) return null;
     const kc = dayNutr(d, 'kcal'), pr = dayNutr(d, 'protein');
     const meals = (d.meals || []).map(m => SLOTS[m.slot] + ': ' + (m.nothing ? 'niets' : m.desc) + (isNum(m.kcal) ? ' (≈' + Math.round(m.kcal) + ' kcal)' : ' (kcal onbekend)')).join('; ');
-    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', d.energy ?? '?', d.mood ?? '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', d.vape ?? '?', d.weight ?? '?', (d.moodNote || '') + ' ' + (d.notes || ''), meals].join(' | ');
+    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', d.energy ?? '?', d.mood ?? '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', d.nicotineForms || d.vape || '?', d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', (d.moodNote || '') + ' ' + (d.notes || ''), meals].join(' | ');
   }).filter(Boolean);
   const P = DB.profile, G = DB.goals;
   return 'PROFIEL: ' + [P.name, P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : '', P.activity].filter(Boolean).join(', ') +
     '\nCONTEXT: ' + (P.notes || '-') +
     '\nDOELEN: ' + G.kcal + ' kcal, ' + G.protein + ' g eiwit, ' + G.fiber + ' g vezels, ' + G.waterMl + ' ml water, ' + G.stepsMin + '–' + G.stepsMax + ' stappen, ' + G.sleepH + ' u slaap' +
-    '\nDAGEN (datum | kcal | eiwit g | slaap u (nacht ervoor) | CPAP | energie/10 | stemming/10 | stappen | water ml | cafeïne shots | alcohol glazen | vapen | gewicht kg | notities | maaltijden):\n' + rows.join('\n');
+    '\nDAGEN (datum | kcal | eiwit g | slaap u (nacht ervoor) | CPAP | energie/10 | stemming/10 | stappen | water ml | cafeïne shots | alcohol glazen | nicotinevormen | suikerhoudende frisdrank porties | snoep/zoetigheden porties | gewicht kg | notities | maaltijden):\n' + rows.join('\n');
 }
 const AI_SYSTEM = 'Je bent een ondersteunende leefstijlcoach voor de gebruiker van een voedingsdagboek-app. ' + ({ 'nl-BE': 'Schrijf in het Nederlands (Vlaams, informeel, je/jij), kort en concreet', 'en-GB': 'Write in English in a friendly, concise and practical tone', 'fr-FR': 'Répondez en français avec un ton chaleureux, concis et concret', 'de-DE': 'Antworte auf Deutsch in einem freundlichen, knappen und konkreten Ton' }[currentLocale()] || 'Schrijf in het Nederlands, kort en concreet') + '. ' +
   'Strikte regels: geen diagnose (ook niet over slaap, stemming of eetgedrag); geen oordeel of schuldgevoel; nooit aansporen tot maaltijden overslaan, compenseren of extra sporten als straf; gewicht nooit als reden om minder te eten, alleen het verloop over weken benoemen; calorieën zijn ruwe schattingen, zeg dat; verbanden zijn geen oorzaken, zeg hoe zeker je bent op basis van het aantal dagen; verzin geen gegevens, wat "?" is, is onbekend. ' +
@@ -238,7 +238,7 @@ async function aiReadLabel(file) {
 async function aiImportMarkdown(md) {
   const S = DB.settings;
   if (!S.apiKey) throw new Error('Geen API-sleutel ingesteld.');
-  const schema = '{"profile":{"name":"","sex":"m|v","age":0,"heightCm":0,"notes":""},"goals":{"kcal":0,"stepsMin":0,"stepsMax":0},"days":{"YYYY-MM-DD":{"weight":null,"sleepH":null,"cpap":"","energy":null,"mood":null,"moodNote":"","steps":null,"waterMl":null,"caffeine":null,"alcohol":null,"vape":"","notes":"","kcalOverride":{"v":0,"lb":false},"meals":[{"id":"uniek","slot":"ontbijt|tussen1|lunch|tussen2|avond|na","time":"HH:MM","desc":"","kcal":null,"protein":null,"fiber":null}]}}}';
+  const schema = '{"profile":{"name":"","sex":"m|v","age":0,"heightCm":0,"notes":""},"goals":{"kcal":0,"stepsMin":0,"stepsMax":0},"days":{"YYYY-MM-DD":{"weight":null,"sleepH":null,"cpap":"","energy":null,"mood":null,"moodNote":"","steps":null,"waterMl":null,"caffeine":null,"alcohol":null,"nicotineForms":[],"softDrinkServings":null,"sweetsServings":null,"notes":"","kcalOverride":{"v":0,"lb":false},"meals":[{"id":"uniek","slot":"ontbijt|tussen1|lunch|tussen2|avond|na","time":"HH:MM","desc":"","kcal":null,"protein":null,"fiber":null}]}}}';
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': S.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },

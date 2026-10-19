@@ -20,7 +20,7 @@ function moodComparison(title, note, rows, groupA, groupB) {
 function renderMoodModule() {
   const enabled = DB.settings.moodInsights === true;
   let h = header('Stemming en gewoontes', 'Een rustige terugblik op je eigen registraties', true);
-  h += '<div class="card mood-intro"><h2>' + tr('Wat valt samen met hoe je je voelt?') + '</h2><p>' + tr('Deze optionele module vergelijkt je stemming met slaap, alcohol, vapen, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.') + '</p><label class="toggle"><input type="checkbox" data-chg="setMoodInsights"' + (enabled ? ' checked' : '') + '><span>' + tr('Persoonlijke vergelijkingen inschakelen') + '</span></label><p class="muted small">' + tr('Alles wordt op dit toestel berekend. Alleen dagen waarop beide waarden zijn ingevuld tellen mee. Uitgeschakelde of niet ingevulde waarden worden niet als nul gezien.') + '</p></div>';
+  h += '<div class="card mood-intro"><h2>' + tr('Wat valt samen met hoe je je voelt?') + '</h2><p>' + tr('Deze optionele module vergelijkt je stemming met slaap, alcohol, nicotinevormen, suikerhoudende frisdrank, snoep, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.') + '</p><label class="toggle"><input type="checkbox" data-chg="setMoodInsights"' + (enabled ? ' checked' : '') + '><span>' + tr('Persoonlijke vergelijkingen inschakelen') + '</span></label><p class="muted small">' + tr('Alles wordt op dit toestel berekend. Alleen dagen waarop beide waarden zijn ingevuld tellen mee. Uitgeschakelde of niet ingevulde waarden worden niet als nul gezien.') + '</p></div>';
   if (!enabled) {
     h += '<div class="card muted">' + tr('Je stemming wordt niet met andere gewoontes vergeleken. Schakel de optie hierboven in als je dat zelf wilt.') + '</div>';
     view().innerHTML = h; return;
@@ -41,9 +41,19 @@ function renderMoodModule() {
     const alcRows = records.filter(x => isNum(x.d.alcohol) && x.d.alcohol >= 0).map(x => ({ x: x.d.alcohol, y: x.d.mood }));
     const drank = v => v > 0, geenDrank = v => v === 0; drank.label = 'Alcohol geregistreerd'; geenDrank.label = 'Geen alcohol geregistreerd';
     cards += moodComparison('Alcohol', 'Alleen expliciet geregistreerde nul of een positieve waarde telt mee; een ontbrekende registratie is onbekend.', alcRows, drank, geenDrank);
-    const vapeRows = records.filter(x => Object.hasOwn(MOOD_VAPE, x.d.vape)).map(x => ({ x: MOOD_VAPE[x.d.vape], y: x.d.mood }));
-    const nicotine = v => v > 0, noNicotine = v => v === 0; nicotine.label = 'Nicotinegebruik gemeld'; noNicotine.label = '“Niet” geregistreerd';
-    cards += moodComparison('Vapen', 'De registratie gaat over vapen, niet over alle mogelijke nicotinebronnen. De frequentie is een grove zelfrapportage en zegt niets over oorzaak of hoeveelheid nicotine.', vapeRows, nicotine, noNicotine);
+    const nicotineRows = records.map(x => {
+      if (Object.hasOwn(x.d, 'nicotineForms')) return Array.isArray(x.d.nicotineForms) ? { x: x.d.nicotineForms.length ? 1 : 0, y: x.d.mood } : null;
+      if (Object.hasOwn(MOOD_VAPE, x.d.vape)) return { x: MOOD_VAPE[x.d.vape] > 0 ? 1 : 0, y: x.d.mood };
+      return null;
+    }).filter(Boolean);
+    const nicotine = v => v > 0, noNicotine = v => v === 0; nicotine.label = 'Nicotinegebruik geregistreerd'; noNicotine.label = 'Geen nicotine geregistreerd';
+    cards += moodComparison('Nicotinevormen', 'Je kunt meerdere vormen registreren, zoals sigaretten, vapes, nicotinekauwgom en nicotinezakjes. Dit is alleen een vergelijking van je eigen registraties; gebruiksvorm, hoeveelheid en ontbrekende dagen kunnen verschillen.', nicotineRows, nicotine, noNicotine);
+    const softRows = records.filter(x => isNum(x.d.softDrinkServings) && x.d.softDrinkServings >= 0).map(x => ({ x: x.d.softDrinkServings, y: x.d.mood }));
+    const softAny = v => v > 0, softNone = v => v === 0; softAny.label = 'Frisdrank genoteerd'; softNone.label = 'Geen frisdrank genoteerd';
+    cards += moodComparison('Frisdrank', 'Porties zijn zelf ingeschat; drankjes die je niet hebt geregistreerd blijven onbekend. Deze vergelijking beschrijft samen voorkomen en geen effect.', softRows, softAny, softNone);
+    const sweetRows = records.filter(x => isNum(x.d.sweetsServings) && x.d.sweetsServings >= 0).map(x => ({ x: x.d.sweetsServings, y: x.d.mood }));
+    const sweetsAny = v => v > 0, sweetsNone = v => v === 0; sweetsAny.label = 'Snoep of zoetigheid genoteerd'; sweetsNone.label = 'Geen snoep of zoetigheid genoteerd';
+    cards += moodComparison('Snoep en zoetigheden', 'Porties zijn zelf ingeschat; niet ingevulde dagen tellen niet mee als nul. De vergelijking kan geen oorzaak of gezondheidseffect aantonen.', sweetRows, sweetsAny, sweetsNone);
     const stepRows = records.filter(x => isNum(x.d.steps)).map(x => ({ x: x.d.steps, y: x.d.mood }));
     const belowSteps = v => v < Number(DB.goals.stepsMin || 0), meetsSteps = v => v >= Number(DB.goals.stepsMin || 0); belowSteps.label = 'Onder je stappendoel'; meetsSteps.label = 'Op/boven je stappendoel';
     cards += moodComparison('Beweging', 'Stappen zijn slechts een deel van beweging; geregistreerde dagen kunnen verschillen van ontbrekende dagen.', stepRows, meetsSteps, belowSteps);
