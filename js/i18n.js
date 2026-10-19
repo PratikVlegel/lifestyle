@@ -2329,4 +2329,5 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   '{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.': '{symptom}: mittelschwer oder stark an {count} von {total} Tagen, an denen du es bewertet hast.',
   'Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.': 'Bei den bewerteten Symptomen hast du keine mittelschwere oder starke Ausprägung erfasst. Das beschreibt nur die von dir eingegebenen Bewertungen.'
 });
+for (const locale of ['nl-BE', 'en-GB', 'fr-FR', 'de-DE']) Object.assign(UI_EXTRA_TRANSLATIONS[locale], { kg: 'kg' });
 if (currentLocale() === 'nl-BE') applyLocale();
