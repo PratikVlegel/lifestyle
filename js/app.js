@@ -25,7 +25,7 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming', 'cycle'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared', 'train-community-exercises', 'exercise-community', 'exercise-share'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi', 'community-profiel'].includes(page)) || (el.dataset.tab === 'home' && ['kpi', 'checkin', 'ontdek'].includes(page))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming', 'cycle'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared', 'train-community-exercises', 'exercise-community', 'exercise-share', 'schema-bewerken'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi', 'community-profiel'].includes(page)) || (el.dataset.tab === 'home' && ['kpi', 'checkin', 'ontdek'].includes(page))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -48,6 +48,7 @@ function render() {
       case 'train-custom': return renderCustomTrainingBuilder();
       case 'train-community': return renderTrainingCommunity();
       case 'train-shared': return renderSharedTraining(a);
+      case 'schema-bewerken': return renderSavedTrainingEditor(a);
       case 'train-community-exercises': return renderExerciseCommunity();
       case 'exercise-community': return renderSharedExercise(a);
       case 'exercise-share': return renderShareExercise(a, b);
@@ -1296,7 +1297,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.40';
+const APP_VERSION = '1.10.41';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
