@@ -1285,3 +1285,22 @@ function applyLocale() {
   document.querySelectorAll('[data-t-aria]').forEach(el => { el.setAttribute('aria-label', tr(el.dataset.tAria)); });
 }
 applyLocale();
+
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'zittend werk': 'Mostly sedentary',
+  'licht actief': 'Lightly active',
+  'matig actief': 'Moderately active',
+  'zeer actief': 'Very active'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'zittend werk': 'Plutôt sédentaire',
+  'licht actief': 'Peu actif',
+  'matig actief': 'Modérément actif',
+  'zeer actief': 'Très actif'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'zittend werk': 'Überwiegend sitzend',
+  'licht actief': 'Leicht aktiv',
+  'matig actief': 'Mäßig aktiv',
+  'zeer actief': 'Sehr aktiv'
+});
