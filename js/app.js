@@ -213,7 +213,7 @@ function kpiTile(key) {
   const val = isNum(cur.v) ? (cur.lb ? '≥ ' : '') + fmtNum(cur.v, M.dec) : '–';
   return '<button class="kpi" data-act="openKpi" data-k="' + key + '">' +
     '<span class="kl">' + tr(M.label) + '</span>' +
-    '<span class="kv">' + val + '<small> ' + M.unit + '</small></span>' +
+    '<span class="kv">' + val + '<small> ' + tr(M.unit) + '</small></span>' +
     '<span class="ks">' + (isNum(cur.v) ? when : tr('nog niets')) + (goal ? ' · ' + tr('doel') + ' ' + fmtNum(goal, M.dec) + (M.goal2 ? '–' + fmtNum(M.goal2(), 0) : '') : '') + '</span>' + bar +
     sparkline(ser, M.chart) +
     '<span class="ks">' + tr('7 d gem.') + ' ' + fmtNum(a7, M.dec) + '</span></button>';
@@ -1354,7 +1354,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.54';
+const APP_VERSION = '1.10.55';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
