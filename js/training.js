@@ -151,7 +151,7 @@ function eventProgram(p) {
   return { goal: p.goal, level: p.level, weeks, startLabel };
 }
 function eventPhase(n, duration, hyrox) {
-  if (hyrox) return n === duration ? 'Taper en frisheid' : n >= duration - 2 ? 'Wedstrijdspecifiek' : n >= Math.ceil(duration * 0.55) ? 'Opbouw en combineren' : n % 4 === 0 ? 'Herstelweek' : 'Basis en techniek';
+  if (hyrox) return n === duration ? 'Taper en frisheid' : n >= duration - 2 ? 'Wedstrijdspecifiek' : n % 4 === 0 ? 'Herstelweek' : n >= Math.ceil(duration * 0.5) ? 'Opbouw en combineren' : 'Basis en techniek';
   if (n >= 18) return n === 20 ? 'Wedstrijdweek' : 'Taper en herstel';
   if ([4, 8, 12, 16].includes(n)) return 'Herstelweek';
   if (n >= 13) return 'Piekblok';
@@ -171,14 +171,17 @@ function marathonWeek(n, duration, phase, days, p) {
 }
 function hyroxWeek(n, duration, phase, days, p) {
   const taper = n === duration, specific = phase === 'Wedstrijdspecifiek';
+  const progression = (n - 1) / Math.max(1, duration - 1);
+  const aerobicMinutes = Math.max(15, Math.min(p.minutes, Math.round((20 + progression * 20) / 5) * 5));
+  const rounds = Math.max(2, Math.min(5, 2 + Math.floor(progression * 4)));
   const strength = p.access === 'yes' && p.equipment === 'gym' ? 'Oefen licht en technisch de stations: SkiErg, sled push, sled pull, burpee broad jumps, roeien, farmer carry, sandbag lunges en wall balls.' : p.equipment === 'home' ? 'Oefen licht met dragen, gecontroleerde lunges, squats en burpee-varianten. Kies veilige alternatieven; een thuistraining vervangt geen sled, ergometer of wall-ball-materiaal.' : 'Werk met lichaamsgewicht aan squats, lunges, gecontroleerde burpee-varianten en rompstabiliteit. Sla stations over die je niet veilig kunt nabootsen.';
   const sessions = days.map((d, i) => {
     if (taper) return i === 0
       ? { day: d.label, title: 'Lichte loop en mobiliteit', detail: 'Korte, ontspannen inspanning; eindig fris.' }
       : { day: i === days.length - 1 && p.eventDate ? new Date(p.eventDate + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'short' }) : d.label, title: i === days.length - 1 && p.eventDate ? 'HYROX-wedstrijd' : 'Rust of lichte techniek', detail: p.eventDate && i === days.length - 1 ? 'Volg de briefing en officiële stationvolgorde. Houd het tempo beheerst.' : 'Geen zware intervallen of vermoeiende racesimulatie in de taper.' };
-    if (i === 0) return { day: d.label, title: specific ? 'Rustige loopintervallen' : 'Aerobe loopbasis', detail: specific ? 'Wissel 4–6 rustige loopblokken van 3–5 minuten af met ruim wandel- of dribbelherstel. Houd de inspanning beheerst.' : '20–40 minuten op praattempo; wissel lopen en wandelen af als dat beter bij je basis past.' };
-    if (i === 1) return { day: d.label, title: 'Kracht en techniek', detail: strength + ' Houd 2–3 herhalingen in reserve; geen maximale gewichten.' };
-    if (i === 2) return { day: d.label, title: specific ? 'Korte HYROX-combinaties' : 'Lichte conditie en functionele beweging', detail: specific ? 'Doe 3–5 rustige rondes: 400–800 m lopen plus één of twee bekende oefeningen. Neem volledig herstel; geen volledige racesimulatie.' : 'Wissel korte rustige cardio af met eenvoudige functionele oefeningen. Stop ruim vóór uitputting.' };
+    if (i === 0) return { day: d.label, title: specific ? 'Rustige loopintervallen' : 'Aerobe loopbasis', detail: specific ? 'Wissel 4 rustige loopblokken van 3–5 minuten af met ruim wandel- of dribbelherstel. Houd de inspanning beheerst.' : aerobicMinutes + ' minuten op praattempo; wissel lopen en wandelen af als dat beter bij je basis past.' };
+    if (i === 1) return { day: d.label, title: phase === 'Herstelweek' ? 'Lichte kracht en techniek' : 'Kracht en techniek', detail: strength + ' Doe 2–3 beheerste sets en houd 2–3 herhalingen in reserve; geen maximale gewichten.' };
+    if (i === 2) return { day: d.label, title: specific ? 'Korte HYROX-combinaties' : 'Lichte conditie en functionele beweging', detail: specific ? 'Doe ' + rounds + ' rustige rondes: 400–800 m lopen plus één of twee bekende oefeningen. Neem volledig herstel; geen volledige racesimulatie.' : 'Wissel korte rustige cardio af met eenvoudige functionele bewegingen. Blijf binnen je gekozen tijdsvenster en stop ruim vóór uitputting.' };
     if (i === 3) return { day: d.label, title: 'Aanvullende kracht', detail: strength + ' Maak dit een lichte techniekdag als je vermoeid bent.' };
     return { day: d.label, title: 'Herstelbeweging', detail: 'Wandelen of rustige mobiliteit; dit mag ook volledige rust zijn.' };
   });
