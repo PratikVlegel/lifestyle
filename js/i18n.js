@@ -1350,3 +1350,18 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Op dagen met meer stappen lag je stemming-score gemiddeld samen hoger. Dit beschrijft je registraties en zegt niet wat oorzaak is.': 'An Tagen mit mehr Schritten war deine Stimmung laut deinen Einträgen tendenziell höher. Das beschreibt deine Angaben und belegt keine Ursache.',
   'Slaapduur en je stemming-score bewogen in deze registraties samen. Dit is een beschrijving, geen aanwijzing voor oorzaak.': 'In deinen Einträgen veränderten sich Schlafdauer und Stimmung gemeinsam. Das ist eine Beschreibung und kein Hinweis auf eine Ursache.'
 });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Deze optionele module vergelijkt je stemming met slaap, cafeïne, alcohol, nicotinevormen, frisdrank, snoep, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.': 'This optional module compares your mood with sleep, caffeine, alcohol, nicotine forms, soft drinks, sweets, activity and logged fibre. It does not diagnose or use your free-text notes.',
+  'Boven je ingestelde cafeïnegrens': 'Above your chosen caffeine limit', 'Binnen je ingestelde cafeïnegrens': 'Within your chosen caffeine limit', 'Porties zijn zelf geregistreerd en meten geen cafeïnedosis of tijdstip. Deze vergelijking beschrijft alleen samen voorkomen en geen effect.': 'Servings are self-reported and do not measure caffeine dose or timing. This comparison describes co-occurrence only, not an effect.',
+  'API-sleutel': 'API key', 'Model': 'Model', 'man': 'Male'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Deze optionele module vergelijkt je stemming met slaap, cafeïne, alcohol, nicotinevormen, frisdrank, snoep, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.': 'Ce module facultatif compare votre humeur au sommeil, à la caféine, à l’alcool, aux formes de nicotine, aux boissons sucrées, aux sucreries, à l’activité et aux fibres renseignées. Il ne pose pas de diagnostic et n’utilise pas vos notes libres.',
+  'Boven je ingestelde cafeïnegrens': 'Au-dessus de votre limite de caféine choisie', 'Binnen je ingestelde cafeïnegrens': 'Dans votre limite de caféine choisie', 'Porties zijn zelf geregistreerd en meten geen cafeïnedosis of tijdstip. Deze vergelijking beschrijft alleen samen voorkomen en geen effect.': 'Les portions sont déclarées par vous et ne mesurent ni la dose de caféine ni l’heure de consommation. Cette comparaison décrit uniquement une coïncidence, pas un effet.',
+  'API-sleutel': 'Clé API', 'Model': 'Modèle', 'man': 'Homme'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Deze optionele module vergelijkt je stemming met slaap, cafeïne, alcohol, nicotinevormen, frisdrank, snoep, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.': 'Dieses optionale Modul vergleicht deine Stimmung mit Schlaf, Koffein, Alkohol, Nikotinformen, Softdrinks, Süßigkeiten, Bewegung und erfassten Ballaststoffen. Es stellt keine Diagnose und verwendet keine freien Notizen.',
+  'Boven je ingestelde cafeïnegrens': 'Über deinem gewählten Koffeinlimit', 'Binnen je ingestelde cafeïnegrens': 'Innerhalb deines gewählten Koffeinlimits', 'Porties zijn zelf geregistreerd en meten geen cafeïnedosis of tijdstip. Deze vergelijking beschrijft alleen samen voorkomen en geen effect.': 'Portionen sind selbst erfasst und messen weder Koffeindosis noch Zeitpunkt. Dieser Vergleich beschreibt nur ein gemeinsames Auftreten, keine Wirkung.',
+  'API-sleutel': 'API-Schlüssel', 'Model': 'Modell', 'man': 'Männlich'
+});

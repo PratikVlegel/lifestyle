@@ -20,7 +20,7 @@ function moodComparison(title, note, rows, groupA, groupB) {
 function renderMoodModule() {
   const enabled = DB.settings.moodInsights === true;
   let h = header('Stemming en gewoontes', 'Een rustige terugblik op je eigen registraties', true);
-  h += '<div class="card mood-intro"><h2>' + tr('Wat valt samen met hoe je je voelt?') + '</h2><p>' + tr('Deze optionele module vergelijkt je stemming met slaap, alcohol, nicotinevormen, frisdrank, snoep, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.') + '</p><label class="toggle"><input type="checkbox" data-chg="setMoodInsights"' + (enabled ? ' checked' : '') + '><span>' + tr('Persoonlijke vergelijkingen inschakelen') + '</span></label><p class="muted small">' + tr('Alles wordt op dit toestel berekend. Alleen dagen waarop beide waarden zijn ingevuld tellen mee. Uitgeschakelde of niet ingevulde waarden worden niet als nul gezien.') + '</p></div>';
+  h += '<div class="card mood-intro"><h2>' + tr('Wat valt samen met hoe je je voelt?') + '</h2><p>' + tr('Deze optionele module vergelijkt je stemming met slaap, cafeïne, alcohol, nicotinevormen, frisdrank, snoep, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.') + '</p><label class="toggle"><input type="checkbox" data-chg="setMoodInsights"' + (enabled ? ' checked' : '') + '><span>' + tr('Persoonlijke vergelijkingen inschakelen') + '</span></label><p class="muted small">' + tr('Alles wordt op dit toestel berekend. Alleen dagen waarop beide waarden zijn ingevuld tellen mee. Uitgeschakelde of niet ingevulde waarden worden niet als nul gezien.') + '</p></div>';
   if (DB.profile.sex === 'v') h += '<a class="card fb cycle-link" href="#/cycle"><b>' + tr('Cyclus en menstruatie') + '</b><p class="small">' + tr('Houd optioneel je eigen ervaringen bij en krijg steun die aansluit op wat jij registreert.') + '</p></a>';
   if (!enabled) {
     h += '<div class="card muted">' + tr('Je stemming wordt niet met andere gewoontes vergeleken. Schakel de optie hierboven in als je dat zelf wilt.') + '</div>';
@@ -49,6 +49,11 @@ function renderMoodModule() {
     }).filter(Boolean);
     const nicotine = v => v > 0, noNicotine = v => v === 0; nicotine.label = 'Nicotinegebruik geregistreerd'; noNicotine.label = 'Geen nicotine geregistreerd';
     cards += moodComparison('Nicotinevormen', 'Je kunt meerdere vormen registreren, zoals sigaretten, vapes, nicotinekauwgom en nicotinezakjes. Dit is alleen een vergelijking van je eigen registraties; gebruiksvorm, hoeveelheid en ontbrekende dagen kunnen verschillen.', nicotineRows, nicotine, noNicotine);
+    const caffeineRows = records.filter(x => isNum(x.d.caffeine) && x.d.caffeine >= 0).map(x => ({ x: x.d.caffeine, y: x.d.mood }));
+    const caffeineLimit = Number.isFinite(DB.goals.caffeineMax) ? DB.goals.caffeineMax : 4;
+    const aboveCaffeine = v => v > caffeineLimit, withinCaffeine = v => v <= caffeineLimit;
+    aboveCaffeine.label = 'Boven je ingestelde cafeïnegrens'; withinCaffeine.label = 'Binnen je ingestelde cafeïnegrens';
+    cards += moodComparison('Cafeïne', 'Porties zijn zelf geregistreerd en meten geen cafeïnedosis of tijdstip. Deze vergelijking beschrijft alleen samen voorkomen en geen effect.', caffeineRows, aboveCaffeine, withinCaffeine);
     const softRows = records.filter(x => isNum(x.d.softDrinkServings) && x.d.softDrinkServings >= 0).map(x => ({ x: x.d.softDrinkServings, y: x.d.mood }));
     const softAny = v => v > 0, softNone = v => v === 0; softAny.label = 'Frisdrank genoteerd'; softNone.label = 'Geen frisdrank genoteerd';
     cards += moodComparison('Frisdrank', 'Porties zijn zelf ingeschat; drankjes die je niet hebt geregistreerd blijven onbekend. Deze vergelijking beschrijft samen voorkomen en geen effect.', softRows, softAny, softNone);
