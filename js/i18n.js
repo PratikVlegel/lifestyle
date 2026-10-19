@@ -2179,4 +2179,5 @@ const DUTCH_SOURCE_TRANSLATIONS = {
   'No weigh-ins recorded.':'Er zijn geen wegingen geregistreerd.'
 };
 Object.assign(UI_TRANSLATIONS['nl-BE'] || (UI_TRANSLATIONS['nl-BE'] = {}), DUTCH_SOURCE_TRANSLATIONS);
+Object.assign(UI_EXTRA_TRANSLATIONS['nl-BE'] || (UI_EXTRA_TRANSLATIONS['nl-BE'] = {}), DUTCH_SOURCE_TRANSLATIONS);
 if (currentLocale() === 'nl-BE') applyLocale();
