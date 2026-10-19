@@ -17,7 +17,7 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport'].includes(page)) || (el.dataset.tab === 'meer' && page === 'train') || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -31,6 +31,7 @@ function render() {
       case 'prep': return renderPrep(a);
       case 'inzicht': return renderInsights();
       case 'meer': return renderMore(a);
+      case 'train': return renderTrainingPlan();
       case 'intake': return renderIntake(a || '1');
       case 'bieb': return renderLibrary();
       case 'recepten': return renderRecipes();
@@ -739,7 +740,7 @@ function renderInsights() {
   h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.</p>';
   h += '<h2 class="sec">Diepere analyse met AI</h2>';
   if (DB.settings.apiKey) {
-    h += '<div class="card"><label class="fld"><span>Vraag (optioneel)</span><textarea id="aiq" rows="2" placeholder="bv. Waarom voel ik me op woensdag zo moe?"></textarea></label><button class="btn" data-act="runAI">Analyseer mijn laatste 3 weken</button><div id="aiout"></div></div>';
+    h += '<div class="card"><p class="muted small">Als je analyseert, stuurt de app je profiel en maximaal 21 dagen aan relevante gegevens — inclusief notities — naar Anthropic.</p><label class="fld"><span>Vraag (optioneel)</span><textarea id="aiq" rows="2" placeholder="bv. Waarom voel ik me op woensdag zo moe?"></textarea></label><button class="btn" data-act="runAI">Analyseer mijn laatste 3 weken</button><div id="aiout"></div></div>';
   } else {
     h += '<p class="card muted small">Stel een eigen Claude API-sleutel in bij Meer → AI om hier op knop een diepere analyse te vragen. Zonder sleutel kan je de samenvatting delen en in een chat plakken.</p>';
   }
@@ -775,6 +776,7 @@ function renderMore(sub) {
   let h = header('Meer', '');
   if (DB.settings.admin) h += '<a class="card fb wk" href="#/uitnodigen"><b>Vrienden uitnodigen</b><p class="small">Maak een persoonlijke code en stuur de uitnodiging meteen door.</p></a>';
   const G = DB.goals, P = DB.profile, S = DB.settings;
+  h += '<a class="card fb" href="#/train"><b>Trainingsplan maken</b><p class="small">Kies een doel, niveau, materiaal en je beschikbare momenten.</p></a>';
   h += '<div class="card"><h3>Herinneringen</h3><p class="muted small">Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.</p>';
   h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="aan"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(r.label) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="verwijder">✕</button></div>').join('');
   h += '<button class="btn ghost" data-act="remAdd">+ herinnering</button>';
@@ -792,13 +794,13 @@ function renderMore(sub) {
     gfield('settings.glassMl', 'Eén glas = ml', S.glassMl) + '</div>' +
     '<label class="fld"><span>Context voor analyses (medisch, werk, gewoontes)</span><textarea rows="4" data-chg="setG" data-p="profile.notes">' + esc(P.notes || '') + '</textarea></label></div>';
 
-  h += '<div class="card"><h3>Gedeelde bibliotheek</h3><p class="muted small">Producten (naam, merk, barcode, etiketwaarden) worden gedeeld met iedereen die de app gebruikt, ook over je eigen toestellen heen. Je dagboek, gewicht en notities blijven altijd alleen op je gsm.</p>' +
-    (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> Mijn producten delen en gedeelde producten ophalen</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">Bibliotheek openen</a><button class="btn ghost" data-act="syncNow">Nu bijwerken</button></div>' : '<p class="note">Niet ingesteld.</p>') + '</div>';
-  h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. Je betaalt per gebruik; één analyse kost meestal een paar cent. De sleutel blijft op dit toestel en zit niet in back-ups.</p>' +
+  h += '<div class="card"><h3>Gedeelde bibliotheek</h3><p class="muted small">Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.</p>' +
+    (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> Mijn productbibliotheek synchroniseren (producten delen en ophalen)</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">Bibliotheek openen</a><button class="btn ghost" data-act="syncNow">Nu bijwerken</button></div>' : '<p class="note">Niet ingesteld.</p>') + '</div>';
+  h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. De analyse stuurt je profiel en maximaal 21 dagen aan relevante dagboekgegevens, inclusief notities, naar Anthropic. Een etiketfoto wordt meegestuurd; van een markdown-bestand worden maximaal 150.000 tekens verwerkt en verstuurd. Je betaalt per gebruik. De sleutel wordt lokaal in je browser opgeslagen en zit niet in back-ups.</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
 
-  h += '<div class="card"><h3>Back-up en import</h3><p class="muted small">Alles staat enkel op deze gsm. Maak geregeld een back-up (bv. wekelijks naar Drive).</p>' +
+  h += '<div class="card"><h3>Back-up en import</h3><p class="muted small">Je dagboek staat lokaal in deze browser; een back-up maak je zelf. Wie toegang heeft tot dezelfde browseropslag kan de gegevens daar ook openen. Gedeelde bibliotheekgegevens en invoer die je bewust naar AI stuurt, staan buiten die lokale opslag.</p>' +
     '<div class="inrow wrap"><button class="btn" data-act="exportData">Back-up maken</button><label class="btn ghost">Back-up of dagboek importeren<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
     '<div class="inrow wrap"><label class="btn ghost">Markdown-dagboek inlezen (AI)<input type="file" accept=".md,.txt,text/plain,text/markdown" hidden data-chg="importMd"></label><button class="btn ghost" data-act="shareWeek">Weeksamenvatting delen</button></div>' +
     '<div class="inrow wrap"><a class="btn ghost" href="#/rapport">Rapport voor diëtist, psycholoog, coach of arts</a></div>' +
@@ -862,9 +864,30 @@ async function runDiag() {
   if (el) el.innerHTML = out.map(d => '<div class="tr"><span>' + (d[1] ? '✓ ' : '✗ ') + esc(d[0]) + '</span><small>' + esc(d[2]) + '</small></div>').join('');
 }
 function gfield(p, l, v, type) { return '<label class="fld"><span>' + l + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="setG" data-p="' + p + '"></label>'; }
+const NUM_LIMITS = {
+  'profile.age': [0, 120], 'profile.heightCm': [0, 300], 'profile.startWeight': [0, 500], weight: [0, 500],
+  'goals.kcal': [0, 15000], 'goals.protein': [0, 1000], 'goals.fiber': [0, 1000], 'goals.waterMl': [0, 30000],
+  'goals.stepsMin': [0, 200000], 'goals.stepsMax': [0, 200000], 'goals.sleepH': [0, 24], 'goals.caffeineMax': [0, 100],
+  'settings.glassMl': [1, 10000]
+};
+function numericValue(el) { return el.value === '' ? null : Number(String(el.value).replace(',', '.')); }
+function numericError(path, value, data) {
+  if (value === null) return '';
+  if (!Number.isFinite(value)) return 'Vul een geldig getal in.';
+  const limit = NUM_LIMITS[path];
+  if (limit && (value < limit[0] || value > limit[1])) return 'Kies een waarde tussen ' + limit[0] + ' en ' + fmtNum(limit[1]) + '.';
+  if (path === 'goals.stepsMin' && isNum(data.goals.stepsMax) && value > data.goals.stepsMax) return 'Stappen minimum mag niet hoger zijn dan het maximum.';
+  if (path === 'goals.stepsMax' && isNum(data.goals.stepsMin) && value < data.goals.stepsMin) return 'Stappen maximum mag niet lager zijn dan het minimum.';
+  return '';
+}
 ACT.setG = el => {
   const [a, b] = el.dataset.p.split('.');
-  let v = el.value; if (el.type === 'number') v = v === '' ? null : Number(v.replace(',', '.'));
+  let v = el.value;
+  if (el.type === 'number') {
+    v = numericValue(el);
+    const err = numericError(el.dataset.p, v, DB);
+    if (err) { el.value = DB[a][b] ?? ''; toast(err); return; }
+  }
   DB[a][b] = v; save(); toast('Bewaard');
 };
 ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); };
@@ -977,7 +1000,15 @@ function renderIntake(step) {
 function ifield(p, l, v, type) { return '<label class="fld"><span>' + l + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="intakeSet" data-p="' + p + '"></label>'; }
 ACT.intakeSet = el => {
   const parts = el.dataset.p.split('.');
-  let v = el.value; if (el.type === 'number') v = v === '' ? null : Number(v.replace(',', '.'));
+  let v = el.value;
+  if (el.type === 'number') {
+    v = numericValue(el);
+    const err = numericError(el.dataset.p, v, INTAKE);
+    if (err) {
+      const previous = parts.length === 1 ? INTAKE[parts[0]] : INTAKE[parts[0]][parts[1]];
+      el.value = previous ?? ''; toast(err); return;
+    }
+  }
   if (parts.length === 1) INTAKE[parts[0]] = v; else INTAKE[parts[0]][parts[1]] = v;
 };
 ACT.intakeRem = el => { const r = INTAKE.reminders[el.dataset.i]; r[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value; };
@@ -1011,7 +1042,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.4.0';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

@@ -27,6 +27,7 @@ function defaultData() {
       { id: 'r4', label: 'Dagopname', time: '21:00', kind: 'dag', on: true }
     ],
     settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, glassMl: 250, theme: 'auto' },
+    training: { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, generated: null },
     days: {},
     preps: [],
     foods: [],
@@ -49,6 +50,8 @@ function migrate(d) {
   out.profile = Object.assign(defaultData().profile, d.profile || {});
   out.goals = Object.assign(defaultData().goals, d.goals || {});
   out.settings = Object.assign(defaultData().settings, d.settings || {});
+  out.training = Object.assign(defaultData().training, d.training || {});
+  out.training.days = Array.isArray(out.training.days) ? out.training.days : ['ma', 'wo', 'vr'];
   out.days = d.days || {};
   out.preps = d.preps || [];
   out.foods = d.foods || [];

@@ -1,5 +1,5 @@
-/* Gedeelde productenbibliotheek via Supabase.
-   Alleen producten (etiketwaarden) gaan online. Het dagboek zelf blijft op het toestel. */
+/* Gedeelde producten, mealprep-recepten, beoordelingen en foto's via Supabase.
+   Het dagboek zelf blijft lokaal; AI-acties sturen de nodige invoer naar Anthropic. */
 'use strict';
 
 const AUTH_KEY = 'vd-auth';

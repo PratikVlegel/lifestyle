@@ -9,7 +9,7 @@ function renderInvite(msg) {
   h += '<div class="card"><label class="fld"><span>Uitnodigingscode</span><input id="invcode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="bv. VRIEND-ABCD-EFGH" value="' + esc(DB.settings.pendingCode || '') + '"></label>' +
     (msg ? '<p class="note">' + esc(msg) + '</p>' : '') +
     '<button class="btn big" data-act="redeem">Doorgaan</button>' +
-    '<p class="muted small">Je hebt hiervoor één keer internet nodig. Daarna werkt de app ook offline. Je dagboek blijft altijd op je eigen gsm; alleen producten en recepten die je deelt, gaan naar de gedeelde bibliotheek.</p></div>';
+    '<p class="muted small">Je hebt hiervoor één keer internet nodig. Daarna werkt de app ook offline. Je dagboek blijft lokaal in deze browser. Producten, gedeelde recepten en beoordelingen gaan naar de bibliotheek als je ze deelt; receptfoto’s zijn via hun openbare afbeeldingslink bereikbaar. AI-acties sturen de gebruikte invoer naar Anthropic.</p></div>';
   view().innerHTML = h;
   $('nav.tabs').hidden = true;
 }

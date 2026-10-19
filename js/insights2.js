@@ -195,18 +195,19 @@ function dayComplete(d) {
 }
 
 /* Tip van de dag: wisselt dagelijks, en kiest bij voorkeur iets dat bij je cijfers past. */
+/* Beweegrichtlijn voor volwassenen: https://www.cdc.gov/physical-activity-basics/guidelines/adults.html */
 const TIPS = [
-  { t: 'eiwit', x: 'Een eiwitrijk ontbijt (20–30 g) geeft bij veel mensen minder trek later op de dag.' },
-  { t: 'eiwit', x: 'Skyr, kwark of hüttenkäse zijn makkelijke eiwitbronnen voor een tussendoortje: ±10 g eiwit per 100 g.' },
+  { t: 'eiwit', x: 'Als je ontbijt eet, kan een eiwitbron (bv. ei, yoghurt of bonen) helpen om de maaltijd vullender te maken. Kijk wat voor jou werkt.' },
+  { t: 'eiwit', x: 'Skyr, kwark en hüttenkäse kunnen eiwitrijke tussendoortjes zijn. De hoeveelheid verschilt per merk: kijk even op het etiket.' },
   { t: 'vezels', x: 'Peulvruchten (bonen, linzen, kikkererwten) leveren vezels én eiwit; een blik in je mealprep is genoeg.' },
   { t: 'vezels', x: 'Laat de schil aan aardappelen en krieltjes: dat scheelt gemakkelijk een paar gram vezels.' },
-  { t: 'water', x: 'Zet bij elke check-in een glas water klaar; zo haal je 2 liter zonder erbij na te denken.' },
-  { t: 'water', x: 'Dorst voelt soms als honger. Een glas water en tien minuten wachten helpt je het verschil te voelen.' },
-  { t: 'slaap', x: 'Cafeïne werkt 5–6 uur na. Je laatste koffie vóór 14 u geeft je nachtrust de beste kans.' },
-  { t: 'slaap', x: 'Een vast opstaanuur, ook in het weekend, maakt je slaap vaak stabieler dan vroeger gaan slapen.' },
-  { t: 'slaap', x: 'Na een korte nacht is meer honger normaal: je hormonen sturen dat. Plan die dag een stevige lunch.' },
-  { t: 'cpap', x: 'Met CPAP de hele nacht slaap je dieper; zet het masker klaar naast je kussen zodat het een gewoonte wordt.' },
-  { t: 'stappen', x: 'Tien minuten wandelen na een maaltijd geeft ±1.000 stappen en vlakt je bloedsuiker af.' },
+  { t: 'water', x: 'Zet bij een check-in een glas water klaar als geheugensteun. Hoeveel je nodig hebt verschilt per persoon, dag en omstandigheden.' },
+  { t: 'water', x: 'Twijfel je of je dorst hebt? Neem gerust wat water. Heb je daarna nog honger, eet dan gewoon iets.' },
+  { t: 'slaap', x: 'Cafeïne kan nog uren invloed hebben op je slaap, en dat verschilt per persoon. Merk je effect, probeer dan je laatste koffie wat vroeger te nemen.' },
+  { t: 'slaap', x: 'Een regelmatig slaap- én opstaantijdstip kan helpen om een vaste routine op te bouwen. Kies tijden die bij je leven passen.' },
+  { t: 'slaap', x: 'Een korte nacht kan bij sommige mensen de eetlust of voedselkeuzes beïnvloeden. Eet de volgende dag gewoon regelmatig; compenseren hoeft niet.' },
+  { t: 'cpap', x: 'Gebruik CPAP zoals afgesproken met je zorgverlener. Het masker en de slang vooraf klaarleggen kan de avondroutine makkelijker maken.' },
+  { t: 'stappen', x: 'Een wandeling na een maaltijd telt mee als beweging. Tien minuten is al een haalbaar begin; je hoeft niet meteen een lange wandeling te doen.' },
   { t: 'stappen', x: 'Bellen? Doe het rechtstaand of al wandelend. Kleine stukjes tellen op.' },
   { t: 'avond', x: 'Avondtrek bouwt zich op overdag. Kijk eerder naar je ontbijt en lunch dan naar wilskracht om 22 u.' },
   { t: 'avond', x: 'Zin in iets na het avondeten? Kies vooraf wat het mag zijn (bv. skyr met fruit), zodat het geen impuls wordt.' },
@@ -214,15 +215,22 @@ const TIPS = [
   { t: 'mealprep', x: 'Zijn je porties moeilijk op te eten? Verdeel dezelfde pot over één portie meer; zo blijft elke maaltijd haalbaar.' },
   { t: 'mealprep', x: 'Bewaar saus apart van rijst of pasta; zo blijft je mealprep lekkerder tot dag 4.' },
   { t: 'mealprep', x: 'Wissel elke week minstens één prep. Variatie maakt het makkelijker om vol te houden.' },
-  { t: 'alcohol', x: 'Een glas water tussen elk alcoholisch drankje beperkt de kater en de trek de dag erna.' },
-  { t: 'alcohol', x: 'Eet een volwaardige maaltijd vóór een avond uit; dat voorkomt de grote honger op de terugweg.' },
+  { t: 'alcohol', x: 'Water tussendoor kan helpen om je vocht aan te vullen, maar voorkomt geen kater. Minder alcohol drinken verlaagt de blootstelling.' },
+  { t: 'alcohol', x: 'Ga niet op een lege maag drinken. Een maaltijd vooraf kan helpen om niet tegelijk met alcohol ook met flinke honger te starten.' },
   { t: 'stemming', x: 'Op zware werkdagen helpt een vaste pauze buiten (5 minuten) meer dan je denkt.' },
   { t: 'stemming', x: 'Noteer bij je dagopname kort waarom je je zo voelt. Na een paar weken zie je zelf de patronen.' },
   { t: 'registratie', x: 'Weet je iets niet meer? Kies gerust "onbekend". Eerlijk onbekend is beter dan een gok.' },
   { t: 'registratie', x: 'Foto van je bord in je galerij? Dat helpt om later een maaltijd juist in te vullen.' },
   { t: 'gewicht', x: 'Gewicht schommelt 1–2 kg per dag door vocht en zout. Kijk naar het weekgemiddelde, niet naar één ochtend.' },
-  { t: 'beweging', x: 'Krachttraining twee keer per week helpt je spieren te behouden, ook als je weinig wandelt.' },
-  { t: 'vapen', x: 'Merk je dat je meer vapet op drukke dagen? Probeer bij de drang eerst drie diepe ademhalingen.' }
+  { t: 'beweging', x: 'Voor volwassenen is een richtpunt 150 minuten matig intensieve beweging per week (of 75 minuten intensief), plus spierversterkende activiteit op minstens 2 dagen. Bouw daar rustig naartoe.' },
+  { t: 'beweging', x: 'Korte beweegmomenten tellen op. Verdeel je beweging gerust over de week en begin met iets dat in je agenda past.' },
+  { t: 'beweging', x: 'Begin je met krachttraining? Start licht en verhoog het gewicht, de herhalingen of de moeilijkheid pas geleidelijk als de oefening goed blijft voelen.' },
+  { t: 'beweging', x: 'Een haalbaar schema bevat ook ruimte voor herstel. Je hoeft een gemiste training niet in te halen door de volgende sessie extra zwaar te maken.' },
+  { t: 'beweging', x: 'Meer bewegen hoeft niet meteen sporten te betekenen: wandelen, fietsen en actief tuinieren tellen ook mee.' },
+  { t: 'stemming', x: 'Maak een gewoonte concreet: kies vooraf wanneer en waar je een korte wandeling of training doet. Een kleine afspraak is makkelijker te herhalen.' },
+  { t: 'gewicht', x: 'Een losse weging zegt weinig over de trend. Als wegen voor jou passend is, vergelijk dan metingen onder gelijkaardige omstandigheden en kijk naar meerdere weken.' },
+  { t: 'registratie', x: 'Een onvolledige dag is nog altijd bruikbare informatie. Vul in wat je weet en laat de rest onbekend.' },
+  { t: 'vapen', x: 'Merk je dat je meer vapet op drukke dagen? Noteer kort wat eraan voorafging; zo ontdek je welke momenten of situaties je triggeren.' }
 ];
 function tipOfDay() {
   const recent = daysWith(14, completeKey());
