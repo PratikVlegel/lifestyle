@@ -684,7 +684,12 @@ function renderDays() {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
     const wellbeing = [isNum(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isNum(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isNum(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
     const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.map(v => tr(NICOTINE_LABELS[v] || v)).join(', ') : tr('Geen nicotine')) : d.nicotineForms === null ? '' : d.vape === 'niet' ? tr('Geen nicotine') : Object.hasOwn({ 'paar keer': 1, 'om de 3 u': 1, 'om de 2 u': 1, 'elk uur': 1 }, d.vape) ? tr('Vape') : '';
-    const context = [isNum(d.sleepH) ? d.sleepH + ' ' + tr('u slaap') : '', isNum(d.steps) ? fmtNum(d.steps) + ' ' + tr('stappen') : '', isNum(d.weight) ? d.weight + ' kg' : '', isNum(d.alcohol) ? d.alcohol + ' ' + tr('glazen alcohol') : '', isNum(d.caffeine) ? trf('{count} koffieporties', { count: fmtNum(d.caffeine) }) : '', isNum(d.softDrinkServings) ? trf('{count} frisdrankporties', { count: fmtNum(d.softDrinkServings) }) : '', isNum(d.sweetsServings) ? trf('{count} porties zoetigheid', { count: fmtNum(d.sweetsServings) }) : '', nicotine].filter(Boolean).join(' · ');
+    const supplements = d.supplementsLogged === true
+      ? (Array.isArray(d.supplements) && d.supplements.length
+        ? esc(tr('Supplementen')) + ': ' + d.supplements.slice(0, 2).map(s => esc(String(s && s.name || ''))).filter(Boolean).join(', ') + (d.supplements.length > 2 ? ' +' + (d.supplements.length - 2) : '')
+        : tr('Vandaag geen supplementen'))
+      : '';
+    const context = [isNum(d.sleepH) ? d.sleepH + ' ' + tr('u slaap') : '', isNum(d.steps) ? fmtNum(d.steps) + ' ' + tr('stappen') : '', isNum(d.weight) ? d.weight + ' kg' : '', isNum(d.alcohol) ? d.alcohol + ' ' + tr('glazen alcohol') : '', isNum(d.caffeine) ? trf('{count} koffieporties', { count: fmtNum(d.caffeine) }) : '', isNum(d.softDrinkServings) ? trf('{count} frisdrankporties', { count: fmtNum(d.softDrinkServings) }) : '', isNum(d.sweetsServings) ? trf('{count} porties zoetigheid', { count: fmtNum(d.sweetsServings) }) : '', nicotine, supplements].filter(Boolean).join(' · ');
     return '<a class="diary-day" href="#/dag/' + k + '"><div class="diary-day-head"><strong>' + fmtDay(k, true) + '</strong><span class="diary-day-kcal">' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('geen dagtotaal')) + '</span></div>' +
       '<div class="diary-day-section"><span class="diary-day-label">' + tr('Welzijn') + '</span><span class="diary-day-value ' + (wellbeing ? '' : 'muted') + '">' + (wellbeing || tr('Nog geen welzijnsgegevens')) + '</span></div>' +
       '<div class="diary-day-section"><span class="diary-day-label">' + tr('Gewoontes & lichaam') + '</span><span class="diary-day-value ' + (context ? '' : 'muted') + '">' + (context || tr('Nog geen slaap- of beweeggegevens')) + '</span></div>' +
@@ -1353,7 +1358,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.62';
+const APP_VERSION = '1.10.63';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
