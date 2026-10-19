@@ -616,15 +616,16 @@ function renderDay(k) {
   let h = header(fmtDay(k, true), 'Alles van deze dag', true);
   h += mealsList(d, k, true);
   h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + tr(SLOTS[s]).toLowerCase() + '</button>').join('') + '</div>';
-  const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow"><input type="' + (step === 'text' ? 'text' : 'number') + '" inputmode="decimal" step="' + (step || 'any') + '" data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">' + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
+  const dayTextLimits = { moodNote: 1000, cpap: 100, notes: 4000 };
+  const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow">' + (step === 'textarea' ? '<textarea rows="3" maxlength="' + dayTextLimits[n] + '" data-dk="' + n + '">' + (d[n] === undefined || d[n] === null ? '' : esc(d[n])) + '</textarea>' : '<input type="' + (step === 'text' ? 'text' : 'number') + '"' + (step === 'text' ? ' maxlength="' + (dayTextLimits[n] || 200) + '"' : ' inputmode="decimal" step="' + (step || 'any') + '"') + ' data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">') + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
   h += '<div class="card"><h3>' + tr('Beweging') + '</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">' + tr('+ activiteit') + '</button></div>';
   h += '<div class="card diary-wellbeing"><h3>' + tr('Welzijn') + '</h3><p class="muted small">' + tr('Optioneel: noteer hoe je je voelde. Je hoeft niet alles in te vullen.') + '</p><div class="grid2">' +
     f('mood', tr('Stemming'), '/10', '1') + f('energy', tr('Energie'), '/10', '1') + f('stress', tr('Stress / spanning'), '/10', '1') + '</div>' +
-    f('moodNote', tr('Wat droeg bij aan hoe je je voelde? (optioneel)'), '', 'text') +
+    f('moodNote', tr('Wat droeg bij aan hoe je je voelde? (optioneel)'), '', 'textarea') +
     '<p class="muted small">' + tr('Je stemming wordt niet automatisch met andere gegevens vergeleken. Dat kan je zelf apart inschakelen bij Stemming en gewoontes.') + '</p></div>' +
     '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
     f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
-    f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'text') +
+    f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'textarea') +
     (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
     '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">' + tr('Check-ins gedaan:') + ' ' + DB.reminders.filter(r => d.done[r.id]).map(r => reminderDisplayLabel(r.label)).join(', ') + '</p>';
@@ -636,7 +637,11 @@ ACT.saveDay = el => {
   const d = getDay(el.dataset.k, true);
   const fields = [...document.querySelectorAll('[data-dk]')];
   for (const i of fields) {
-    if (i.type !== 'number') continue;
+    if (i.type !== 'number') {
+      const limit = ({ moodNote: 1000, cpap: 100, notes: 4000 })[i.dataset.dk] || 200;
+      if (i.value.length > limit) { toast(trf('Tekst mag maximaal {count} tekens bevatten.', { count: limit })); i.focus(); return; }
+      continue;
+    }
     let v = numericValue(i);
     if (i.dataset.dk === 'waterMl' && v !== null) v = Math.round(v * 1000);
     const err = numericError(i.dataset.dk, v, DB);
@@ -919,7 +924,7 @@ function renderMore(sub) {
     (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches ? '<p class="muted small">' + tr('Voeg de app toe aan je beginscherm om push op iPhone of iPad te gebruiken.') + '</p>' : '') +
     '<h4>' + tr('Agenda-export (alternatief)') + '</h4><div class="inrow"><button class="btn ghost" data-act="ics">' + tr('Download agendabestand (.ics)') + '</button></div>' +
     (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '<p class="muted small">' + tr('iPhone: open het gedownloade bestand en tik op "Voeg alles toe" om de herinneringen in Agenda te zetten.') + '</p>' : '<div class="chips">' + DB.reminders.filter(r => r.on).map(r => '<a class="chip" href="' + alarmIntent(r) + '">⏰ ' + r.time + '</a>').join('') + '</div>') +
-    '<label class="fld"><span>' + tr('Adres van deze app (voor de links in de agenda)') + '</span><input type="url" value="' + esc(S.appUrl || appBase()) + '" data-chg="setAppUrl"></label>' +
+    '<label class="fld"><span>' + tr('Adres van deze app (voor de links in de agenda)') + '</span><input type="url" maxlength="2048" value="' + esc(S.appUrl || appBase()) + '" data-chg="setAppUrl"></label>' +
     '<label class="toggle"><input type="checkbox" ' + (S.notify ? 'checked' : '') + ' data-chg="setNotify"> ' + tr('Ook meldingen geven zolang de app open staat') + '</label></div>';
 
   h += '<div class="card"><h3>' + tr('Profiel en doelen') + '</h3><div class="grid2">' +
@@ -927,14 +932,14 @@ function renderMore(sub) {
     gfield('goals.kcal', tr('Kcal per dag'), G.kcal) + gfield('goals.protein', tr('Eiwit (g)'), G.protein) + gfield('goals.fiber', tr('Vezels (g)'), G.fiber) + gfield('goals.waterMl', tr('Water (ml)'), G.waterMl) +
     gfield('goals.stepsMin', tr('Stappen min.'), G.stepsMin) + gfield('goals.stepsMax', tr('Stappen max.'), G.stepsMax) + gfield('goals.sleepH', tr('Slaap (u)'), G.sleepH) + gfield('goals.caffeineMax', tr('Max. cafeïne (shots)'), G.caffeineMax) +
     gfield('settings.glassMl', tr('Eén glas = ml'), S.glassMl) + '</div>' +
-    '<label class="fld"><span>' + tr('Context voor analyses (medisch, werk, gewoontes)') + '</span><textarea rows="4" data-chg="setG" data-p="profile.notes">' + esc(P.notes || '') + '</textarea></label></div>';
+    '<label class="fld"><span>' + tr('Context voor analyses (medisch, werk, gewoontes)') + '</span><textarea rows="4" maxlength="4000" data-chg="setG" data-p="profile.notes">' + esc(P.notes || '') + '</textarea></label></div>';
 
   h += '<div class="card"><h3>' + tr('Gedeelde bibliotheek') + '</h3><p class="muted small">' + tr('Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.') + '</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> ' + tr('Mijn productbibliotheek synchroniseren (producten delen en ophalen)') + '</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">' + tr('Bibliotheek openen') + '</a><button class="btn ghost" data-act="syncNow">' + tr('Nu bijwerken') + '</button></div>' : '<p class="note">' + tr('Niet ingesteld.') + '</p>') + '</div>';
   h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
   h += '<div class="card"><h3>' + tr('AI (optioneel)') + '</h3><p class="muted small">' + tr('With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.') + ' ' + esc(aiDataDisclosure()) + ' ' + tr('You pay Anthropic for each request. Your key is stored in this browser and is excluded from backups.') + '</p>' +
-    '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
-    '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
+    '<label class="fld"><span>' + tr('API-sleutel') + '</span><input type="password" maxlength="512" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
+    '<label class="fld"><span>' + tr('Model') + '</span><input type="text" maxlength="100" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
 
   h += '<div class="card"><h3>' + tr('Back-up en import') + '</h3><p class="muted small">' + tr('Je dagboek staat lokaal in deze browser; een back-up maak je zelf. Wie toegang heeft tot dezelfde browseropslag kan de gegevens daar ook openen. Gedeelde bibliotheekgegevens en invoer die je bewust naar AI stuurt, staan buiten die lokale opslag.') + '</p>' +
     '<div class="inrow wrap"><button class="btn" data-act="exportData">' + tr('Back-up maken') + '</button><label class="btn ghost">' + tr('Back-up of dagboek importeren') + '<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
@@ -1007,7 +1012,7 @@ async function runDiag() {
   const el = $('#diag');
   if (el) el.innerHTML = out.map(d => '<div class="tr"><span>' + (d[1] ? '✓ ' : '✗ ') + esc(d[0]) + '</span><small>' + esc(d[2]) + '</small></div>').join('');
 }
-function gfield(p, l, v, type) { return '<label class="fld"><span>' + tr(l) + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="setG" data-p="' + p + '"></label>'; }
+function gfield(p, l, v, type) { const limit = p === 'profile.name' ? 80 : 100; return '<label class="fld"><span>' + tr(l) + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '"' + (type ? ' maxlength="' + limit + '"' : '') + ' value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="setG" data-p="' + p + '"></label>'; }
 const NUM_LIMITS = {
   'profile.age': [1, 120], 'profile.heightCm': [50, 300], 'profile.startWeight': [20, 500], weight: [20, 500],
   'goals.kcal': [0, 15000], 'goals.protein': [0, 1000], 'goals.fiber': [0, 1000], 'goals.waterMl': [0, 30000],
@@ -1036,6 +1041,9 @@ ACT.setG = el => {
     v = numericValue(el);
     const err = numericError(el.dataset.p, v, DB);
     if (err) { el.value = DB[a][b] ?? ''; toast(err); return; }
+  } else {
+    const limit = ({ 'profile.name': 80, 'profile.notes': 4000, 'settings.model': 100, 'settings.apiKey': 512, 'settings.appUrl': 2048 })[el.dataset.p];
+    if (limit && v.length > limit) { toast(trf('Tekst mag maximaal {count} tekens bevatten.', { count: limit })); el.value = DB[a][b] || ''; return; }
   }
   DB[a][b] = v; save(); toast('Bewaard');
 };
@@ -1055,7 +1063,15 @@ ACT.personalize = el => {
   if (!choices[key] || !choices[key].includes(el.value)) { render(); return; }
   DB.settings[key] = el.value; save(); applyPersonalSettings(); render();
 };
-ACT.setAppUrl = el => { DB.settings.appUrl = el.value.trim(); save(); };
+ACT.setAppUrl = el => {
+  const value = el.value.trim();
+  if (value.length > 2048) { toast(trf('Tekst mag maximaal {count} tekens bevatten.', { count: 2048 })); el.value = DB.settings.appUrl || appBase(); return; }
+  if (value) {
+    try { const parsed = new URL(value); if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('protocol'); }
+    catch (_) { toast(tr('Voer een geldige http(s)-URL in.')); el.value = DB.settings.appUrl || appBase(); return; }
+  }
+  DB.settings.appUrl = value; save();
+};
 ACT.setShare = el => { DB.settings.share = el.checked; save(); if (el.checked) cloudSync(false); };
 ACT.setNotify = async el => {
   if (el.checked) {
@@ -1214,7 +1230,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.19';
+const APP_VERSION = '1.10.20';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
