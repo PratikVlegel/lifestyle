@@ -1782,3 +1782,15 @@ Object.assign(UI_EXTRA_TRANSLATIONS['nl-BE'], {
   'duration missing for {count} sessions': 'duur ontbreekt bij {count} sessies',
   '{count} sessions; duration not recorded': '{count} sessies; duur niet geregistreerd'
 });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Water vandaag: {amount} l': 'Water today: {amount} L',
+  'Cafeïne vandaag: {count} porties': 'Caffeine logged today: {count} servings'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Water vandaag: {amount} l': 'Eau aujourd’hui : {amount} l',
+  'Cafeïne vandaag: {count} porties': 'Caféine notée aujourd’hui : {count} doses'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Water vandaag: {amount} l': 'Wasser heute: {amount} l',
+  'Cafeïne vandaag: {count} porties': 'Koffein heute erfasst: {count} Portionen'
+});

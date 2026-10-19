@@ -170,8 +170,8 @@ function kpiTile(key) {
 }
 ACT.openKpi = el => go('#/kpi/' + el.dataset.k);
 ACT.openCheckin = el => go('#/checkin/' + el.dataset.id);
-ACT.quickWater = () => { const d = getDay(todayKey(), true); d.waterMl = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; save(); toast('Water: ' + fmtNum(d.waterMl / 1000, 2) + ' l vandaag'); render(); };
-ACT.quickCoffee = () => { const d = getDay(todayKey(), true); d.caffeine = (isNum(d.caffeine) ? d.caffeine : 0) + 1; save(); toast('Cafeïne: ' + d.caffeine + ' shots vandaag'); render(); };
+ACT.quickWater = () => { const d = getDay(todayKey(), true); d.waterMl = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; save(); toast(trf('Water vandaag: {amount} l', { amount: fmtNum(d.waterMl / 1000, 2) })); render(); };
+ACT.quickCoffee = () => { const d = getDay(todayKey(), true); d.caffeine = (isNum(d.caffeine) ? d.caffeine : 0) + 1; save(); toast(trf('Cafeïne vandaag: {count} porties', { count: d.caffeine })); render(); };
 ACT.quickEat = () => openPicker(items => {
   const d = getDay(todayKey(), true);
   const slot = slotForNow();
@@ -1283,7 +1283,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.27';
+const APP_VERSION = '1.10.28';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
