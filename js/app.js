@@ -564,10 +564,13 @@ function renderDay(k) {
   h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + SLOTS[s].toLowerCase() + '</button>').join('') + '</div>';
   const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow"><input type="' + (step === 'text' ? 'text' : 'number') + '" inputmode="decimal" step="' + (step || 'any') + '" data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">' + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
   h += '<div class="card"><h3>' + tr('Beweging') + '</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">' + tr('+ activiteit') + '</button></div>';
-  h += '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
-    f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('energy', tr('Energie'), '/10', '1') + f('mood', tr('Stemming'), '/10', '1') + f('stress', tr('Stress / spanning'), '/10', '1') +
-    f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
-    f('cpap', 'CPAP', '', 'text') + f('vape', 'Vapen', '', 'text') + f('moodNote', 'Waarom zo (stemming)', '', 'text') + f('notes', 'Notitie', '', 'text') +
+  h += '<div class="card diary-wellbeing"><h3>' + tr('Welzijn') + '</h3><p class="muted small">' + tr('Optioneel: noteer hoe je je voelde. Je hoeft niet alles in te vullen.') + '</p><div class="grid2">' +
+    f('mood', tr('Stemming'), '/10', '1') + f('energy', tr('Energie'), '/10', '1') + f('stress', tr('Stress / spanning'), '/10', '1') + '</div>' +
+    f('moodNote', tr('Wat droeg bij aan hoe je je voelde? (optioneel)'), '', 'text') +
+    '<p class="muted small">' + tr('Je stemming wordt niet automatisch met andere gegevens vergeleken. Dat kan je zelf apart inschakelen bij Stemming en gewoontes.') + '</p></div>' +
+    '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
+    f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
+    f('cpap', 'CPAP', '', 'text') + f('vape', 'Vapen', '', 'text') + f('notes', tr('Notitie'), '', 'text') +
     (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
     '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">Check-ins gedaan: ' + DB.reminders.filter(r => d.done[r.id]).map(r => r.label).join(', ') + '</p>';
@@ -1105,7 +1108,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
