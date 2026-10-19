@@ -333,6 +333,8 @@ function renderGeneratedTraining(g) {
 }
 function draftPlanActions() { return '<div class="card plan-draft"><h3>Wil je dit schema volgen?</h3><p class="muted small">Start het om je trainingen af te vinken. Je kan het later pauzeren, hervatten of stopzetten.</p><button class="btn big" data-act="startTrainingPlan">Start dit schema</button><a class="link" href="#/schemas">Terug naar mijn schema’s</a></div>'; }
 function trTrainingText(value) {
+  const walk = String(value).match(/^(\d+) min op een matig tempo waarbij praten nog lukt\. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies\.$/);
+  if (walk) return trf('{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.', { minutes: walk[1] });
   const match = String(value).match(/^Kies (\d+(?:–\d+)?) pijnvrije bewegingen voor benen, heupen, duwen, trekken en romp met (.+?)\. Doe (1–2|2–3) beheerste sets; stop met 2–3 herhalingen over\.(.*)$/);
   if (!match) return tr(value);
   return trf('Kies {count} pijnvrije bewegingen voor benen, heupen, duwen, trekken en romp met {equipment}. Doe {sets} beheerste sets; stop met 2–3 herhalingen over.', { count: match[1], equipment: tr(match[2]), sets: match[3] }) + tr(match[4]);

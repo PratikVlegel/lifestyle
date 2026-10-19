@@ -268,7 +268,7 @@ function renderCheckin(rid, dateKey) {
     h += drinks();
   } else if (kind === 'dag') {
     const miss = ['ontbijt', 'lunch', 'avond'].filter(s => !(day && day.meals.some(m => m.slot === s)));
-    if (miss.length) h += '<p class="note">Nog niet ingevuld vandaag: ' + miss.map(s => SLOTS[s].toLowerCase()).join(', ') + '. <a href="#/dag/' + k + '">Aanvullen in het dagboek</a></p>';
+    if (miss.length) h += '<p class="note">' + tr('Nog niet ingevuld vandaag:') + ' ' + miss.map(s => tr(SLOTS[s]).toLowerCase()).join(', ') + '. <a href="#/dag/' + k + '">' + tr('Aanvullen in het dagboek') + '</a></p>';
     h += '<div class="card"><h3>Slaap (afgelopen nacht)</h3>' +
       field('sleepH', 'Hoeveel uur geslapen?', 'number', { unit: 'u', step: '0.25', unknown: 'onbekend', bare: true }) +
       choice('sleepQ', 'Hoe uitgerust?', ['slecht', 'matig', 'uitgerust', 'goed uitgerust']) +
@@ -570,7 +570,7 @@ function renderDay(k) {
     '<p class="muted small">' + tr('Je stemming wordt niet automatisch met andere gegevens vergeleken. Dat kan je zelf apart inschakelen bij Stemming en gewoontes.') + '</p></div>' +
     '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
     f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
-    f('cpap', 'CPAP', '', 'text') + f('vape', 'Vapen', '', 'text') + f('notes', tr('Notitie'), '', 'text') +
+    f('cpap', 'CPAP', '', 'text') + f('vape', tr('Vapen'), '', 'text') + f('notes', tr('Notitie'), '', 'text') +
     (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
     '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">Check-ins gedaan: ' + DB.reminders.filter(r => d.done[r.id]).map(r => r.label).join(', ') + '</p>';

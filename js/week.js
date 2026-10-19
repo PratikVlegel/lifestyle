@@ -37,11 +37,11 @@ function renderWeek(endArg) {
       return '<div class="tr"><span>' + tr(label) + '</span><b>' + (isNum(a) ? fmtV(name, a) : '–') + arrow + '</b><small class="muted" style="width:auto">' + (isNum(b) ? fmtV(name, b) : '–') + '</small></div>';
     }).join('') + '</div>';
   const notes = [];
-  if (isNum(cur.weight)) notes.push('Gewicht: weekgemiddelde ' + fmtNum(cur.weight, 1) + ' kg over ' + cur.weighings + ' weging' + (cur.weighings > 1 ? 'en' : '') + (isNum(prev.weight) ? ' (vorige week ' + fmtNum(prev.weight, 1) + ' kg)' : '') + '.');
-  notes.push('Registratie: ' + cur.complete + ' van de 7 dagen volledig' + (cur.complete >= 6 ? ', sterk!' : '.'));
-  if (cur.acts) notes.push(cur.acts + ' extra activiteit' + (cur.acts > 1 ? 'en' : '') + ' gelogd.');
-  if (cur.alcoholTotal) notes.push(cur.alcoholTotal + ' glazen alcohol deze week.');
-  if (cur.best) notes.push('Beste dag: ' + fmtDay(cur.best.k, true) + ' (stemming ' + cur.best.v + '/10).');
+  if (isNum(cur.weight)) notes.push(tr('Gewicht: weekgemiddelde') + ' ' + fmtNum(cur.weight, 1) + ' kg · ' + cur.weighings + ' ' + tr('metingen') + (isNum(prev.weight) ? ' (' + tr('vorige week') + ' ' + fmtNum(prev.weight, 1) + ' kg)' : '') + '.');
+  notes.push(tr('Registratie:') + ' ' + cur.complete + ' ' + tr('van de 7 dagen volledig') + (cur.complete >= 6 ? ', ' + tr('sterk!') : '.'));
+  if (cur.acts) notes.push(cur.acts + ' ' + tr(cur.acts > 1 ? 'extra activiteiten gelogd.' : 'extra activiteit gelogd.'));
+  if (cur.alcoholTotal) notes.push(cur.alcoholTotal + ' ' + tr('glazen alcohol deze week.') );
+  if (cur.best) notes.push(tr('Beste dag:') + ' ' + fmtDay(cur.best.k, true) + ' (' + tr('stemming') + ' ' + cur.best.v + '/10).');
   h += '<div class="card"><h3>' + tr('In het kort') + '</h3>' + notes.map(n => '<p class="small">' + esc(n) + '</p>').join('') + '</div>';
   const ins = buildInsights(14).filter(i => i.tone === 'tip').slice(0, 3);
   if (ins.length) h += '<h2 class="sec">' + tr('Om op te letten deze week') + '</h2>' + ins.map(insightCard).join('');

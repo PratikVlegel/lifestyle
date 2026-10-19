@@ -107,8 +107,8 @@ function reportHtml(aud, n) {
   const P = DB.profile, G = DB.goals, A = AUDIENCES[aud];
   const avgOf = name => avg(keys.map(k => dv(name, k)).filter(isNum));
   const cntOf = name => keys.filter(k => isNum(dv(name, k))).length;
-  const row = (l, v) => '<tr><td>' + esc(l) + '</td><td>' + v + '</td></tr>';
-  const sec = (t, body) => body ? '<section><h3>' + esc(t) + '</h3>' + body + '</section>' : '';
+  const row = (l, v) => '<tr><td>' + esc(tr(l)) + '</td><td>' + v + '</td></tr>';
+  const sec = (t, body) => body ? '<section><h3>' + esc(tr(t)) + '</h3>' + body + '</section>' : '';
   const tbl = rows => '<table>' + rows.filter(Boolean).join('') + '</table>';
   const mv = (name, extra) => { const v = avgOf(name); return isNum(v) ? fmtV(name, v) + ' <small>(' + cntOf(name) + ' d' + (extra ? ', ' + extra : '') + ')</small>' : '–'; };
   let h = '<header><h2>Rapport voor ' + esc(A.label.toLowerCase()) + '</h2><p>' + esc(P.name || '') + ' · ' + fmtDay(addDays(end, -(n - 1))) + ' – ' + fmtDay(end) + ' · ' + keys.length + ' dagen met gegevens</p><p class="small">Zelf geregistreerd. Kcal en voedingswaarden zijn ruwe schattingen; "–" = onbekend. Slaap hoort bij de nacht vóór de dag.</p></header>';
@@ -116,7 +116,7 @@ function reportHtml(aud, n) {
     if (part === 'profiel') h += sec('Profiel en doelen', '<p>' + esc([P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : ''].filter(Boolean).join(', ')) + '. Doelen: ' + G.kcal + ' kcal, ' + G.protein + ' g eiwit, ' + G.fiber + ' g vezels, ' + fmtNum(G.waterMl / 1000, 1) + ' l water, ' + G.stepsMin + '–' + G.stepsMax + ' stappen.</p>' + (P.notes ? '<p class="small">' + esc(P.notes) + '</p>' : ''));
     if (part === 'voeding') h += sec('Voeding (gemiddeld per volledige dag)', tbl([row('Kcal', mv('kcal')), row('Eiwit', mv('protein')), row('Vezels', mv('fiber')), row('Kcal vóór het avondeten', mv('dayKcal')), row('Kcal vanaf het avondeten', mv('eveKcal'))]));
     if (part === 'drinken') h += sec('Drinken', tbl([row('Water', mv('water')), row('Cafeïne', mv('caffeine')), row('Alcohol', mv('alcohol'))]));
-    if (part === 'maaltijden') h += sec('Wat er gegeten werd', '<table class="days">' + keys.slice().reverse().map(k => { const d = DB.days[k], kc = dayNutr(d, 'kcal'); return '<tr><td><b>' + fmtDay(k, true) + '</b><br><small>' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : 'kcal ?') + '</small></td><td>' + SLOT_ORDER.map(s => (d.meals || []).filter(m => m.slot === s).map(m => '<div><small>' + SLOTS[s] + (m.time ? ' ' + m.time : '') + ':</small> ' + (m.nothing ? 'niets' : esc(m.desc)) + (d.hunger && isNum(d.hunger[s]) ? ' <small>(honger ' + d.hunger[s] + '/5)</small>' : '') + '</div>').join('')).join('') + '</td></tr>'; }).join('') + '</table>');
+    if (part === 'maaltijden') h += sec('Wat er gegeten werd', '<table class="days">' + keys.slice().reverse().map(k => { const d = DB.days[k], kc = dayNutr(d, 'kcal'); return '<tr><td><b>' + fmtDay(k, true) + '</b><br><small>' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : 'kcal ?') + '</small></td><td>' + SLOT_ORDER.map(s => (d.meals || []).filter(m => m.slot === s).map(m => '<div><small>' + tr(SLOTS[s]) + (m.time ? ' ' + m.time : '') + ':</small> ' + (m.nothing ? tr('niets') : esc(m.desc)) + (d.hunger && isNum(d.hunger[s]) ? ' <small>(' + tr('honger') + ' ' + d.hunger[s] + '/5)</small>' : '') + '</div>').join('')).join('') + '</td></tr>'; }).join('') + '</table>');
     if (part === 'ritme') {
       const late = keys.filter(k => (DB.days[k].meals || []).some(m => m.slot === 'na' && !m.nothing)).length;
       const noLunch = keys.filter(k => (DB.days[k].meals || []).some(m => m.slot === 'lunch' && m.nothing)).length;

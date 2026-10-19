@@ -115,13 +115,13 @@ function stackChart(rows, opts) {
       const v = r.parts[s] || 0;
       if (!v) return;
       const y1 = y(acc + v), hh = y(acc) - y1;
-      g += '<rect class="s' + si + '" x="' + (x + bw * 0.15) + '" y="' + y1 + '" width="' + (bw * 0.7) + '" height="' + Math.max(0.5, hh - 0.6) + '"><title>' + fmtDay(r.k) + ' · ' + SLOTS[s] + ': ' + fmtNum(v) + ' kcal</title></rect>';
+      g += '<rect class="s' + si + '" x="' + (x + bw * 0.15) + '" y="' + y1 + '" width="' + (bw * 0.7) + '" height="' + Math.max(0.5, hh - 0.6) + '"><title>' + fmtDay(r.k) + ' · ' + tr(SLOTS[s]) + ': ' + fmtNum(v) + ' kcal</title></rect>';
       acc += v;
     });
     if (i % every === 0) g += '<text class="ax" x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + xLab(r.k, rows.length) + '</text>';
   });
   if (opts.goal) g += '<line class="goal" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(opts.goal) + '" y2="' + y(opts.goal) + '"/>';
-  const legend = '<div class="legend">' + SLOT_ORDER.map((s, si) => '<span><i class="sw s' + si + '"></i>' + SLOTS[s] + '</span>').join('') + '</div>';
+  const legend = '<div class="legend">' + SLOT_ORDER.map((s, si) => '<span><i class="sw s' + si + '"></i>' + tr(SLOTS[s]) + '</span>').join('') + '</div>';
   return svgEl(W, H, g, opts.label) + legend;
 }
 
