@@ -8,8 +8,9 @@ const TRAIN_DAYS = [
 ];
 const TRAIN_CATEGORIES = {
   general: { label: 'Algemeen doel', goals: { weight: 'Afvallen / fitter worden', general: 'Algemene conditie' } },
-  fitness: { label: 'Fitness', goals: { strength: 'Kracht opbouwen', interval: 'Conditie / interval' } },
+  fitness: { label: 'Fitness', goals: { strength: 'Kracht opbouwen', muscle: 'Spiermassa opbouwen', interval: 'Conditie / interval' } },
   running: { label: 'Lopen', goals: { runStart: 'Lopen rustig opbouwen', run5k: 'Toewerken naar 5 km' } },
+  recovery: { label: 'Terugkeer na revalidatie', goals: { rehab: 'Veilig terug naar bewegen' } },
   events: { label: 'Wedstrijd of evenement', goals: { race5k: '5 km-wedstrijd', race10k: '10 km-wedstrijd', half: 'Halve marathon', marathon: 'Marathon', race: 'Andere hardloopwedstrijd', hyrox: 'HYROX' } }
 };
 const TRAIN_GOALS = Object.assign({}, ...Object.values(TRAIN_CATEGORIES).map(c => c.goals));
@@ -22,9 +23,11 @@ function goalsInCategory(category) { return TRAIN_CATEGORIES[category]?.goals ||
 function maxTrainingDays(p) {
   const levelMax = TRAIN_MAX_DAYS[p.level] || 3;
   if (p.goal === 'runStart') return Math.min(levelMax, 3);
-  if (p.goal === 'strength') return Math.min(levelMax, p.level === 'beginner' ? 2 : p.level === 'intermediate' ? 3 : 4);
+  if (p.goal === 'rehab') return Math.min(levelMax, 3);
+  if (['strength', 'muscle'].includes(p.goal)) return Math.min(levelMax, p.level === 'beginner' ? 2 : p.level === 'intermediate' ? 3 : 4);
   if (['race5k', 'race10k', 'half', 'marathon', 'race'].includes(p.goal)) return Math.min(levelMax, p.goal === 'marathon' ? 4 : p.level === 'beginner' ? 3 : 4);
   if (p.goal === 'hyrox') return Math.min(levelMax, p.level === 'beginner' ? 3 : p.level === 'intermediate' ? 4 : 5);
+  if (p.goal === 'run5k') return Math.min(levelMax, p.level === 'beginner' ? 3 : 4);
   return Math.min(levelMax, p.level === 'beginner' ? 3 : 4);
 }
 function eventWeeksLeft(value) {
@@ -35,7 +38,7 @@ function eventWeeksLeft(value) {
   return Math.ceil((target - today) / 604800000);
 }
 function trainingData() {
-  const d = DB.training || (DB.training = { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, generated: null });
+  const d = DB.training || (DB.training = { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, rehabCleared: false, generated: null });
   if (!Object.hasOwn(TRAIN_CATEGORIES, d.category)) d.category = Object.keys(TRAIN_CATEGORIES).find(k => Object.hasOwn(TRAIN_CATEGORIES[k].goals, d.goal)) || 'general';
   if (!Object.hasOwn(TRAIN_GOALS, d.goal)) d.goal = 'general';
   if (!Object.hasOwn(goalsInCategory(d.category), d.goal)) d.category = Object.keys(TRAIN_CATEGORIES).find(k => Object.hasOwn(TRAIN_CATEGORIES[k].goals, d.goal)) || 'general';
@@ -44,6 +47,7 @@ function trainingData() {
   if (!['none', 'home', 'gym'].includes(d.equipment)) d.equipment = 'none';
   if (!['none', 'regularity', 'protein', 'fiber'].includes(d.nutritionFocus)) d.nutritionFocus = 'none';
   if (!['none', 'guideline', 'custom'].includes(d.activityGoal)) d.activityGoal = 'none';
+  d.rehabCleared = d.rehabCleared === true;
   d.weeklyActivityMinutes = Math.max(1, Math.min(2000, Number(d.weeklyActivityMinutes) || 150));
   if (typeof d.eventDate !== 'string') d.eventDate = '';
   if (typeof d.eventName !== 'string') d.eventName = '';
@@ -72,6 +76,9 @@ function renderTrainingPlan() {
   h += '<label class="fld"><span>Voedingsfocus (optioneel)</span><select data-chg="trainingField" data-f="nutritionFocus">' + [['none', 'Geen'], ['regularity', 'Regelmaat in maaltijden'], ['protein', 'Eiwitbron bij maaltijden'], ['fiber', 'Meer vezelrijke keuzes']].map(([k, l]) => '<option value="' + k + '"' + (p.nutritionFocus === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><small class="muted">Dit geeft een aandachtspunt, geen dieet- of calorievoorschrift.</small></label>';
   h += '<label class="fld"><span>Beweegdoel (optioneel)</span><select data-chg="trainingField" data-f="activityGoal">' + [['none', 'Geen'], ['guideline', 'Richtlijn voor volwassenen'], ['custom', 'Eigen weekdoel in minuten']].map(([k, l]) => '<option value="' + k + '"' + (p.activityGoal === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label>';
   if (p.activityGoal === 'custom') h += '<label class="fld"><span>Minuten beweging per week</span><input type="number" min="1" max="2000" step="5" value="' + esc(p.weeklyActivityMinutes) + '" data-chg="trainingField" data-f="weeklyActivityMinutes"><small class="muted">Vul je eigen haalbare streefdoel in; wandelen en fietsen tellen ook mee.</small></label>';
+  if (p.goal === 'rehab') h += '<div class="card note"><b>Alleen met akkoord van je behandelaar</b><p class="small">Deze app stelt geen diagnose of revalidatie-oefeningen op. Gebruik dit alleen als arts of kinesitherapeut je toestemming gaf om te trainen; volg hun oefeningen, grenzen en opbouw.</p><label class="check"><input type="checkbox" data-chg="trainingField" data-f="rehabCleared"' + (p.rehabCleared ? ' checked' : '') + '><span class="n">Mijn behandelaar heeft bewegen/trainen toegestaan en ik volg diens richtlijnen</span></label></div>';
+  h += '<p class="muted small">Persoonlijke instellingen: je profiel kan geslacht en lichaamsgewicht bevatten, maar bepaalt niet automatisch een ander trainingsschema. Doel, ervaring, beschikbare dagen, tijd en materiaal sturen de oefeningen. Afvallen of spiermassa opbouwen geeft geen gegarandeerd resultaat of automatisch calorievoorschrift.</p>';
+  if (['runStart', 'run5k'].includes(p.goal)) h += '<p class="muted small">Voor looptrainingen plan je minstens één volledige rustdag tussen twee gekozen loopdagen.</p>';
   if (p.category === 'events') {
     if (p.goal !== 'hyrox') h += '<label class="fld"><span>Wat loop je nu comfortabel als langste afstand? (km)</span><input type="number" min="0" max="100" step="0.5" value="' + esc(p.comfortableRunKm) + '" data-chg="trainingField" data-f="comfortableRunKm"><small class="muted">Gebruik 0 als je nu nog niet loopt. Wedstrijdopbouw wordt alleen getoond als je huidige basis erbij past.</small></label>';
     h += '<div class="grid2"><label class="fld"><span>Gemiddeld aantal loopkilometers per week in de laatste 4 weken</span><input type="number" min="0" max="250" step="1" value="' + esc(p.weeklyRunKm) + '" data-chg="trainingField" data-f="weeklyRunKm"><small class="muted">Een schatting is genoeg; vul 0 in als je niet hebt gelopen.</small></label>' +
@@ -85,6 +92,7 @@ function renderTrainingPlan() {
   view().innerHTML = h;
 }
 function renderGeneratedTraining(g) {
+  if (g.programType === 'progressive') return renderProgressiveProgram(g);
   if (g.weeks) return renderEventProgram(g);
   const sessions = (g.sessions || []).map(s => '<div class="card"><h3>' + esc(s.day) + ' · ' + esc(s.title) + '</h3><p>' + esc(s.detail) + '</p><p class="muted small">' + g.minutes + ' min · ' + esc(s.effort) + '</p></div>').join('');
   const focus = { regularity: 'Kies een eetmoment dat vaak wegvalt en maak daar een haalbare routine van.', protein: 'Voeg bij een of meer maaltijden een eiwitbron toe die je graag eet.', fiber: 'Voeg geleidelijk een vezelrijke keuze toe, zoals fruit, groente, volkoren of peulvruchten.' }[g.nutritionFocus];
@@ -93,6 +101,16 @@ function renderGeneratedTraining(g) {
   const place = g.access === 'yes' ? 'met toegang tot fitness' : 'zonder fitness';
   const timing = { any: 'geen tijdsvoorkeur', morning: 'bij voorkeur in de ochtend', afternoon: 'bij voorkeur in de middag', evening: 'bij voorkeur in de avond' }[g.timeOfDay] || 'geen tijdsvoorkeur';
   return '<h2 class="sec">Jouw weekindeling</h2><div class="card"><p><b>' + esc((g.goal === 'race' && g.eventName) ? g.eventName : TRAIN_GOALS[g.goal] || TRAIN_GOALS.general) + '</b> · ' + esc(levels[g.level] || 'beginner') + ' · ' + g.sessions.length + ' trainingen</p><p class="muted small">' + g.sessions.length * g.minutes + ' minuten gepland deze week · ' + place + ' · ' + timing + '. Herhaal deze basisweek en verhoog de belasting pas geleidelijk wanneer het goed voelt. Pas dagen aan als je agenda verandert.</p></div>' + sessions + (focus ? '<div class="card"><h3>Optionele voedingsfocus</h3><p>' + focus + '</p></div>' : '') + (activityGoal ? '<div class="card"><h3>Optioneel beweegdoel</h3><p>' + activityGoal + '</p></div>' : '');
+}
+function renderProgressiveProgram(g) {
+  const cards = g.weeks.map(w => '<details class="card train-week"' + (w.number === 1 ? ' open' : '') + '><summary><b>Week ' + w.number + ' · ' + esc(w.phase) + '</b><span class="muted small">' + esc(w.focus) + '</span></summary>' + w.sessions.map(s => '<div class="train-session"><b>' + esc(s.day) + ' · ' + esc(s.title) + '</b><p>' + esc(s.detail) + '</p></div>').join('') + '</details>').join('');
+  const caution = g.goal === 'rehab' ? '<div class="card note"><b>Revalidatie blijft onder regie van je behandelaar</b><p class="small">Dit is alleen een weekindeling om de door je behandelaar goedgekeurde activiteiten te plannen. De app verhoogt geen oefeningen, gewicht of intensiteit. Stop en vraag advies bij scherpe/toenemende pijn, terugkerende zwelling of verlies van beweging/kracht.</p><p class="muted small">Richtlijn: <a href="https://leedscommunityhealthcare.nhs.uk/our-services-a-z/musculoskeletal-msk/return-to-activity-or-sport-after-injury/" target="_blank" rel="noopener">Leeds Community Healthcare NHS · terugkeer na blessure</a></p></div>' : '<div class="card"><p class="muted small">Verhoog alleen als je goed herstelt; herhaal gerust een week. Rustdagen zijn onderdeel van het plan. Bij pijn of een medische aandoening: overleg met een zorgverlener.</p></div>';
+  const source = g.goal === 'runStart' ? '<p class="muted small">Opbouwprincipe: afwisselend wandelen en lopen met rust tussen loopdagen, zoals bij <a href="https://www.nhs.uk/better-health/get-active/get-running-with-couch-to-5k/couch-to-5k-running-plan/" target="_blank" rel="noopener">NHS Couch to 5K</a>. Dit is een eigen, vereenvoudigde planning en geen kopie van het NHS-programma.</p>' : ['strength', 'muscle'].includes(g.goal) ? '<p class="muted small">Krachtprincipes afgestemd op de <a href="https://acsm.org/resistance-training-guidelines-update-2026/" target="_blank" rel="noopener">ACSM-richtlijn 2026</a>: train grote spiergroepen minstens 2 dagen per week, kies een haalbare belasting en bouw geleidelijk op. Je hoeft niet tot spierfalen te trainen.</p>' : '';
+  const nutritionFocus = { regularity: 'Kies een eetmoment dat vaak wegvalt en maak daar een haalbare routine van.', protein: 'Voeg bij een of meer maaltijden een eiwitbron toe die je graag eet.', fiber: 'Voeg geleidelijk een vezelrijke keuze toe, zoals fruit, groente, volkoren of peulvruchten.' }[g.nutritionFocus];
+  const activityGoal = g.activityGoal === 'guideline' ? 'Voor volwassenen is een algemeen richtpunt 150–300 minuten matige beweging per week (of 75–150 minuten intensieve beweging), plus spierversterkende activiteit op minstens 2 dagen. Bouw hier rustig naartoe.' : g.activityGoal === 'custom' ? 'Jouw gekozen beweegdoel: ' + g.weeklyActivityMinutes + ' minuten per week. Pas dit aan als herstel of omstandigheden daarom vragen.' : '';
+  const place = g.access === 'yes' && g.equipment === 'gym' ? 'fitness met toestellen' : g.equipment === 'home' ? 'thuis met banden/gewichten' : 'zonder materiaal';
+  const time = g.goal === 'rehab' ? 'volgens de duur van je behandelaar' : 'richttijd ' + g.minutes + ' min per training';
+  return '<h2 class="sec">Jouw ' + g.weeks.length + '-weekse opbouw</h2><div class="card"><p><b>' + esc(TRAIN_GOALS[g.goal]) + '</b> · ' + esc((TRAIN_LEVELS.find(x => x[0] === g.level) || ['', 'Beginner'])[1]) + ' · ' + g.days.length + ' trainingsdagen per week</p><p class="muted small">Aangepast aan je gekozen dagen, beschikbare tijd, niveau en materiaal (' + place + '; ' + time + '). ' + (g.goal === 'weight' ? 'Beweging ondersteunt je gezondheid; gewichtsverlies hangt ook af van voeding en andere factoren en wordt niet gegarandeerd.' : '') + '</p></div>' + source + cards + caution + (nutritionFocus ? '<div class="card"><h3>Optionele voedingsfocus</h3><p>' + nutritionFocus + '</p></div>' : '') + (activityGoal ? '<div class="card"><h3>Optioneel beweegdoel</h3><p>' + activityGoal + '</p></div>' : '');
 }
 function renderEventGuidance(p) {
   const marathonReady = p.weeklyRunKm >= 20 && p.comfortableRunKm >= 12 && p.currentRunDays >= 3;
@@ -187,6 +205,58 @@ function hyroxWeek(n, duration, phase, days, p) {
   });
   return { number: n, phase, focus: taper ? 'Verminder trainingsbelasting en houd je fris.' : phase === 'Herstelweek' ? 'Behoud techniek, verlaag volume en herstel.' : phase === 'Wedstrijdspecifiek' ? 'Combineer lopen met een klein aantal stations, zonder uitputting.' : 'Bouw aerobe basis, kracht en bewegingstechniek geleidelijk op.', sessions };
 }
+function progressiveProgram(p) {
+  const duration = p.goal === 'runStart' ? 9 : 8;
+  const levelIndex = Math.max(0, TRAIN_LEVELS.findIndex(([key]) => key === p.level));
+  const dayLabels = Object.fromEntries(TRAIN_DAYS), days = p.days.map(key => dayLabels[key]);
+  const equipment = p.equipment === 'gym' && p.access === 'yes' ? 'machines of losse gewichten' : p.equipment === 'home' ? 'lichaamsgewicht, banden of thuisgewichten' : 'lichaamsgewicht en een stevige stoel of muur';
+  const exerciseCount = p.minutes < 25 ? '3' : p.minutes < 40 ? '4' : '4–6';
+  const strengthDetails = [
+    'Kies ' + exerciseCount + ' pijnvrije bewegingen voor benen, heupen, duwen, trekken en romp met ' + equipment + '. Doe ' + (p.level === 'beginner' ? '1–2' : '2–3') + ' beheerste sets; stop met 2–3 herhalingen over.',
+    'Herhaal de grote spiergroepen met andere comfortabele varianten: bijvoorbeeld squat/stoel-opstaan, heupstrekken, duwen, trekken en rompstabiliteit. Houd techniek en herstel voorop.',
+    'Herhaal je full-body basis. Als je alle herhalingen goed en ruim gecontroleerd haalt, verhoog dan hoogstens één kleine stap het gewicht of de herhalingen.'
+  ];
+  const weeks = Array.from({ length: duration }, (_, ix) => {
+    const n = ix + 1, recovery = n === 4 || n === 8, final = n === duration;
+    const phase = recovery ? 'Herstelweek' : final ? 'Afronden en evalueren' : n <= 2 ? 'Rustig starten' : n <= 5 ? 'Basis opbouwen' : 'Verder opbouwen';
+    const focus = recovery ? 'Minder volume, houd de routine comfortabel.' : final ? 'Behoud wat goed werkt; geen eindtest nodig.' : 'Kleine, haalbare stap en voldoende herstel.';
+    const sessions = days.map((day, i) => {
+      if (p.goal === 'rehab') return { day, title: i === 0 ? 'Behandelaar-goedgekeurde activiteit' : i === 1 ? 'Oefeningen volgens je behandelplan' : 'Rust of afgesproken lichte beweging', detail: 'Plan uitsluitend de activiteit en oefeningen die je behandelaar heeft toegestaan. Volg diens exacte duur, belasting, herhalingen en hersteladvies. Deze app voegt geen oefening of progressie toe.' };
+      if (p.goal === 'runStart') {
+        const runMinutes = Math.min(20, Math.max(1, Math.round((p.minutes - 10) * ((n - 1) / 8) * (recovery ? 0.7 : 1))));
+        return { day, title: 'Loop-wandeltraining ' + (i + 1), detail: 'Wandel 5 min rustig in en 5 min uit. Wissel daarna ' + runMinutes + ' min totaal rustig joggen af met wandelpauzes (bijv. 1 min jog / 2 min wandelen). ' + (recovery ? 'Herstelweek: herhaal kortere blokken uit de vorige week.' : 'Praattempo; als dit niet comfortabel is, wandel dan meer of herhaal de vorige week.') };
+      }
+      if (['strength', 'muscle'].includes(p.goal)) {
+        const earlierWeek = n === 4 ? 3 : 7;
+        const sets = recovery ? 'ongeveer de helft van je sets uit week ' + earlierWeek : p.level === 'beginner' ? (n <= 2 ? '1–2 sets' : '2 sets') : (n <= 2 ? '2 sets' : '2–3 sets');
+        const detail = recovery ? strengthDetails[0] + ' Doe ' + sets + '; week 8 is eveneens lichter.' : strengthDetails[i % strengthDetails.length] + ' Richtlijn voor deze opbouwfase: ' + sets + ' per oefening.';
+        if (p.goal === 'muscle' && !recovery) return { day, title: 'Spiermassa · full-body kracht', detail: detail + ' Werk doorgaans in een comfortabele reeks van 6–15 herhalingen. Verhoog pas als de huidige sets goed herstellen; wie al ervaring heeft kan op termijn richting ongeveer 10 wekelijkse sets per spiergroep opbouwen.' };
+        return { day, title: p.goal === 'muscle' ? 'Spiermassa · lichtere krachtbasis' : 'Krachttraining · full-body', detail };
+      }
+      if (p.goal === 'interval') {
+        const reps = recovery ? 4 : Math.min(8, 3 + Math.floor(n / 2) + (levelIndex >= 2 ? 1 : 0)), seconds = recovery ? 45 : Math.min(120, 45 + Math.floor(n / 2) * 15);
+        if (i === 0 && !recovery) return { day, title: 'Beheerste intervallen', detail: 'Warm 5–10 min rustig op. Doe ' + reps + ' × ' + seconds + ' sec vlot maar controleerbaar, met minstens even lang rustig herstel. Koel af. Geen sprint; stop als je klachten krijgt.' };
+        if (i === 0 && recovery) return { day, title: 'Rustige conditie', detail: 'Kies een comfortabele wandeling, fietsrit of andere lichte cardio. Laat de intervallen deze week weg.' };
+      }
+      if (p.goal === 'run5k') {
+        const minutes = Math.min(p.minutes, recovery ? 20 : Math.min(40, 20 + n * 2));
+        if (i === 1 || (i === 0 && days.length === 1)) return { day, title: 'Rustige duur · lopen/wandelen', detail: 'Beweeg ' + minutes + ' min op praattempo. Wissel lopen met wandelen af als nodig; verhoog niet tegelijk duur én snelheid.' };
+        if (i === 2 || (i === 0 && days.length > 1)) return { day, title: 'Loop-wandelbasis', detail: 'Kies ' + Math.max(15, minutes - 5) + ' min ontspannen loop-wandelblokken. Ervaren lopers kunnen enkele korte ontspannen versnellingen toevoegen, met volledig herstel.' };
+        return { day, title: 'Rustig lopen / wandelen', detail: 'Beweeg ' + Math.max(15, minutes - 5) + ' min comfortabel. Beginners houden wandelpauzes; neem minstens een rustdag tussen looptrainingen.' };
+      }
+      const minutes = Math.min(p.minutes, recovery ? 20 : Math.min(50, 15 + n * (3 + levelIndex)));
+      if (i === 0 && (p.goal === 'weight' || p.goal === 'general')) return { day, title: 'Full-body kracht', detail: strengthDetails[0] + ' Houd de sessie kort en beheersbaar.' };
+      if (p.goal === 'weight' && i === 1) return { day, title: 'Wandelen of fietsen', detail: minutes + ' min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.' };
+      if (p.goal === 'weight' && i === 2) return { day, title: 'Full-body kracht', detail: strengthDetails[1] };
+      if (p.goal === 'general' && i === 1) return { day, title: 'Rustige conditie', detail: minutes + ' min wandelen, fietsen of een andere activiteit op praattempo.' };
+      if (i === 0 && p.goal === 'interval') return { day, title: 'Rustige conditie', detail: minutes + ' min comfortabel wandelen, fietsen of andere cardio.' };
+      if (p.goal === 'interval' && i === 1) return { day, title: 'Kracht en mobiliteit', detail: strengthDetails[0] };
+      return { day, title: 'Rustige beweging / herstel', detail: minutes + ' min ontspannen wandelen of fietsen, of neem volledige rust als je moe bent.' };
+    });
+    return { number: n, phase, focus, sessions };
+  });
+  return { programType: 'progressive', weeks, days, duration };
+}
 function foundationProgram(p) {
   return Array.from({ length: 8 }, (_, i) => {
     const n = i + 1, recovery = n === 4 || n === 8, days = p.days.slice(0, 3);
@@ -254,7 +324,7 @@ function trainingSession(p, i, day) {
 }
 ACT.trainingField = el => {
   const p = trainingData(), f = el.dataset.f;
-  const value = ['minutes', 'weeklyActivityMinutes', 'comfortableRunKm', 'weeklyRunKm', 'currentRunDays'].includes(f) ? Number(el.value) : el.value;
+  const value = el.type === 'checkbox' ? el.checked : ['minutes', 'weeklyActivityMinutes', 'comfortableRunKm', 'weeklyRunKm', 'currentRunDays'].includes(f) ? Number(el.value) : el.value;
   if (f === 'minutes' && (!Number.isFinite(value) || value < 15 || value > 180)) { el.value = p.minutes; toast('Kies een trainingsduur tussen 15 en 180 minuten.'); return; }
   if (f === 'comfortableRunKm' && (!Number.isFinite(value) || value < 0 || value > 100)) { el.value = p.comfortableRunKm; toast('Kies een afstand tussen 0 en 100 kilometer.'); return; }
   if (f === 'weeklyRunKm' && (!Number.isFinite(value) || value < 0 || value > 250)) { el.value = p.weeklyRunKm; toast('Kies een gemiddelde tussen 0 en 250 kilometer.'); return; }
@@ -288,6 +358,7 @@ ACT.trainingDay = el => {
 ACT.generateTrainingPlan = () => {
   const p = trainingData();
   if (!p.days.length) return toast('Kies minstens één trainingsdag.');
+  if (p.goal === 'rehab' && !p.rehabCleared) return toast('Vraag eerst toestemming en richtlijnen aan je arts of kinesitherapeut.');
   if (['marathon', 'hyrox'].includes(p.goal)) {
     if (p.days.length < 3) return toast('Kies minstens 3 trainingsdagen voor dit wedstrijdplan.');
     const plan = eventProgram(p);
@@ -295,8 +366,12 @@ ACT.generateTrainingPlan = () => {
     p.generated = Object.assign({ category: p.category, goal: p.goal, level: p.level, eventDate: p.eventDate, minutes: p.minutes }, plan);
     save(); renderTrainingPlan(); return;
   }
-  const labels = Object.fromEntries(TRAIN_DAYS);
-  const sessions = p.days.map((key, i) => trainingSession(p, i, labels[key]));
-  p.generated = { category: p.category, goal: p.goal, level: p.level, access: p.access, timeOfDay: p.timeOfDay, minutes: p.minutes, nutritionFocus: p.nutritionFocus, activityGoal: p.activityGoal, weeklyActivityMinutes: p.weeklyActivityMinutes, eventDate: p.eventDate, eventName: p.eventName, comfortableRunKm: p.comfortableRunKm, sessions };
+  if (['runStart', 'run5k'].includes(p.goal)) {
+    const chosen = p.days.map(k => TRAIN_DAYS.findIndex(d => d[0] === k));
+    if (chosen.some((day, i) => i > 0 && day - chosen[i - 1] < 2) || (chosen.length > 1 && chosen[0] === 0 && chosen[chosen.length - 1] === 6)) return toast('Plan minstens één volledige rustdag tussen looptrainingen, ook over de weekgrens.');
+  }
+  const progressive = progressiveProgram(p);
+  if (p.goal === 'rehab') progressive.weeks = progressive.weeks.map(w => Object.assign(w, { phase: w.number === 1 ? 'Afspraken met behandelaar plannen' : 'Alleen verder volgens behandelaar' }));
+  p.generated = Object.assign({ category: p.category, goal: p.goal, level: p.level, access: p.access, equipment: p.equipment, timeOfDay: p.timeOfDay, minutes: p.minutes, nutritionFocus: p.nutritionFocus, activityGoal: p.activityGoal, weeklyActivityMinutes: p.weeklyActivityMinutes, eventDate: p.eventDate, eventName: p.eventName, comfortableRunKm: p.comfortableRunKm }, progressive);
   save(); renderTrainingPlan();
 };
