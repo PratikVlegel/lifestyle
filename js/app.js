@@ -91,7 +91,7 @@ document.addEventListener('change', e => {
 });
 
 function toast(msg) {
-  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  const t = $('#toast'); t.textContent = tr(String(msg)); t.hidden = false;
   clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 2600);
 }
 function header(title, sub, back) {
@@ -1079,12 +1079,12 @@ const NUM_INTEGERS = new Set(['profile.age', 'goals.kcal', 'goals.waterMl', 'goa
 function numericValue(el) { return el.value === '' ? null : Number(String(el.value).replace(',', '.')); }
 function numericError(path, value, data) {
   if (value === null) return '';
-  if (!Number.isFinite(value)) return 'Vul een geldig getal in.';
-  if (NUM_INTEGERS.has(path) && !Number.isInteger(value)) return 'Vul een geheel getal in.';
+  if (!Number.isFinite(value)) return tr('Vul een geldig getal in.');
+  if (NUM_INTEGERS.has(path) && !Number.isInteger(value)) return tr('Vul een geheel getal in.');
   const limit = NUM_LIMITS[path];
-  if (limit && (value < limit[0] || value > limit[1])) return 'Kies een waarde tussen ' + limit[0] + ' en ' + fmtNum(limit[1]) + '.';
-  if (path === 'goals.stepsMin' && isNum(data.goals.stepsMax) && value > data.goals.stepsMax) return 'Stappen minimum mag niet hoger zijn dan het maximum.';
-  if (path === 'goals.stepsMax' && isNum(data.goals.stepsMin) && value < data.goals.stepsMin) return 'Stappen maximum mag niet lager zijn dan het minimum.';
+  if (limit && (value < limit[0] || value > limit[1])) return trf('Kies een waarde tussen {min} en {max}.', { min: limit[0], max: fmtNum(limit[1]) });
+  if (path === 'goals.stepsMin' && isNum(data.goals.stepsMax) && value > data.goals.stepsMax) return tr('Stappen minimum mag niet hoger zijn dan het maximum.');
+  if (path === 'goals.stepsMax' && isNum(data.goals.stepsMin) && value < data.goals.stepsMin) return tr('Stappen maximum mag niet lager zijn dan het minimum.');
   return '';
 }
 ACT.setG = el => {
@@ -1283,7 +1283,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.28';
+const APP_VERSION = '1.10.29';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
