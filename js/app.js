@@ -25,7 +25,7 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -45,6 +45,7 @@ function render() {
       case 'train-custom': return renderCustomTrainingBuilder();
       case 'train-community': return renderTrainingCommunity();
       case 'train-shared': return renderSharedTraining(a);
+      case 'community-kpi': return renderCommunityKpis(a);
       case 'intake': return renderIntake(a || '1');
       case 'bieb': return renderLibrary();
       case 'recepten': return renderRecipes();
@@ -925,7 +926,8 @@ function renderMore(sub) {
 
   h += '<div class="card"><h3>' + tr('Gedeelde bibliotheek') + '</h3><p class="muted small">' + tr('Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.') + '</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> ' + tr('Mijn productbibliotheek synchroniseren (producten delen en ophalen)') + '</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">' + tr('Bibliotheek openen') + '</a><button class="btn ghost" data-act="syncNow">' + tr('Nu bijwerken') + '</button></div>' : '<p class="note">' + tr('Niet ingesteld.') + '</p>') + '</div>';
-  h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
+  h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
+  h += '<a class="card fb wk" href="#/community-kpi/weekly"><b>' + tr('Community-KPI’s') + '</b><p class="small">' + tr('Vergelijk vrijwillig gedeelde stappen en beweegminuten met andere leden.') + '</p></a>';
   h += '<div class="card"><h3>' + tr('AI (optioneel)') + '</h3><p class="muted small">' + tr('With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.') + ' ' + esc(aiDataDisclosure()) + ' ' + tr('You pay Anthropic for each request. Your key is stored in this browser and is excluded from backups.') + '</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
@@ -1206,7 +1208,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.12';
+const APP_VERSION = '1.10.14';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

@@ -60,17 +60,57 @@ function weekCard() {
 }
 
 /* ---------- experimenten ---------- */
-const EXPERIMENTS = [
-  { id: 'eiwitontbijt', title: 'Eiwitrijk ontbijt', do: 'Ontbijt met minstens 20 g eiwit (eieren, skyr, kwark, hüttenkäse)', q: 'Had je ontbijt minstens 20 g eiwit?', m: ['hungerEve', 'eveKcal', 'energy'] },
-  { id: 'snack16', title: 'Vast tussendoortje rond 16 u', do: 'Een klein, eiwitrijk tussendoortje tussen 15 en 17 u', q: 'Had je een tussendoortje rond 16 u?', m: ['hungerEve', 'hungerDinner', 'eveKcal'] },
-  { id: 'lunch', title: 'Lunch nooit overslaan', do: 'Elke dag een volwaardige lunch, ook op drukke dagen', q: 'Heb je vandaag geluncht?', m: ['hungerEve', 'eveKcal', 'mood'] },
-  { id: 'koffie14', title: 'Laatste koffie vóór 14 u', do: 'Na 14 u geen koffie, espresso of energiedrank', q: 'Was je laatste koffie vóór 14 u?', m: ['sleepH', 'energy', 'mood'], lagSleep: true },
-  { id: 'wandel', title: '10 minuten wandelen na het avondeten', do: 'Kort wandelen na het avondeten', q: 'Ben je na het avondeten gaan wandelen?', m: ['steps', 'hungerEve', 'mood'] },
-  { id: 'water', title: '2 liter water', do: 'Minstens 2 liter water per dag', q: 'Heb je 2 liter water gedronken?', m: ['energy', 'hungerEve', 'mood'] },
-  { id: 'cpap', title: 'CPAP de hele nacht', do: 'Elke nacht de hele nacht CPAP', q: 'Had je vannacht de hele nacht CPAP op?', m: ['energy', 'mood', 'steps'] },
-  { id: 'scherm', title: 'Schermen uit 30 min voor het slapen', do: 'Geen gsm of laptop het laatste halfuur', q: 'Had je het laatste halfuur geen scherm?', m: ['sleepH', 'energy'], lagSleep: true },
-  { id: 'keuken', title: 'Keuken dicht na het avondeten', do: 'Na het avondeten tanden poetsen en niets meer eten, tenzij gepland', q: 'Bleef de keuken dicht na het avondeten?', m: ['hungerEve', 'eveKcal', 'sleepH'] }
+const EXPERIMENT_FOCI = [
+  ['weight', 'Afvallen / gezondere gewoontes'], ['strength', 'Kracht / spiermassa'],
+  ['endurance', 'Lopen / conditie / wedstrijd'], ['wellbeing', 'Stemming / slaap'], ['habits', 'Gewoontes / nicotine']
 ];
+const EXPERIMENTS = [
+  { id: 'eiwitontbijt', title: 'Eiwitbron bij het ontbijt', do: 'Voeg een eiwitbron toe die je graag eet, zoals ei, yoghurt of bonen.', q: 'Had je bij het ontbijt een eiwitbron?', m: ['hungerEve', 'eveKcal', 'energy'], groups: ['weight', 'strength', 'endurance', 'habits'] },
+  { id: 'snack16', title: 'Gepland tussendoortje', do: 'Kies vooraf een tussendoortje dat bij je honger en dagplanning past.', q: 'Had je het geplande tussendoortje?', m: ['hungerEve', 'hungerDinner', 'eveKcal'], groups: ['weight', 'strength', 'endurance', 'wellbeing'] },
+  { id: 'lunch', title: 'Een haalbare lunchpauze', do: 'Plan een lunchpauze die ook op drukke dagen haalbaar is; maak de maaltijd passend voor jou.', q: 'Heb je vandaag een lunchpauze genomen?', m: ['hungerEve', 'eveKcal', 'mood'], groups: ['weight', 'strength', 'endurance', 'wellbeing', 'habits'] },
+  { id: 'koffie14', title: 'Cafeïne vroeger op de dag', do: 'Als cafeïne je slaap lijkt te beïnvloeden, probeer dan je laatste koffie of energiedrank wat vroeger te nemen.', q: 'Heb je cafeïne alleen op het tijdstip gebruikt dat je had gekozen?', m: ['sleepH', 'energy', 'mood'], groups: ['weight', 'strength', 'endurance', 'wellbeing', 'habits'], lagSleep: true },
+  { id: 'wandel', title: 'Korte wandeling na een maaltijd', do: 'Wandel na één maaltijd kort op een tempo dat voor jou prettig voelt.', q: 'Ben je na die maaltijd kort gaan wandelen?', m: ['steps', 'hungerEve', 'mood'], groups: ['weight', 'endurance', 'wellbeing', 'habits'] },
+  { id: 'water', title: 'Water bij de lunch', do: 'Zet water klaar bij je lunch. Je hoeft geen vast aantal liters te halen.', q: 'Had je water bij de lunch klaargezet?', m: ['energy', 'hungerEve', 'mood'], groups: ['weight', 'strength', 'endurance', 'wellbeing', 'habits'] },
+  { id: 'cpap', title: 'CPAP volgens afspraak gebruiken', do: 'Volg het gebruik zoals je met je slaapteam hebt afgesproken; pas instellingen niet zelf aan.', q: 'Heb je CPAP gebruikt zoals afgesproken?', m: ['energy', 'mood', 'steps'], groups: ['wellbeing'], requiresCpap: true },
+  { id: 'scherm', title: 'Rustige schermvrije afsluiting', do: 'Probeer het laatste halfuur voor bed zonder telefoon of laptop af te sluiten, als dat voor jou haalbaar is.', q: 'Was het laatste halfuur voor bed schermvrij?', m: ['sleepH', 'energy'], groups: ['strength', 'endurance', 'wellbeing', 'habits'], lagSleep: true },
+  { id: 'keuken', title: 'Bewuste avondkeuze', do: 'Als je na het avondeten nog honger hebt, kies dan bewust iets dat bij je past. Je hoeft eten niet te verbieden.', q: 'Heb je na het avondeten gekozen op basis van je honger?', m: ['hungerEve', 'eveKcal', 'sleepH'], groups: ['weight', 'strength', 'wellbeing', 'habits'] },
+  { id: 'groenteLunch', title: 'Groente of fruit bij de lunch', do: 'Voeg bij de lunch groente of fruit toe dat je lekker vindt; vers, diepvries of uit blik kan ook.', q: 'Had je vandaag groente of fruit bij de lunch?', m: ['fiber', 'energy', 'mood'], groups: ['weight', 'strength', 'endurance', 'habits'] },
+  { id: 'frisdrank', title: 'Eén zoete drank vervangen', do: 'Als je normaal frisdrank met suiker drinkt, vervang dan één portie door water of ongezoete thee.', q: 'Heb je één zoete drank vervangen door water of ongezoete thee?', m: ['eveKcal', 'energy', 'mood'], groups: ['weight', 'wellbeing', 'habits'], requiresSoftDrink: true },
+  { id: 'snackOpBord', title: 'Tussendoortje bewust klaarzetten', do: 'Leg je gekozen tussendoortje op een bordje of in een kommetje en eet zittend als dat lukt.', q: 'Heb je je tussendoortje vooraf klaargezet?', m: ['hungerEve', 'eveKcal'], groups: ['weight', 'wellbeing', 'habits'] },
+  { id: 'nicotineTrigger', title: 'Nicotine-moment herkennen', do: 'Noteer voor jezelf wat er gebeurde vlak vóór een nicotine-moment. Als je wilt stoppen of minderen, kan je huisarts of apotheker je helpen met passende steun.', q: 'Heb je vandaag één situatie vóór nicotinegebruik opgemerkt?', m: ['mood', 'stress', 'sleepH'], groups: ['wellbeing', 'habits'], requiresNicotine: true },
+  { id: 'pauzeBuiten', title: 'Korte pauze buiten', do: 'Neem op een druk moment een paar minuten buitenlucht, als dat praktisch en prettig is.', q: 'Heb je vandaag een korte pauze buiten genomen?', m: ['mood', 'stress', 'steps'], groups: ['wellbeing', 'habits'] },
+  { id: 'herstel', title: 'Herstel na training plannen', do: 'Plan na een stevige training ruimte voor herstel; schuif een sessie door als je nog duidelijk vermoeid bent.', q: 'Heb je vandaag je geplande herstelmoment genomen?', m: ['energy', 'sleepH', 'mood'], groups: ['strength', 'endurance'] },
+  { id: 'trainingKlaar', title: 'Trainingsmateriaal vooraf klaarleggen', do: 'Leg je schoenen, kleding of materiaal klaar op het moment dat jou het beste uitkomt.', q: 'Had je je materiaal vooraf klaargelegd?', m: ['steps', 'energy', 'mood'], groups: ['strength', 'endurance', 'habits'] },
+  { id: 'maaltijdritme', title: 'Een passend maaltijdritme', do: 'Kies voor drukke dagen één of twee eetmomenten die je vooraf eenvoudig kunt plannen. Sla geen maaltijd over als je daardoor later juist meer honger krijgt.', q: 'Heb je je geplande eetmomenten kunnen volgen?', m: ['hungerEve', 'eveKcal', 'energy'], groups: ['weight', 'wellbeing', 'habits'] },
+  { id: 'zoeteDrank', title: 'Zoete drank bewust kiezen', do: 'Kies op één vast moment bewust tussen je gebruikelijke zoete drank en een alternatief dat je lekker vindt. Geen verbod; kijk wat haalbaar is.', q: 'Heb je op dat moment bewust gekozen?', m: ['mood', 'energy', 'hungerEve'], groups: ['weight', 'habits'], requiresSoftDrink: true },
+  { id: 'snoepMoment', title: 'Zoetigheid zonder autopiloot', do: 'Als je zoetigheid neemt, schep dan een portie in een kommetje en eet die met aandacht. Je hoeft niets te compenseren.', q: 'Heb je je portie bewust klaargezet?', m: ['mood', 'hungerEve', 'eveKcal'], groups: ['weight', 'wellbeing', 'habits'], requiresSweets: true },
+  { id: 'nicotineAlternatief', title: 'Een nicotine-trigger anders opvangen', do: 'Kies één terugkerend moment en bedenk vooraf een alternatief dat voor jou werkt, zoals even naar buiten gaan of iemand berichten. Je bepaalt zelf of minderen je doel is.', q: 'Heb je je gekozen alternatief geprobeerd?', m: ['mood', 'stress', 'sleepH'], groups: ['wellbeing', 'habits'], requiresNicotine: true },
+  { id: 'krachtTechniek', title: 'Eén krachtoefening technisch oefenen', do: 'Kies één oefening uit je huidige schema. Oefen met een comfortabele belasting en let op een beheerste, pijnvrije uitvoering; voeg deze week geen extra gewicht toe.', q: 'Heb je de oefening beheerst uitgevoerd?', m: ['energy', 'mood'], groups: ['strength'] },
+  { id: 'krachtLog', title: 'Je trainingsherhalingen noteren', do: 'Noteer na één geplande krachttraining de oefening, sets en herhalingen. Verhoog pas later iets als techniek en herstel goed blijven.', q: 'Heb je je sets en herhalingen genoteerd?', m: ['energy', 'mood'], groups: ['strength'] },
+  { id: 'praattempo', title: 'Een rustige loop op praattempo', do: 'Houd één rustige looptraining zo makkelijk dat je nog in korte zinnen kunt praten. Vertraag of wandel als dat niet lukt.', q: 'Bleef je looptraining grotendeels op praattempo?', m: ['energy', 'sleepH', 'mood'], groups: ['endurance'] },
+  { id: 'stemmingContext', title: 'Stemming naast je dagcontext bekijken', do: 'Noteer bij je stemming één neutraal contextpunt, bijvoorbeeld slaap, werkdruk of beweging. Zoek naar patronen over meerdere dagen; één dag bewijst geen oorzaak.', q: 'Heb je een contextpunt bij je stemming genoteerd?', m: ['mood', 'stress', 'sleepH'], groups: ['wellbeing'] },
+  { id: 'stapmoment', title: 'Een vast beweegmoment kiezen', do: 'Koppel een korte wandeling aan iets dat al in je dag zit, zoals na de lunch of tijdens een telefoontje. Kies een duur die haalbaar voelt.', q: 'Heb je je gekozen beweegmoment gedaan?', m: ['steps', 'mood', 'energy'], groups: ['weight', 'endurance', 'habits'] }
+];
+function defaultExperimentFocus() {
+  const explicit = DB.settings.experimentFocus;
+  if (EXPERIMENT_FOCI.some(([key]) => key === explicit)) return explicit;
+  const goal = (DB.training || {}).goal || 'weight';
+  if (goal === 'weight') return 'weight';
+  if (['strength', 'muscle'].includes(goal)) return 'strength';
+  if (['runStart', 'run5k', 'race5k', 'race10k', 'half', 'marathon', 'race', 'hyrox', 'interval'].includes(goal)) return 'endurance';
+  if (DB.settings.homeFocus === 'wellbeing' || DB.settings.moodInsights) return 'wellbeing';
+  return 'habits';
+}
+function experimentFits(E) {
+  if (!E.groups.includes(defaultExperimentFocus())) return false;
+  const days = Object.values(DB.days || {});
+  if (E.requiresCpap && !days.some(d => d && d.cpap)) return false;
+  if (E.requiresSoftDrink && !days.some(d => d && isNum(d.softDrinkServings) && d.softDrinkServings > 0)) return false;
+  if (E.requiresSweets && !days.some(d => d && isNum(d.sweetsServings) && d.sweetsServings > 0)) return false;
+  if (E.requiresNicotine && !days.some(d => d && (Array.isArray(d.nicotineForms) ? d.nicotineForms.some(f => ['cigarette', 'vape', 'nicotinePouch', 'heatedTobacco', 'otherNicotine'].includes(f)) : ['paar keer', 'om de 3 u', 'om de 2 u', 'elk uur'].includes(d.vape)))) return false;
+  return true;
+}
+ACT.setExperimentFocus = el => { DB.settings.experimentFocus = el.value; save(); renderExperiments(); };
 function renderExperiments() {
   DB.experiments = DB.experiments || [];
   const act = DB.experiments.find(e => !e.closed);
@@ -85,8 +125,10 @@ function renderExperiments() {
   const done = DB.experiments.filter(e => e.closed);
   if (done.length) h += '<h2 class="sec">' + tr('Resultaten') + '</h2>' + done.slice().reverse().map(e => '<div class="card"><b>' + esc(tr((EXPERIMENTS.find(x => x.id === e.id) || {}).title || e.id)) + '</b><small class="muted"> · ' + fmtDay(e.start) + '</small>' + expResultHtml(e) + '</div>').join('');
   if (!act) {
+    h += '<div class="card"><label class="fld"><span>' + tr('Welke focus past nu bij je?') + '</span><select data-chg="setExperimentFocus">' + EXPERIMENT_FOCI.map(([key, label]) => '<option value="' + key + '"' + (defaultExperimentFocus() === key ? ' selected' : '') + '>' + tr(label) + '</option>').join('') + '</select></label><p class="muted small">' + tr('De suggesties volgen je focus en recente registraties. Je kan de focus op elk moment wijzigen.') + '</p></div>';
     h += '<h2 class="sec">' + tr('Kies een experiment') + '</h2><p class="muted small">' + tr('De app vergelijkt de dagen waarop het lukte met je twee weken ervoor. Eén experiment tegelijk, zo blijft het meetbaar.') + '</p>';
-    h += EXPERIMENTS.map(E => '<div class="card"><b>' + esc(tr(E.title)) + '</b><p class="small">' + esc(tr(E.do)) + '</p><small class="muted">' + tr('Meet:') + ' ' + E.m.map(x => tr(DVARS[x].l)).join(', ') + '</small><div><button class="btn ghost" data-act="expStart" data-id="' + E.id + '">' + tr('Start 7 dagen') + '</button></div></div>').join('');
+    const choices = EXPERIMENTS.filter(experimentFits);
+    h += choices.length ? choices.map(E => '<div class="card"><b>' + esc(tr(E.title)) + '</b><p class="small">' + esc(tr(E.do)) + '</p><small class="muted">' + tr('Meet:') + ' ' + E.m.map(x => tr(DVARS[x].l)).join(', ') + '</small><div><button class="btn ghost" data-act="expStart" data-id="' + E.id + '">' + tr('Start 7 dagen') + '</button></div></div>').join('') : '<div class="card note"><b>' + tr('Nog geen passende experimenten') + '</b><p class="small">' + tr('Er zijn nog geen bijpassende gewoonteregistraties om hier een persoonlijk experiment voor te tonen.') + '</p></div>';
   }
   view().innerHTML = h;
 }
