@@ -769,6 +769,9 @@ async function shareText(txt, title) {
 }
 
 /* ================= inzicht ================= */
+function aiDataDisclosure() {
+  return 'Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.';
+}
 function insightCard(i) {
   return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + i.cat + '</span>' + (i.isNew ? '<span class="tag new">nieuw</span>' : '') + '<b>' + esc(i.title) + '</b></div><p>' + esc(i.text).replace(/\n/g, '<br>') + '</p><small class="muted">Op basis van ' + esc(i.evidence) + '</small></div>';
 }
@@ -788,7 +791,7 @@ function renderInsights() {
   h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.</p>';
   h += '<h2 class="sec">Diepere analyse met AI</h2>';
   if (DB.settings.apiKey) {
-    h += '<div class="card"><p class="muted small">Als je analyseert, stuurt de app je profiel en maximaal 21 dagen aan relevante gegevens — inclusief notities — naar Anthropic.</p><label class="fld"><span>Vraag (optioneel)</span><textarea id="aiq" rows="2" placeholder="bv. Waarom voel ik me op woensdag zo moe?"></textarea></label><button class="btn" data-act="runAI">Analyseer mijn laatste 3 weken</button><div id="aiout"></div></div>';
+    h += '<div class="card"><p class="muted small">' + esc(aiDataDisclosure()) + '</p><label class="fld"><span>Vraag (optioneel)</span><textarea id="aiq" rows="2" placeholder="bv. Waarom voel ik me op woensdag zo moe?"></textarea></label><button class="btn" data-act="runAI">Analyseer mijn laatste 3 weken</button><div id="aiout"></div></div>';
   } else {
     h += '<p class="card muted small">Stel een eigen Claude API-sleutel in bij Meer → AI om hier op knop een diepere analyse te vragen. Zonder sleutel kan je de samenvatting delen en in een chat plakken.</p>';
   }
@@ -845,7 +848,7 @@ function renderMore(sub) {
   h += '<div class="card"><h3>Gedeelde bibliotheek</h3><p class="muted small">Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> Mijn productbibliotheek synchroniseren (producten delen en ophalen)</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">Bibliotheek openen</a><button class="btn ghost" data-act="syncNow">Nu bijwerken</button></div>' : '<p class="note">Niet ingesteld.</p>') + '</div>';
   h += '<div class="card"><h3>Communityprofiel</h3><p class="muted small">Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en gezondheidsgegevens worden hiermee niet gedeeld.</p><label class="fld"><span>Communitynaam</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">Communitynaam opslaan</button></div>';
-  h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. De analyse stuurt je profiel en maximaal 21 dagen aan relevante dagboekgegevens, inclusief notities, naar Anthropic. Een etiketfoto wordt meegestuurd; van een markdown-bestand worden maximaal 150.000 tekens verwerkt en verstuurd. Je betaalt per gebruik. De sleutel wordt lokaal in je browser opgeslagen en zit niet in back-ups.</p>' +
+  h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. ' + esc(aiDataDisclosure()) + ' Je betaalt per gebruik. De sleutel wordt lokaal in je browser opgeslagen en zit niet in back-ups.</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
 
@@ -1096,7 +1099,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.8.2';
+const APP_VERSION = '1.8.3';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

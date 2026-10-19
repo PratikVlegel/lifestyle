@@ -9,7 +9,7 @@ function renderInvite(msg) {
   h += '<div class="card"><label class="fld"><span>Uitnodigingscode</span><input id="invcode" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="bv. VRIEND-ABCD-EFGH" value="' + esc(DB.settings.pendingCode || '') + '"></label>' +
     (msg ? '<p class="note">' + esc(msg) + '</p>' : '') +
     '<button class="btn big" data-act="redeem">Doorgaan</button>' +
-    '<p class="muted small">Je hebt hiervoor één keer internet nodig. Daarna werkt de app ook offline. Je dagboek en trainingsschema’s blijven lokaal in deze browser. Producten, gedeelde recepten en beoordelingen gaan naar de gedeelde bibliotheek als je ze deelt; receptfoto’s zijn via hun openbare afbeeldingslink bereikbaar. Als je zelf een AI-analyse start, stuurt de app je profiel en maximaal 21 dagen relevante dagboekgegevens, inclusief notities, naar Anthropic. De stemmingmodule gebruikt alleen numerieke waarden en leest geen vrije notities.</p></div>';
+    '<p class="muted small">Je hebt hiervoor één keer internet nodig. Daarna werkt de app ook offline. Je dagboek en trainingsschema’s blijven lokaal in deze browser. Producten, gedeelde recepten en beoordelingen gaan naar de gedeelde bibliotheek als je ze deelt; receptfoto’s zijn via hun openbare afbeeldingslink bereikbaar. ' + esc(aiDataDisclosure()) + '</p></div>';
   view().innerHTML = h;
   $('nav.tabs').hidden = true;
 }
