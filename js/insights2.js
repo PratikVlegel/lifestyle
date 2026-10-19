@@ -72,8 +72,9 @@ function moreInsights(n, recent, add) {
   }
   if (per.ontbijt.length >= 3) {
     const b = avg(per.ontbijt), l = avg(per.lunch), a = avg(per.avond);
-    add('voeding', 'Eiwit per maaltijd', 'Ontbijt ≈ ' + fmtNum(b) + ' g' + (isNum(l) ? ', lunch ≈ ' + fmtNum(l) + ' g' : '') + (isNum(a) ? ', avondeten ≈ ' + fmtNum(a) + ' g' : '') + '. ' +
-      (b < 15 ? 'In deze geregistreerde ontbijten staat weinig eiwit. Als je dat wilt veranderen, voeg een bron toe die je graag eet (bijvoorbeeld ei, yoghurt, tofu of bonen) en kijk of dit voor jou een prettigere maaltijd oplevert. Dit is geen individueel eiwitvoorschrift.' : 'Je geregistreerde ontbijt bevat gemiddeld een eiwitbron. Een goede registratie zegt nog niet alles over je totale voedingskwaliteit.'), per.ontbijt.length + ' ontbijten', b < 15 ? 'tip' : 'good');
+    const proteinMeals = trf('Ontbijt: ≈ {breakfast} g{lunch}{dinner}.', { breakfast: fmtNum(b), lunch: isNum(l) ? trf(' · lunch: ≈ {value} g', { value: fmtNum(l) }) : '', dinner: isNum(a) ? trf(' · avondeten: ≈ {value} g', { value: fmtNum(a) }) : '' });
+    add('voeding', 'Eiwit per maaltijd', proteinMeals + ' ' +
+      (b < 15 ? tr('In deze geregistreerde ontbijten staat weinig eiwit. Als je dat wilt veranderen, voeg een bron toe die je graag eet (bijvoorbeeld ei, yoghurt, tofu of bonen) en kijk of dit voor jou een prettigere maaltijd oplevert. Dit is geen individueel eiwitvoorschrift.') : tr('Je geregistreerde ontbijt bevat gemiddeld een eiwitbron. Een goede registratie zegt nog niet alles over je totale voedingskwaliteit.')), per.ontbijt.length + ' ontbijten', b < 15 ? 'tip' : 'good');
   }
 
   /* 6. Mealprep-porties: lukt het om ze op te eten? */
@@ -81,7 +82,7 @@ function moreInsights(n, recent, add) {
   for (const x of recent) for (const m of x.d.meals || []) if (m.prepId && isNum(m.portion)) portions.push(m.portion);
   if (portions.length >= 4) {
     const partial = portions.filter(p => p < 0.95).length;
-    if (partial / portions.length >= 0.3) add('voeding', 'Mealprep-porties', 'Bij ' + partial + ' van de ' + portions.length + ' mealprep-maaltijden at je niet de hele portie. Overweeg dezelfde hoeveelheid over één portie meer te verdelen, zodat elke portie haalbaar is en de energie gelijkmatiger binnenkomt.', portions.length + ' maaltijden', 'tip');
+    if (partial / portions.length >= 0.3) add('voeding', 'Mealprep-porties', trf('Bij {partial} van de {total} mealprep-maaltijden at je niet de hele portie. Je kunt dezelfde bereiding eventueel over meer porties verdelen, zodat elke portie haalbaar is.', { partial, total: portions.length }), portions.length + ' maaltijden', 'tip');
   }
 
   /* 7. Alcohol: de dag erna */
@@ -89,17 +90,17 @@ function moreInsights(n, recent, add) {
   for (const k of keys) { const a = dv('alcohol', k), nk = addDays(k, 1); const kc = dv('kcal', nk), st = dv('steps', nk); if (!isNum(a)) continue; (a > 0 ? after : noAfter).push({ kc, st }); }
   if (after.length >= 2 && noAfter.length >= 3) {
     const s1 = avg(after.map(x => x.st).filter(isNum)), s0 = avg(noAfter.map(x => x.st).filter(isNum));
-    if (isNum(s1) && isNum(s0) && Math.abs(s1 - s0) > 800) add('activiteit', 'Stappen na alcoholregistratie', 'De dag na een dag met alcoholregistratie zette je gemiddeld ' + fmtNum(s1) + ' stappen; na een dag met expliciet nul alcohol was dit ' + fmtNum(s0) + '.', after.length + ' + ' + noAfter.length + ' dagen', 'info');
+    if (isNum(s1) && isNum(s0) && Math.abs(s1 - s0) > 800) add('activiteit', 'Stappen na alcoholregistratie', trf('De dag na een dag waarop alcohol was geregistreerd, zette je gemiddeld {after} stappen; na dagen die expliciet als alcoholvrij waren genoteerd, {without}. Dit is een patroon in je registraties, geen oorzaak.', { after: fmtNum(s1), without: fmtNum(s0) }), after.length + ' + ' + noAfter.length + ' dagen', 'info');
   }
 
   /* 8. Slaapregelmaat en korte nachten */
   const sl = keys.map(k => dv('sleepH', k)).filter(isNum);
   if (sl.length >= 5) {
     const short = sl.filter(x => x < 6).length, s = sd(sl);
-    add('slaap', 'Slaapregelmaat', 'Je slaapduur schommelt met ±' + fmtNum(s, 1) + ' u (gemiddeld ' + fmtNum(avg(sl), 1) + ' u).' + (short ? ' ' + short + ' nacht' + (short > 1 ? 'en' : '') + ' korter dan 6 u.' : '') + (s > 1.2 ? ' Als je meer regelmaat wilt, probeer een week een haalbare vaste opstaantijd en kijk hoe je je voelt.' : ''), sl.length + ' nachten', s > 1.2 || short >= 2 ? 'tip' : 'good');
+    add('slaap', 'Slaapregelmaat', trf('Je slaapduur varieert ongeveer {variation} uur (gemiddeld {average} uur).', { variation: fmtNum(s, 1), average: fmtNum(avg(sl), 1) }) + (short ? ' ' + trf('{count} nachten waren korter dan 6 uur.', { count: short }) : '') + (s > 1.2 ? ' ' + tr('Als je meer regelmaat wilt, kun je een week een haalbare vaste opstaantijd proberen en kijken hoe je je voelt.') : ''), sl.length + ' nachten', s > 1.2 || short >= 2 ? 'tip' : 'good');
     const nextKcal = pairs(n, d => d.sleepH, d => DVARS.eveKcal.f(d)).filter(p => isNum(p.y));
     const sc = splitCompare(nextKcal, 6.5);
-    if (sc && sc.lo > sc.hi * 1.2) add('slaap', 'Korte nacht en avondinname', 'In je registratie volgde na nachten korter dan 6,5 u gemiddeld ' + fmtNum(sc.lo) + ' kcal vanaf het avondeten, tegenover ' + fmtNum(sc.hi) + ' kcal na langere nachten. Dit kan toeval of een verschil in dagcontext zijn; het dagboek kan geen oorzaak aantonen. Kijk of een vaste maaltijdplanning op korte nachten voor jou helpt.', sc.nlo + ' + ' + sc.nhi + ' dagen', 'info');
+    if (sc && sc.lo > sc.hi * 1.2) add('slaap', 'Korte nacht en avondinname', trf('Na nachten korter dan 6,5 uur registreerde je gemiddeld {short} kcal vanaf het avondeten, tegenover {long} kcal na langere nachten. Dit kan toeval zijn of samenhangen met andere omstandigheden; je dagboek toont geen oorzaak. Kijk of een vaste maaltijdplanning na korte nachten voor jou helpt.', { short: fmtNum(sc.lo), long: fmtNum(sc.hi) }), sc.nlo + ' + ' + sc.nhi + ' dagen', 'info');
   }
 
   /* 9. Honger en trek */
@@ -127,7 +128,11 @@ function moreInsights(n, recent, add) {
     const types = {};
     actDays.forEach(x => x.d.activities.forEach(a => { types[a.type] = (types[a.type] || 0) + a.min; }));
     const e1 = avg(actDays.map(x => x.d.energy).filter(isNum)), e0 = avg(recent.filter(x => !(x.d.activities || []).length).map(x => x.d.energy).filter(isNum));
-    add('activiteit', 'Sporten en bewegen', 'Op ' + actDays.length + ' dagen deed je iets extra: ' + Object.entries(types).map(([t, m]) => (ACTIVITIES[t] || ACTIVITIES.anders).label.toLowerCase() + ' ' + m + ' min').join(', ') + '.' + (isNum(e1) && isNum(e0) ? ' Energie op die dagen ' + fmtNum(e1, 1) + '/10, anders ' + fmtNum(e0, 1) + '/10.' : ''), actDays.length + ' dagen', 'good');
+    add('activiteit', 'Sporten en bewegen', trf('Op {days} dagen registreerde je extra beweging: {activities}.{energy}', {
+      days: actDays.length,
+      activities: Object.entries(types).map(([t, m]) => tr(ACTIVITIES[t] || ACTIVITIES.anders).toLocaleLowerCase(currentLocale()) + ' ' + m + ' ' + tr('min')).join(', '),
+      energy: isNum(e1) && isNum(e0) ? trf(' Je energie was op die dagen gemiddeld {active}/10 en op dagen zonder geregistreerde activiteit {rest}/10.', { active: fmtNum(e1, 1), rest: fmtNum(e0, 1) }) : ''
+    }), actDays.length + ' dagen', 'good');
   }
 }
 function dayComplete(d) {

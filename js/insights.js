@@ -40,13 +40,13 @@ function buildInsights(n) {
     const a = avg(kcFull.map(x => x.r.v));
     const diff = a - G.kcal;
     if (diff < -250) add('voeding', 'Gemiddeld onder je richtpunt',
-      'Op dagen die volledig geregistreerd zijn eet je gemiddeld ≈ ' + fmtNum(a) + ' kcal, zo\'n ' + fmtNum(-diff) + ' onder je richtpunt van ' + fmtNum(G.kcal) + '. Structureel ver onder je richtpunt kan later op de dag of \'s nachts sterke honger geven. Een eiwitrijk tussendoortje in de namiddag (bv. skyr, kwark, een handje noten) is een manier om het gat kleiner te maken.',
+      trf('Op volledig geregistreerde dagen eet je gemiddeld ≈ {average} kcal, ongeveer {difference} onder je richtpunt van {target} kcal. Als dit langere tijd zo is, kun je later op de dag of ’s nachts meer honger krijgen. Een eiwitrijke snack in de namiddag, zoals skyr, kwark of noten, kan helpen het verschil kleiner te maken.', { average: fmtNum(a), difference: fmtNum(-diff), target: fmtNum(G.kcal) }),
       kcFull.length + ' volledige dagen', 'tip');
     else if (diff > 300) add('voeding', 'Gemiddeld boven je richtpunt',
-      'Op volledig geregistreerde dagen ≈ ' + fmtNum(a) + ' kcal gemiddeld, ' + fmtNum(diff) + ' boven je richtpunt. Kijk in de Kcal-grafiek op welk moment van de dag het meeste binnenkomt; daar zit meestal de makkelijkste aanpassing. Niet compenseren door de volgende dag minder te eten.',
+      trf('Op volledig geregistreerde dagen gemiddeld ≈ {average} kcal, {difference} boven je richtpunt. Bekijk in de kcal-grafiek wanneer je het meest eet; daar vind je vaak een haalbare kleine aanpassing. Compenseer niet door de volgende dag minder te eten.', { average: fmtNum(a), difference: fmtNum(diff) }),
       kcFull.length + ' volledige dagen', 'tip');
     else add('voeding', 'Rond je richtpunt',
-      'Volledig geregistreerde dagen zitten gemiddeld op ≈ ' + fmtNum(a) + ' kcal, dicht bij je richtpunt van ' + fmtNum(G.kcal) + '.', kcFull.length + ' volledige dagen', 'good');
+      trf('Volledig geregistreerde dagen zitten gemiddeld op ≈ {average} kcal, dicht bij je richtpunt van {target} kcal.', { average: fmtNum(a), target: fmtNum(G.kcal) }), kcFull.length + ' volledige dagen', 'good');
   }
   /* Verdeling over de dag: weinig overdag, veel 's avonds/'s nachts */
   const dist = recent.filter(x => (x.d.meals || []).some(m => isNum(m.kcal)) && !x.d.kcalOverride).map(x => {
@@ -57,42 +57,42 @@ function buildInsights(n) {
   if (dist.length >= 4) {
     const share = avg(dist.map(x => x.eve / x.tot));
     if (share > 0.5) add('voeding', 'Het grootste deel komt \'s avonds',
-      'Gemiddeld ' + Math.round(share * 100) + '% van je geregistreerde kcal komt bij of na het avondeten. Bij een rustig ontbijt en een kleine lunch is avondhonger een logisch gevolg. Een stevigere lunch of een vast tussendoortje rond 16 u spreidt het beter; zo hoeft het avondeten minder op te vangen.',
+      trf('Gemiddeld {percent}% van je geregistreerde kcal komt bij of na het avondeten. Als ontbijt en lunch klein zijn, kan je later meer honger krijgen. Een stevigere lunch of een geplande snack rond 16 uur kan je eten beter over de dag spreiden.', { percent: Math.round(share * 100) }),
       dist.length + ' dagen', 'tip');
     const nightDays = recent.filter(x => (x.d.meals || []).some(m => m.slot === 'na' && !m.nothing));
     if (nightDays.length >= 2) {
       const lowDay = nightDays.filter(x => slotKcal(x.d, ['ontbijt', 'tussen1', 'lunch', 'tussen2']) < 800).length;
       add('voeding', 'Eten na het avondeten',
-        'Op ' + nightDays.length + ' van de ' + recent.length + ' dagen at je nog iets na het avondeten. ' + (lowDay ? 'Op ' + lowDay + ' daarvan kwam er vóór 19 u minder dan 800 kcal binnen. ' : '') + 'Dit is een patroon om met je diëtist te bespreken, geen fout.',
+        trf(lowDay ? 'Op {days} van de {total} dagen at je na het avondeten nog iets. Op {lowDays} van die dagen was er vóór 19 uur minder dan 800 kcal geregistreerd. Dit is een patroon om eventueel met je diëtist te bespreken, geen fout.' : 'Op {days} van de {total} dagen at je na het avondeten nog iets. Dit is een patroon om eventueel met je diëtist te bespreken, geen fout.', { days: nightDays.length, total: recent.length, lowDays: lowDay }),
         nightDays.length + ' dagen', 'info');
     }
   }
   const pr = recent.map(x => dayNutr(x.d, 'protein')).filter(r => r && !r.lb);
   if (pr.length >= 3) {
     const a = avg(pr.map(r => r.v));
-    if (a < G.protein * 0.85) add('voeding', 'Eiwit onder je doel', 'Gemiddeld ≈ ' + fmtNum(a) + ' g eiwit per dag, je doel is ' + G.protein + ' g. Eiwit verzadigt goed; een eiwitbron bij het ontbijt (eieren, skyr, kwark) helpt het meest, want daar zit nu vaak weinig.', pr.length + ' dagen', 'tip');
-    else add('voeding', 'Eiwit op niveau', 'Gemiddeld ≈ ' + fmtNum(a) + ' g eiwit per dag (doel ' + G.protein + ' g).', pr.length + ' dagen', 'good');
+    if (a < G.protein * 0.85) add('voeding', 'Eiwit onder je doel', trf('Gemiddeld ≈ {average} g eiwit per dag; je doel is {target} g. Een eiwitbron bij het ontbijt, zoals eieren of yoghurt, kan een praktische aanvulling zijn.', { average: fmtNum(a), target: G.protein }), pr.length + ' dagen', 'tip');
+    else add('voeding', 'Eiwit op niveau', trf('Gemiddeld ≈ {average} g eiwit per dag (doel {target} g).', { average: fmtNum(a), target: G.protein }), pr.length + ' dagen', 'good');
   }
   const fb = recent.map(x => dayNutr(x.d, 'fiber')).filter(r => r && !r.lb);
   if (fb.length >= 3) {
     const a = avg(fb.map(r => r.v));
-    if (a < G.fiber * 0.8) add('voeding', 'Vezels', 'Gemiddeld ≈ ' + fmtNum(a) + ' g vezels (doel ' + G.fiber + ' g). Peulvruchten, volkoren en groenten in je mealprep zijn de makkelijkste bron.', fb.length + ' dagen', 'tip');
+    if (a < G.fiber * 0.8) add('voeding', 'Vezels', trf('Gemiddeld ≈ {average} g vezels (doel {target} g). Peulvruchten, volkoren granen en groenten zijn eenvoudige manieren om meer vezels toe te voegen.', { average: fmtNum(a), target: G.fiber }), fb.length + ' dagen', 'tip');
   }
 
   /* --- Drinken, cafeïne, alcohol --- */
   const wat = recent.map(x => x.d.waterMl).filter(isNum);
   if (wat.length >= 3) {
     const a = avg(wat);
-    if (a < G.waterMl * 0.85) add('voeding', 'Water', 'Gemiddeld ≈ ' + fmtNum(a / 1000, 1) + ' l per dag (doel ' + fmtNum(G.waterMl / 1000, 1) + ' l). Een glas bij elke check-in is een simpele gewoonte.', wat.length + ' dagen', 'tip');
+    if (a < G.waterMl * 0.85) add('voeding', 'Water', trf('Gemiddeld ≈ {average} l per dag (doel {target} l). Een glas water bij een check-in kan een eenvoudige herinnering zijn.', { average: fmtNum(a / 1000, 1), target: fmtNum(G.waterMl / 1000, 1) }), wat.length + ' dagen', 'tip');
   }
   const cafSleep = pairs(n, d => d.caffeine, d => d.sleepH, 1);
   const cs = splitCompare(cafSleep, 3);
   if (cs && cs.hi < cs.lo - 0.4) add('slaap', 'Cafeïne en de nacht erna',
-    'Na dagen met 3 of meer shots sliep je gemiddeld ' + fmtNum(cs.hi, 1) + ' u, na rustigere dagen ' + fmtNum(cs.lo, 1) + ' u. Cafeïne werkt 5–6 uur na; probeer de laatste koffie vóór 14 u.', cs.nhi + ' + ' + cs.nlo + ' dagen', 'tip');
+    trf('Na dagen met 3 of meer cafeïneporties sliep je gemiddeld {higher} uur; na dagen met minder porties {lower} uur. Cafeïne kan nog uren doorwerken. Als jij een verband vermoedt, probeer dan eens je laatste portie eerder te nemen.', { higher: fmtNum(cs.hi, 1), lower: fmtNum(cs.lo, 1) }), cs.nhi + ' + ' + cs.nlo + ' dagen', 'tip');
   const alcNext = pairs(n, d => d.alcohol, d => d.energy, 1);
   const ae = splitCompare(alcNext, 1);
   if (ae && ae.hi < ae.lo - 0.5) add('stemming', 'Alcohol en de dag erna',
-    'De dag na het drinken was je energie gemiddeld ' + fmtNum(ae.hi, 1) + '/10, tegenover ' + fmtNum(ae.lo, 1) + '/10 na dagen zonder.', ae.nhi + ' + ' + ae.nlo + ' dagen', 'info');
+    trf('De dag na een dag met alcoholregistratie was je energie gemiddeld {after}/10, tegenover {without}/10 na dagen met expliciet nul alcohol. Dit laat samen voorkomen zien, geen oorzaak.', { after: fmtNum(ae.hi, 1), without: fmtNum(ae.lo, 1) }), ae.nhi + ' + ' + ae.nlo + ' dagen', 'info');
 
   /* --- Activiteit --- */
   const st = recent.map(x => ({ k: x.k, v: x.d.steps })).filter(x => isNum(x.v));
@@ -100,7 +100,7 @@ function buildInsights(n) {
     const last7 = st.filter(x => x.k > addDays(todayKey(), -7)).map(x => x.v);
     const prev7 = st.filter(x => x.k <= addDays(todayKey(), -7) && x.k > addDays(todayKey(), -14)).map(x => x.v);
     const a7 = avg(last7.length ? last7 : st.map(x => x.v));
-    let t = tr('Laatste 7 dagen gemiddeld') + ' ' + fmtNum(a7) + ' ' + tr('stappen (doel') + ' ' + fmtNum(G.stepsMin) + '–' + fmtNum(G.stepsMax) + ').';
+    let t = trf('Gemiddeld over de laatste 7 dagen: {average} stappen (doel {minimum}–{maximum}).', { average: fmtNum(a7), minimum: fmtNum(G.stepsMin), maximum: fmtNum(G.stepsMax) });
     if (prev7.length >= 3) t += ' ' + tr('De week ervoor:') + ' ' + fmtNum(avg(prev7)) + '.';
     let tone = 'good';
     if (a7 < G.stepsMin) { t += ' ' + tr('Een korte wandeling van 10 minuten na de lunch of het avondeten levert ≈ 1.000 stappen op en helpt ook je bloedsuiker na de maaltijd.'); tone = 'tip'; }
@@ -111,37 +111,37 @@ function buildInsights(n) {
     const valid = wk.map((v, i) => ({ v, i })).filter(x => isNum(x.v));
     if (valid.length >= 5) {
       const low = valid.reduce((a, b) => (b.v < a.v ? b : a));
-      add('activiteit', 'Rustigste dag', 'Op ' + WD[low.i] + ' zet je gemiddeld het minst stappen (' + fmtNum(low.v) + '). Een vaste wandeling op die dag plannen is het makkelijkste winstpunt.', valid.length + ' weekdagen', 'info');
+      add('activiteit', 'Rustigste dag', trf('Op {day} zet je gemiddeld het minst stappen ({steps}). Een vaste wandeling op die dag plannen kan een haalbare volgende stap zijn.', { day: tr(WD[low.i]), steps: fmtNum(low.v) }), valid.length + ' weekdagen', 'info');
     }
   }
   if (DB.settings.moodInsights === true) {
     const stMood = pairs(n, d => d.steps, d => d.mood);
     const rs = pearson(stMood);
-    if (rs !== null && rs > 0.35 && stMood.length >= 14) add('stemming', 'Bewegen en stemming', 'Op dagen met meer stappen lag je stemming-score gemiddeld samen hoger. Dit beschrijft je registraties en zegt niet wat oorzaak is.', stMood.length + ' dagen', 'info');
+    if (rs !== null && rs > 0.35 && stMood.length >= 14) add('stemming', 'Bewegen en stemming', tr('Op dagen met meer stappen lag je stemmingsscore gemiddeld samen hoger. Dit beschrijft je registraties en zegt niet wat de oorzaak is.'), stMood.length + ' dagen', 'info');
   }
 
   /* --- Slaap en stemming --- */
   const slEn = pairs(n, d => d.sleepH, d => d.energy);
   const se = splitCompare(slEn, G.sleepH - 0.5);
   if (se && Math.abs(se.hi - se.lo) >= 0.7) add('slaap', 'Slaap en energie',
-    'Na nachten van ' + fmtNum(G.sleepH - 0.5, 1) + ' u of meer: energie ' + fmtNum(se.hi, 1) + '/10. Na kortere nachten: ' + fmtNum(se.lo, 1) + '/10.', se.nhi + ' + ' + se.nlo + ' dagen', se.hi > se.lo ? 'tip' : 'info');
+    trf('Na nachten van {threshold} uur of meer was je energie gemiddeld {long}/10. Na kortere nachten was die {short}/10. Dit zijn persoonlijke registraties; slaap en energie kunnen ook door andere omstandigheden veranderen.', { threshold: fmtNum(G.sleepH - 0.5, 1), long: fmtNum(se.hi, 1), short: fmtNum(se.lo, 1) }), se.nhi + ' + ' + se.nlo + ' dagen', se.hi > se.lo ? 'tip' : 'info');
   if (DB.settings.moodInsights === true) {
     const slMood = pairs(n, d => d.sleepH, d => d.mood);
     const sm = pearson(slMood);
-    if (sm !== null && Math.abs(sm) > 0.3 && slMood.length >= 14) add('stemming', 'Slaap en stemming', 'Slaapduur en je stemming-score bewogen in deze registraties samen. Dit is een beschrijving, geen aanwijzing voor oorzaak.', slMood.length + ' dagen', 'info');
+    if (sm !== null && Math.abs(sm) > 0.3 && slMood.length >= 14) add('stemming', 'Slaap en stemming', tr('Slaapduur en je stemmingsscore bewogen in deze registraties samen. Dit is een beschrijving, geen aanwijzing voor oorzaak.'), slMood.length + ' dagen', 'info');
   }
   const cp = recent.filter(x => x.d.cpap && isNum(x.d.energy));
   const cpFull = cp.filter(x => /hele|ja/i.test(x.d.cpap) && !/deels|vanaf|nee/i.test(x.d.cpap)).map(x => x.d.energy);
   const cpNot = cp.filter(x => /nee|deels|vanaf/i.test(x.d.cpap)).map(x => x.d.energy);
-  if (cpFull.length >= 2 && cpNot.length >= 2) add('slaap', 'CPAP', 'Met CPAP de hele nacht: energie gemiddeld ' + fmtNum(avg(cpFull), 1) + '/10. Zonder of maar een deel van de nacht: ' + fmtNum(avg(cpNot), 1) + '/10.', cpFull.length + ' + ' + cpNot.length + ' dagen', 'tip');
+  if (cpFull.length >= 2 && cpNot.length >= 2) add('slaap', 'CPAP', trf('Op dagen waarop je CPAP de hele nacht gebruikte, was je energie gemiddeld {full}/10. Zonder CPAP of bij gebruik gedurende een deel van de nacht was dit {partial}/10. Volg het plan van je slaapteam en pas de instellingen niet zelf aan.', { full: fmtNum(avg(cpFull), 1), partial: fmtNum(avg(cpNot), 1) }), cpFull.length + ' + ' + cpNot.length + ' dagen', 'info');
 
   /* --- Gewicht --- */
   const w = recent.map(x => ({ k: x.k, v: x.d.weight })).filter(x => isNum(x.v));
   if (w.length >= 2) {
     const a1 = avg(w.slice(-7).map(x => x.v));
-    let t = 'Weekgemiddelde ≈ ' + fmtNum(a1, 1) + ' kg over ' + Math.min(7, w.length) + ' wegingen.';
-    if (w.length >= 10) { const a0 = avg(w.slice(-14, -7).map(x => x.v)); if (isNum(a0)) t += ' De 7 wegingen daarvoor: ' + fmtNum(a0, 1) + ' kg.'; }
-    t += ' Gewicht schommelt van dag tot dag 1–2 kg door vocht, zout, alcohol en restauranteten; kijk alleen naar het verloop over weken.';
+    let t = trf('Het gemiddelde over je laatste {count} wegingen is ongeveer {average} kg.', { count: Math.min(7, w.length), average: fmtNum(a1, 1) });
+    if (w.length >= 10) { const a0 = avg(w.slice(-14, -7).map(x => x.v)); if (isNum(a0)) t += ' ' + trf('Het gemiddelde van de 7 wegingen daarvoor was {average} kg.', { average: fmtNum(a0, 1) }); }
+    t += ' ' + tr('Gewicht kan van dag tot dag 1–2 kg schommelen door vocht, zout, alcohol en restaurantmaaltijden. Kijk naar het verloop over meerdere weken.');
     add('gewicht', 'Gewichtsverloop', t, w.length + ' wegingen', 'info');
   }
 
@@ -152,21 +152,21 @@ function buildInsights(n) {
     const hungry = fbs.filter(p => p.feedback.fullness === 'snel weer honger');
     const fav = fbs.filter(p => p.feedback.again === 'ja' && (p.feedback.taste || 0) >= 4);
     let t = '';
-    if (fav.length) t += 'Favorieten om opnieuw te maken: ' + fav.map(p => p.name).join(', ') + '. ';
-    if (big.length) t += 'Te groot of moeilijk op te eten: ' + big.map(p => p.name).join(', ') + '. Verdeel zo\'n prep over meer porties of minder volume (minder groenten of rijst per portie), eerder dan maaltijden over te slaan. ';
-    if (hungry.length) t += 'Snel weer honger na: ' + hungry.map(p => p.name).join(', ') + '. Meer eiwit of vezels per portie helpt meestal om langer verzadigd te blijven.';
+    if (fav.length) t += trf('Favorieten om opnieuw te maken: {names}. ', { names: fav.map(p => p.name).join(', ') });
+    if (big.length) t += trf('Deze porties waren te groot of lastig op te eten: {names}. Verdeel dezelfde bereiding eventueel over meer porties, in plaats van maaltijden over te slaan.', { names: big.map(p => p.name).join(', ') }) + ' ';
+    if (hungry.length) t += trf('Na deze bereidingen had je snel weer honger: {names}. Een combinatie met eiwit- en vezelrijke ingrediënten kan voor sommige mensen langer verzadigen.', { names: hungry.map(p => p.name).join(', ') });
     if (t) add('voeding', 'Wat je van je mealpreps vond', t.trim(), fbs.length + ' beoordeelde mealprep' + (fbs.length > 1 ? 's' : ''), big.length || hungry.length ? 'tip' : 'good');
   }
   /* --- Beweging --- */
   const burns = recent.map(x => ({ k: x.k, v: dayBurn(x.d, x.k) })).filter(x => isNum(x.v));
   if (burns.length >= 3) {
     const acts = recent.reduce((n, x) => n + (x.d.activities || []).length, 0);
-    add('activiteit', 'Beweging', 'Gemiddeld ≈ ' + fmtNum(avg(burns.map(x => x.v))) + ' kcal extra per dag door bewegen (stappen' + (acts ? ' en ' + acts + ' andere activiteit' + (acts > 1 ? 'en' : '') : '') + '). Dat is een ruwe schatting; zie het als een maat voor hoe actief je was, niet als iets om met eten te verrekenen.', burns.length + ' dagen', 'info');
+    add('activiteit', 'Beweging', trf('Je registreerde gemiddeld ongeveer {calories} extra kcal per dag door activiteit{activities}. Dit is een ruwe schatting van je activiteit, geen hoeveelheid die je met eten hoeft te verrekenen.', { calories: fmtNum(avg(burns.map(x => x.v))), activities: acts ? trf(' (stappen en {count} andere activiteiten)', { count: acts }) : '' }), burns.length + ' dagen', 'info');
   }
 
   /* --- Registratie --- */
   const missing = rangeKeys(completeKey(), 7).filter(k => !DB.days[k] || !(DB.days[k].meals || []).length).length;
-  if (missing >= 3) add('registratie', 'Gaten in de registratie', missing + ' van de laatste 7 dagen hebben geen maaltijden. Hoe vollediger, hoe betrouwbaarder de analyses.', '7 dagen', 'info');
+  if (missing >= 3) add('registratie', 'Gaten in de registratie', trf('Op {count} van de laatste 7 dagen heb je geen maaltijden geregistreerd. Analyses zijn bruikbaarder wanneer je gegevens zo volledig mogelijk zijn.', { count: missing }), '7 dagen', 'info');
 
   if (typeof moreInsights === 'function') { try { moreInsights(n, recent, add); } catch (e) { console.warn('inzichten', e); } }
   return out;

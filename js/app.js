@@ -647,7 +647,7 @@ function supplementDiary(d, k) {
   if (d.supplementsLogged) {
     h += entries.length ? '<ul class="supplement-list">' + entries.map((s, i) => '<li><span><b>' + esc(s.name) + '</b>' + (s.dose ? ' · ' + esc(s.dose) : '') + '</span><button class="link danger" data-act="supplementRemove" data-k="' + k + '" data-i="' + i + '" aria-label="' + esc(tr('Verwijderen')) + '">×</button></li>').join('') + '</ul>' : '<p class="muted">' + tr('Je hebt voor deze dag genoteerd dat je geen supplementen nam.') + '</p>';
   } else h += '<p class="muted">' + tr('Nog niet bijgehouden. Een lege dag is geen registratie van geen gebruik.') + '</p>';
-  if (entries.length < 8) h += '<div class="grid2"><label class="fld"><span>' + tr('Naam') + '</span><input type="text" maxlength="80" data-supp-name="' + k + '" placeholder="' + esc(tr('bv. vitamine D, zink')) + '"></label><label class="fld"><span>' + tr('Dosis (zoals op etiket)') + '</span><input type="text" maxlength="40" data-supp-dose="' + k + '" placeholder="' + esc(tr('bv. 25 µg, 1 tablet')) + '"></label></div><div class="inrow wrap"><button class="btn" data-act="supplementAdd" data-k="' + k + '">' + tr('Supplement toevoegen') + '</button>';
+  if (entries.length < 8) h += '<div class="grid2 supplement-fields"><label class="fld"><span>' + tr('Naam') + '</span><input type="text" maxlength="80" data-supp-name="' + k + '" placeholder="' + esc(tr('bv. vitamine D, zink')) + '"></label><label class="fld"><span>' + tr('Dosis (zoals op etiket)') + '</span><input type="text" maxlength="40" data-supp-dose="' + k + '" placeholder="' + esc(tr('bv. 25 µg, 1 tablet')) + '"></label></div><div class="inrow wrap"><button class="btn" data-act="supplementAdd" data-k="' + k + '">' + tr('Supplement toevoegen') + '</button>';
   if (!d.supplementsLogged && !entries.length) h += '<button class="btn ghost" data-act="supplementNone" data-k="' + k + '">' + tr('Vandaag geen supplementen') + '</button>';
   h += '</div>';
   if (d.supplementsLogged) h += '<button class="link" data-act="supplementClear" data-k="' + k + '">' + tr('Registratie wissen') + '</button>';
@@ -1262,7 +1262,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.25';
+const APP_VERSION = '1.10.26';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
