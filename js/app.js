@@ -582,7 +582,7 @@ ACT.pickNewFood = () => openFoodEditor(null, food => backToPicker('Bewaard: ' + 
 function renderDays() {
   const keys = Object.keys(DB.days).sort().reverse();
   let h = header('Dagboek', keys.length + ' dagen geregistreerd');
-  h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><label class="btn ghost datepick">' + tr('Andere dag') + '<input type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" data-chg="openDate"></label></div>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><div class="diary-date-control"><button class="btn ghost" data-act="chooseDiaryDate">' + tr('Andere dag') + '</button><input class="diary-date" type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" data-chg="openDate"></div></div>';
   h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">' + tr('Welzijn') + '</span><h3>' + tr('Hoe is het met je, los van de cijfers?') + '</h3><p class="small">' + tr('Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.') + '</p><span class="plan-go">' + tr('Stemming en gewoontes bekijken ›') + '</span></a>';
   const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
@@ -600,6 +600,11 @@ function renderDays() {
   view().innerHTML = h;
 }
 ACT.newEntry = () => go('#/checkin/vrij');
+ACT.chooseDiaryDate = () => {
+  const input = $('#pdate'); if (!input) return;
+  try { if (typeof input.showPicker === 'function') input.showPicker(); else { input.focus(); input.click(); } }
+  catch (_) { input.focus(); input.click(); }
+};
 ACT.openDate = el => { if (el.value) go('#/dag/' + el.value); };
 
 function renderDay(k) {
@@ -1201,7 +1206,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.10';
+const APP_VERSION = '1.10.11';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
