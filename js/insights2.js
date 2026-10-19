@@ -11,6 +11,7 @@ const DVARS = {
   burn: { l: 'beweging', u: 'kcal', d: 0, f: (d, k) => dayBurn(d, k) },
   kcal: { l: 'kcal', u: 'kcal', d: 0, f: d => { const r = dayNutr(d, 'kcal'); return r && !r.lb ? r.v : null; } },
   protein: { l: 'eiwit', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'protein'); return r && !r.lb ? r.v : null; } },
+  carbs: { l: 'koolhydraten', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'carbs'); return r && !r.lb ? r.v : null; } },
   fiber: { l: 'vezels', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'fiber'); return r && !r.lb ? r.v : null; } },
   fat: { l: 'vet', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'fat'); return r && !r.lb ? r.v : null; } },
   water: { l: 'water', u: 'l', d: 1, f: d => isNum(d.waterMl) ? d.waterMl / 1000 : null },

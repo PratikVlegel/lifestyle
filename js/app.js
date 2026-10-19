@@ -115,16 +115,16 @@ function reminderDisplayLabel(label) {
 }
 
 /* ================= home ================= */
-const KPI_ORDER = ['kcal', 'protein', 'water', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fiber', 'caffeine', 'fat'];
+const KPI_ORDER = ['kcal', 'protein', 'carbs', 'water', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fiber', 'caffeine', 'fat'];
 const HOME_KPI_CHOICES = [...KPI_ORDER, 'diary'];
 function homeKpiKeys() {
   const saved = DB.settings.homeKpis;
   if (Array.isArray(saved)) return [...new Set(saved.filter(k => HOME_KPI_CHOICES.includes(k)))];
   const defaults = {
-    food: ['kcal', 'protein', 'fiber', 'water'],
+    food: ['kcal', 'protein', 'carbs', 'fiber', 'water'],
     movement: ['steps', 'burn', 'sleep', 'diary'],
     wellbeing: ['mood', 'energy', 'sleep', 'diary'],
-    balanced: ['kcal', 'protein', 'steps', 'diary']
+    balanced: ['kcal', 'protein', 'carbs', 'steps', 'diary']
   };
   return defaults[DB.settings.homeFocus] || defaults.balanced;
 }
@@ -255,13 +255,15 @@ function mealsList(day, k, editable) {
 function nutrLine(m) {
   const p = [];
   p.push(isNum(m.kcal) ? '≈ ' + fmtNum(m.kcal) + ' kcal' : 'kcal onbekend');
-  if (isNum(m.protein)) p.push(fmtNum(m.protein) + ' g eiwit');
+  if (isNum(m.protein)) p.push(fmtNum(m.protein) + ' g ' + tr('eiwit'));
+  if (isNum(m.carbs)) p.push(fmtNum(m.carbs) + ' g ' + tr('koolh.'));
+  if (isNum(m.fat)) p.push(fmtNum(m.fat) + ' g ' + tr('vet'));
   if (isNum(m.fiber)) p.push(fmtNum(m.fiber) + ' g vezels');
   return p.join(' · ');
 }
 
 /* ================= KPI-detail ================= */
-const KPI_CAT = { kcal: 'voeding', protein: 'voeding', fiber: 'voeding', water: 'voeding', steps: 'activiteit', burn: 'activiteit', fat: 'voeding', sleep: 'slaap', mood: 'stemming', energy: 'stemming', weight: 'gewicht', caffeine: 'slaap' };
+const KPI_CAT = { kcal: 'voeding', protein: 'voeding', carbs: 'koolhydraten', fiber: 'voeding', water: 'voeding', steps: 'activiteit', burn: 'activiteit', fat: 'voeding', sleep: 'slaap', mood: 'stemming', energy: 'stemming', weight: 'gewicht', caffeine: 'slaap' };
 function renderKpi(key) {
   const M = METRICS[key]; if (!M) return go('#/');
   const ser = metricSeries(key, todayKey(), PERIOD);
@@ -1352,7 +1354,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.51';
+const APP_VERSION = '1.10.52';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

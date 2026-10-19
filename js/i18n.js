@@ -1259,6 +1259,9 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], CYCLE_WARM_TRANSLATIONS['de-DE']);
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], INTAKE_STEP_TRANSLATIONS['en-GB']);
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], INTAKE_STEP_TRANSLATIONS['fr-FR']);
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], INTAKE_STEP_TRANSLATIONS['de-DE']);
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { 'Koolhydraten': 'Carbohydrates', 'koolhydraten': 'carbohydrates' });
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { 'Koolhydraten': 'Glucides', 'koolhydraten': 'glucides' });
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Koolhydraten': 'Kohlenhydrate', 'koolhydraten': 'Kohlenhydrate' });
 for (const [locale, labels] of Object.entries({
   'en-GB': {
     'Startscherm':'Home screen','Kies je kerncijfers':'Choose your dashboard metrics','Open deze instelling via het vraagteken rechtsboven op Vandaag. Kies zelf welke tegels je wilt tonen; je kunt er zoveel of zo weinig kiezen als je wilt.':'Open this setting using the question mark at the top right of Today. Choose which tiles to show; you can show as many or as few as you like.','onderdelen':'sections','vandaag bijgehouden':'logged today','Aanvullen ›':'Add details ›','De dagboektegel toont hoeveel soorten gegevens je vandaag hebt ingevuld. Tik erop om je dagboek aan te vullen.':'The diary tile counts the types of information you logged today. Tap it to add to your diary.','Aanpassen':'Customise','Kies minimaal één kerncijfer.':'Choose at least one metric.','Je kunt maximaal zes kerncijfers kiezen.':'You can choose up to six metrics.','Er zijn geen kerncijfers gekozen.':'No metrics selected.'
