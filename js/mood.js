@@ -12,23 +12,23 @@ function moodComparison(title, note, rows, groupA, groupB) {
   const a = rows.filter(x => groupA(x.x)).map(x => x.y), b = rows.filter(x => groupB(x.x)).map(x => x.y);
   if (a.length < 5 || b.length < 5) return '';
   const delta = moodMedian(a) - moodMedian(b);
-  const direction = Math.abs(delta) < 0.5 ? 'De middelste stemming-score was in beide groepen vergelijkbaar.' : delta > 0 ? 'De middelste stemming-score was hoger in de eerste groep.' : 'De middelste stemming-score was lager in de eerste groep.';
-  return '<article class="card mood-factor"><div class="mood-factor-head"><h3>' + esc(title) + '</h3><span class="pill">' + rows.length + ' dagen</span></div>' +
-    '<div class="mood-groups"><div><span>' + esc(groupA.label) + '</span><b>' + fmtNum(moodMedian(a), 1) + '<small>/10</small></b><small>' + a.length + ' dagen</small></div><div><span>' + esc(groupB.label) + '</span><b>' + fmtNum(moodMedian(b), 1) + '<small>/10</small></b><small>' + b.length + ' dagen</small></div></div>' +
-    '<p>' + direction + '</p><p class="muted small">' + esc(note) + ' Dit is een persoonlijke beschrijving, geen bewijs van oorzaak of een medische beoordeling.</p></article>';
+  const direction = Math.abs(delta) < 0.5 ? tr('De middelste stemmingsscore was in beide groepen vergelijkbaar.') : delta > 0 ? tr('De middelste stemmingsscore was hoger in de eerste groep.') : tr('De middelste stemmingsscore was lager in de eerste groep.');
+  return '<article class="card mood-factor"><div class="mood-factor-head"><h3>' + esc(tr(title)) + '</h3><span class="pill">' + rows.length + ' ' + tr('dagen') + '</span></div>' +
+    '<div class="mood-groups"><div><span>' + esc(tr(groupA.label)) + '</span><b>' + fmtNum(moodMedian(a), 1) + '<small>/10</small></b><small>' + a.length + ' ' + tr('dagen') + '</small></div><div><span>' + esc(tr(groupB.label)) + '</span><b>' + fmtNum(moodMedian(b), 1) + '<small>/10</small></b><small>' + b.length + ' ' + tr('dagen') + '</small></div></div>' +
+    '<p>' + direction + '</p><p class="muted small">' + esc(tr(note)) + ' ' + tr('Dit is een persoonlijke beschrijving, geen bewijs van oorzaak of een medische beoordeling.') + '</p></article>';
 }
 function renderMoodModule() {
   const enabled = DB.settings.moodInsights === true;
   let h = header('Stemming en gewoontes', 'Een rustige terugblik op je eigen registraties', true);
-  h += '<div class="card mood-intro"><h2>Wat valt samen met hoe je je voelt?</h2><p>Deze optionele module vergelijkt je stemming met slaap, alcohol, vapen, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.</p><label class="toggle"><input type="checkbox" data-chg="setMoodInsights"' + (enabled ? ' checked' : '') + '><span>Persoonlijke vergelijkingen inschakelen</span></label><p class="muted small">Alles wordt op dit toestel berekend. Alleen dagen waarop beide waarden zijn ingevuld tellen mee. Uitgeschakelde of niet ingevulde waarden worden niet als nul gezien.</p></div>';
+  h += '<div class="card mood-intro"><h2>' + tr('Wat valt samen met hoe je je voelt?') + '</h2><p>' + tr('Deze optionele module vergelijkt je stemming met slaap, alcohol, vapen, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.') + '</p><label class="toggle"><input type="checkbox" data-chg="setMoodInsights"' + (enabled ? ' checked' : '') + '><span>' + tr('Persoonlijke vergelijkingen inschakelen') + '</span></label><p class="muted small">' + tr('Alles wordt op dit toestel berekend. Alleen dagen waarop beide waarden zijn ingevuld tellen mee. Uitgeschakelde of niet ingevulde waarden worden niet als nul gezien.') + '</p></div>';
   if (!enabled) {
-    h += '<div class="card muted">Je stemming wordt niet met andere gewoontes vergeleken. Schakel de optie hierboven in als je dat zelf wilt.</div>';
+    h += '<div class="card muted">' + tr('Je stemming wordt niet met andere gewoontes vergeleken. Schakel de optie hierboven in als je dat zelf wilt.') + '</div>';
     view().innerHTML = h; return;
   }
   const keys = rangeKeys(todayKey(), 60), records = keys.map(k => ({ k, d: DB.days[k] })).filter(x => x.d && isNum(x.d.mood) && x.d.mood >= 0 && x.d.mood <= 10);
-  h += '<div class="card"><b>Laatste 60 dagen</b><p class="muted small">' + records.length + ' dagen met een stemmingsscore. Een score zegt alleen hoe jij die dag je stemming hebt ingeschat.</p></div>';
+  h += '<div class="card"><b>' + tr('Laatste 60 dagen') + '</b><p class="muted small">' + records.length + ' ' + tr('dagen met een stemmingsscore. Een score zegt alleen hoe jij die dag je stemming hebt ingeschat.') + '</p></div>';
   if (records.length < 14) {
-    h += '<div class="card note"><b>Nog te weinig registraties voor een zinvolle vergelijking</b><p class="small">Er zijn minstens 14 stemmingsdagen nodig, en minstens 5 dagen per kant van elke vergelijking. Je hoeft niet elke dag in te vullen.</p></div>';
+    h += '<div class="card note"><b>' + tr('Nog te weinig registraties voor een zinvolle vergelijking') + '</b><p class="small">' + tr('Er zijn minstens 14 stemmingsdagen nodig, en minstens 5 dagen per kant van elke vergelijking. Je hoeft niet elke dag in te vullen.') + '</p></div>';
   } else {
     let cards = '';
     const sleepRows = records.filter(x => isNum(x.d.sleepH)).map(x => ({ x: x.d.sleepH, y: x.d.mood }));
@@ -52,7 +52,7 @@ function renderMoodModule() {
     cards += moodComparison('Geregistreerde vezels', 'Dit gaat over voedingsmiddelen met ingevulde voedingswaarden in je dagboek, niet over je volledige voedingskwaliteit.', fiberRows, meetsFiber, belowFiber);
     h += cards || '<div class="card note"><b>Per factor nog te weinig gegevens</b><p class="small">Een vergelijking verschijnt pas bij minstens vijf dagen per groep. Ontbrekende waarden blijven buiten de berekening.</p></div>';
   }
-  h += '<div class="card mood-care"><h3>Als je stemming je zorgen baart</h3><p>Een dagboek kan helpen om je eigen ervaringen te bespreken, maar vervangt geen gesprek met een huisarts of andere zorgverlener. Neem contact op als een sombere stemming langer aanhoudt of je dagelijks leven beïnvloedt.</p><a href="https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/low-mood-sadness-depression/" target="_blank" rel="noopener">NHS: omgaan met een lage stemming</a></div>';
+  h += '<div class="card mood-care"><h3>' + tr('Als je stemming je zorgen baart') + '</h3><p>' + tr('Een dagboek kan helpen om je eigen ervaringen te bespreken, maar vervangt geen gesprek met een huisarts of andere zorgverlener. Neem contact op als een sombere stemming langer aanhoudt of je dagelijks leven beïnvloedt.') + '</p><a href="https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/low-mood-sadness-depression/" target="_blank" rel="noopener">' + tr('NHS: omgaan met een lage stemming') + '</a></div>';
   view().innerHTML = h;
 }
 ACT.setMoodInsights = el => { DB.settings.moodInsights = !!el.checked; save(); renderMoodModule(); };
