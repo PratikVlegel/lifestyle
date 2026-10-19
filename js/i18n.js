@@ -1836,3 +1836,12 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Vul een geldig getal in.': 'Gib eine gültige Zahl ein.', 'Vul een geheel getal in.': 'Gib eine ganze Zahl ein.', 'Kies een waarde tussen {min} en {max}.': 'Wähle einen Wert zwischen {min} und {max}.',
   'Stappen minimum mag niet hoger zijn dan het maximum.': 'Das Schritt-Minimum darf nicht über dem Maximum liegen.', 'Stappen maximum mag niet lager zijn dan het minimum.': 'Das Schritt-Maximum darf nicht unter dem Minimum liegen.'
 });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Mealpreps': 'Meal preps', 'Lijst': 'List', 'favoriet': 'favourite', 'Kies hierboven een of meer mealpreps.': 'Choose one or more meal preps above.', 'Iets anders toevoegen (bv. skyr)': 'Add something else (e.g. skyr)', 'Toevoegen': 'Add', 'Deel lijst': 'Share list', 'Alles uitvinken': 'Uncheck all', 'Lijst leegmaken': 'Clear list', 'Lijst leegmaken?': 'Clear the list?', 'Boodschappen': 'Shopping list', 'Nog niets. Wat je vaak eet, verschijnt hier vanzelf.': 'Nothing yet. Foods you eat often will appear here.', 'In 45 dagen: {count} keer': '{count} times in the last 45 days'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Mealpreps': 'Repas préparés', 'Lijst': 'Liste', 'favoriet': 'favori', 'Kies hierboven een of meer mealpreps.': 'Choisissez un ou plusieurs repas préparés ci-dessus.', 'Iets anders toevoegen (bv. skyr)': 'Ajouter autre chose (ex. skyr)', 'Toevoegen': 'Ajouter', 'Deel lijst': 'Partager la liste', 'Alles uitvinken': 'Tout décocher', 'Lijst leegmaken': 'Vider la liste', 'Lijst leegmaken?': 'Vider la liste ?', 'Boodschappen': 'Courses', 'Nog niets. Wat je vaak eet, verschijnt hier vanzelf.': 'Rien pour le moment. Les aliments que vous consommez souvent apparaîtront ici.', 'In 45 dagen: {count} keer': '{count} fois au cours des 45 derniers jours'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Mealpreps': 'Mahlzeiten', 'Lijst': 'Liste', 'favoriet': 'Favorit', 'Kies hierboven een of meer mealpreps.': 'Wähle oben eine oder mehrere Mahlzeiten aus.', 'Iets anders toevoegen (bv. skyr)': 'Etwas anderes hinzufügen (z. B. Skyr)', 'Toevoegen': 'Hinzufügen', 'Deel lijst': 'Liste teilen', 'Alles uitvinken': 'Alle Häkchen entfernen', 'Lijst leegmaken': 'Liste leeren', 'Lijst leegmaken?': 'Liste leeren?', 'Boodschappen': 'Einkaufsliste', 'Nog niets. Wat je vaak eet, verschijnt hier vanzelf.': 'Noch nichts. Lebensmittel, die du häufig isst, erscheinen hier automatisch.', 'In 45 dagen: {count} keer': '{count}-mal in den letzten 45 Tagen'
+});

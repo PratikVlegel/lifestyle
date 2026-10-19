@@ -37,8 +37,8 @@ function frequentItems(max) {
 }
 function favResults() {
   const list = frequentItems(15);
-  if (!list.length) return '<p class="muted">Nog niets. Wat je vaak eet, verschijnt hier vanzelf.</p>';
-  return list.map((e, i) => '<button class="pick wide" data-act="pickFav" data-i="' + i + '"><b>' + esc(e.m.desc) + '</b><small>' + nutrLine(e.m) + ' · ' + e.n + '× in 45 dagen</small></button>').join('');
+  if (!list.length) return '<p class="muted">' + tr('Nog niets. Wat je vaak eet, verschijnt hier vanzelf.') + '</p>';
+  return list.map((e, i) => '<button class="pick wide" data-act="pickFav" data-i="' + i + '"><b>' + esc(e.m.desc) + '</b><small>' + nutrLine(e.m) + ' · ' + trf('In 45 dagen: {count} keer', { count: e.n }) + '</small></button>').join('');
 }
 ACT.pickFav = el => { const e = frequentItems(15)[Number(el.dataset.i)]; closeSheet(); PICK_CB && PICK_CB([copyItem(e.m)]); };
 
@@ -58,28 +58,28 @@ function shopItems() {
   const items = [...map.values()].map(e => ({ key: e.name.toLowerCase(), label: e.name, amt: e.g >= 1000 ? fmtNum(e.g / 1000, 2) + ' kg' : fmtNum(e.g) + ' g', from: [...new Set(e.from)] }));
   for (const l of loose) if (!map.has(l.name.toLowerCase())) items.push({ key: l.name.toLowerCase(), label: l.name, amt: '', from: l.from });
   for (const x of S.extra) items.push({ key: 'x:' + x, label: x, amt: '', from: [] });
-  return items.sort((a, b) => a.label.localeCompare(b.label, 'nl'));
+  return items.sort((a, b) => a.label.localeCompare(b.label, currentLocale()));
 }
 function renderShop() {
   const S = shopState();
   let h = header('Boodschappenlijst', 'Kies wat je deze week maakt', true);
   const preps = DB.preps.slice().sort((a, b) => (b.feedback && b.feedback.again === 'ja') - (a.feedback && a.feedback.again === 'ja') || (b.date || '').localeCompare(a.date || ''));
-  h += '<div class="card"><h3>Mealpreps</h3>' + preps.map(p => {
+  h += '<div class="card"><h3>' + tr('Mealpreps') + '</h3>' + preps.map(p => {
     const m = S.sel[p.id] || 0;
-    return '<div class="stepper"><span>' + esc(p.name) + (p.feedback && p.feedback.again === 'ja' ? ' <small class="muted">★ favoriet</small>' : '') + '</span><button data-act="shopMult" data-id="' + p.id + '" data-d="-1">−</button><b>' + (m ? m + '×' : '–') + '</b><button data-act="shopMult" data-id="' + p.id + '" data-d="1">+</button></div>';
+    return '<div class="stepper"><span>' + esc(p.name) + (p.feedback && p.feedback.again === 'ja' ? ' <small class="muted">★ ' + tr('favoriet') + '</small>' : '') + '</span><button data-act="shopMult" data-id="' + p.id + '" data-d="-1">−</button><b>' + (m ? m + '×' : '–') + '</b><button data-act="shopMult" data-id="' + p.id + '" data-d="1">+</button></div>';
   }).join('') + '</div>';
   const items = shopItems();
-  h += '<div class="card list"><h3>Lijst</h3>' + (items.length ? items.map(it => '<label class="check"><input type="checkbox" data-chg="shopDone" data-k="' + esc(it.key) + '"' + (S.done[it.key] ? ' checked' : '') + '><span class="n">' + esc(it.label) + (it.amt ? ' <b>' + it.amt + '</b>' : '') + '<small class="muted"> ' + esc(it.from.join(', ')) + '</small></span></label>').join('') : '<p class="muted">Kies hierboven een of meer mealpreps.</p>') +
-    '<div class="inrow"><input id="shopx" placeholder="Iets anders toevoegen (bv. skyr)"><button class="btn ghost" data-act="shopAdd">+</button></div></div>';
-  h += '<div class="inrow wrap"><button class="btn" data-act="shopShare">Deel lijst</button><button class="link" data-act="shopReset">Alles uitvinken</button><button class="link danger" data-act="shopClear">Lijst leegmaken</button></div>';
+  h += '<div class="card list"><h3>' + tr('Lijst') + '</h3>' + (items.length ? items.map(it => '<label class="check"><input type="checkbox" data-chg="shopDone" data-k="' + esc(it.key) + '"' + (S.done[it.key] ? ' checked' : '') + '><span class="n">' + esc(it.label) + (it.amt ? ' <b>' + it.amt + '</b>' : '') + '<small class="muted"> ' + esc(it.from.join(', ')) + '</small></span></label>').join('') : '<p class="muted">' + tr('Kies hierboven een of meer mealpreps.') + '</p>') +
+    '<div class="inrow"><input id="shopx" placeholder="' + esc(tr('Iets anders toevoegen (bv. skyr)')) + '"><button class="btn ghost" data-act="shopAdd" aria-label="' + esc(tr('Toevoegen')) + '">+</button></div></div>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="shopShare">' + tr('Deel lijst') + '</button><button class="link" data-act="shopReset">' + tr('Alles uitvinken') + '</button><button class="link danger" data-act="shopClear">' + tr('Lijst leegmaken') + '</button></div>';
   view().innerHTML = h;
 }
 ACT.shopMult = el => { const S = shopState(); S.sel[el.dataset.id] = Math.max(0, (S.sel[el.dataset.id] || 0) + Number(el.dataset.d)); if (!S.sel[el.dataset.id]) delete S.sel[el.dataset.id]; save(); const y = scrollY; render(); scrollTo(0, y); };
 ACT.shopDone = el => { const S = shopState(); if (el.checked) S.done[el.dataset.k] = true; else delete S.done[el.dataset.k]; save(); };
 ACT.shopAdd = () => { const v = ($('#shopx').value || '').trim(); if (!v) return; shopState().extra.push(v); save(); render(); };
 ACT.shopReset = () => { shopState().done = {}; save(); render(); };
-ACT.shopClear = () => { if (!confirm('Lijst leegmaken?')) return; DB.shop = { sel: {}, done: {}, extra: [] }; save(); render(); };
-ACT.shopShare = () => { const S = shopState(); shareText('Boodschappen\n' + shopItems().filter(i => !S.done[i.key]).map(i => '☐ ' + i.label + (i.amt ? ' – ' + i.amt : '')).join('\n'), 'Boodschappenlijst'); };
+ACT.shopClear = () => { if (!confirm(tr('Lijst leegmaken?'))) return; DB.shop = { sel: {}, done: {}, extra: [] }; save(); render(); };
+ACT.shopShare = () => { const S = shopState(); shareText(tr('Boodschappen') + '\n' + shopItems().filter(i => !S.done[i.key]).map(i => '☐ ' + i.label + (i.amt ? ' – ' + i.amt : '')).join('\n'), tr('Boodschappenlijst')); };
 
 /* ---------- rapporten per doelgroep ---------- */
 const AUDIENCES = {
