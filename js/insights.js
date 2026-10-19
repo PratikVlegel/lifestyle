@@ -274,15 +274,15 @@ function downscale(file) {
 /* Tekstsamenvatting om te delen met diëtist of in een Claude-chat te plakken. */
 function weekSummaryText(n) {
   n = n || 7;
-  const lines = ['Samenvatting laatste ' + n + ' dagen (' + fmtDay(addDays(todayKey(), -(n - 1))) + ' – ' + fmtDay(todayKey()) + ')', ''];
+  const lines = [trf('Samenvatting van de laatste {count} dagen ({start} – {end})', { count: n, start: fmtDay(addDays(todayKey(), -(n - 1))), end: fmtDay(todayKey()) }), ''];
   for (const k of rangeKeys(todayKey(), n)) {
-    const d = DB.days[k]; if (!d) { lines.push(fmtDay(k, true) + ': geen registratie'); continue; }
+    const d = DB.days[k]; if (!d) { lines.push(fmtDay(k, true) + ': ' + tr('Geen registratie')); continue; }
     const kc = dayNutr(d, 'kcal');
-    lines.push(fmtDay(k, true) + ': ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : 'kcal onbekend') +
-      ' · slaap ' + (d.sleepH ?? '?') + ' u · energie ' + (d.energy ?? '?') + ' · stemming ' + (d.mood ?? '?') + ' · ' + (d.steps ?? '?') + ' stappen · water ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + d.weight + ' kg' : ''));
-    for (const s of SLOT_ORDER) for (const m of (d.meals || []).filter(m => m.slot === s)) lines.push('   ' + SLOTS[s] + (m.time ? ' ' + m.time : '') + ': ' + (m.nothing ? 'niets' : m.desc) + (isNum(m.kcal) ? ' (≈ ' + Math.round(m.kcal) + ' kcal)' : ''));
-    if (d.notes || d.moodNote) lines.push('   Notitie: ' + [d.moodNote, d.notes].filter(Boolean).join(' · '));
+    lines.push(fmtDay(k, true) + ': ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('Kcal onbekend')) +
+      ' · ' + tr('Slaap') + ' ' + (d.sleepH ?? '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (d.energy ?? '?') + ' · ' + tr('Stemming') + ' ' + (d.mood ?? '?') + ' · ' + (d.steps ?? '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + d.weight + ' kg' : ''));
+    for (const s of SLOT_ORDER) for (const m of (d.meals || []).filter(m => m.slot === s)) lines.push('   ' + tr(SLOTS[s]) + (m.time ? ' ' + m.time : '') + ': ' + (m.nothing ? tr('niets') : m.desc) + (isNum(m.kcal) ? ' (≈ ' + Math.round(m.kcal) + ' kcal)' : ''));
+    if (d.notes || d.moodNote) lines.push('   ' + tr('Notitie:') + ' ' + [d.moodNote, d.notes].filter(Boolean).join(' · '));
   }
-  lines.push('', 'Kcal zijn ruwe schattingen. Slaap = de nacht ervóór.');
+  lines.push('', tr('Kcal zijn ruwe schattingen. Slaap slaat op de nacht vóór die dag.'));
   return lines.join('\n');
 }

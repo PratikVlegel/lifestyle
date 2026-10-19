@@ -369,7 +369,7 @@ function trTrainingText(value) {
   let dynamic = text.match(/^Richtlijn voor deze opbouwfase: (.+?) per oefening\.$/);
   if (dynamic) return trf('Richtlijn voor deze opbouwfase: {sets} per oefening.', { sets: tr(dynamic[1]) });
   dynamic = text.match(/^Doe ongeveer de helft van je sets uit week (\d+); week 8 is eveneens lichter\.$/);
-  if (dynamic) return trf('Do about half as many sets as in week {week}; week 8 is also lighter.', { week: dynamic[1] });
+  if (dynamic) return trf('Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.', { week: dynamic[1] });
   return tr(text);
 }
 function renderProgressiveProgram(g) {

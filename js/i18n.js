@@ -1008,6 +1008,45 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Zoek op schemanaam of communitynaam': 'Nach Plan- oder Community-Namen suchen', 'Zoek in gedeelde schema’s': 'Geteilte Pläne durchsuchen', 'Doel of type': 'Ziel oder Typ', 'Alle doelen': 'Alle Ziele', 'Alle niveaus': 'Alle Niveaus', 'Zoekopdracht doorzoekt de nieuwste 100 gedeelde schema’s.': 'Die Suche umfasst die 100 neuesten geteilten Pläne.', 'Geen schema’s gevonden met deze filters.': 'Keine Pläne passen zu diesen Filtern.', 'Schema’s laden…': 'Pläne werden geladen…', 'Log in als communitylid om gedeelde schema’s te bekijken.': 'Melde dich als Community-Mitglied an, um geteilte Pläne zu sehen.', 'Gedeelde schema’s laden kan alleen met internet.': 'Zum Laden geteilter Pläne ist eine Internetverbindung erforderlich.', 'Gedeelde schema’s zijn nog niet beschikbaar. Controleer of de communitytabellen op Supabase zijn bijgewerkt.': 'Geteilte Pläne sind noch nicht verfügbar. Prüfe, ob die Community-Tabellen in Supabase aktualisiert wurden.', 'Er zijn nog geen schema’s gedeeld. Deel je eigen schema om de community op gang te brengen.': 'Es wurden noch keine Pläne geteilt. Teile deinen eigenen Plan, um die Community zu starten.', 'weken': 'Wochen', 'trainingsdagen/week': 'Trainingstage/Woche', 'beoordeling': 'Bewertung', 'beoordelingen': 'Bewertungen'
 });
 
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Nog geen beoordelingen': 'No reviews yet', 'Nog geen beoordelingen.': 'No reviews yet.', 'Schema bekijken ›': 'View plan ›',
+  'Samenvatting van de laatste {count} dagen ({start} – {end})': 'Summary of the last {count} days ({start} – {end})',
+  'Geen registratie': 'No entry logged', 'Kcal onbekend': 'Calories unknown', 'hours': 'h', 'niets': 'nothing', 'Notitie:': 'Note:',
+  'Kcal zijn ruwe schattingen. Slaap slaat op de nacht vóór die dag.': 'Calories are rough estimates. Sleep refers to the night before that day.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Nog geen beoordelingen': 'Aucun avis pour le moment', 'Nog geen beoordelingen.': 'Aucun avis pour le moment.', 'Schema bekijken ›': 'Voir le programme ›',
+  'Samenvatting van de laatste {count} dagen ({start} – {end})': 'Résumé des {count} derniers jours ({start} – {end})',
+  'Geen registratie': 'Aucune donnée enregistrée', 'Kcal onbekend': 'Calories inconnues', 'hours': 'h', 'niets': 'rien', 'Notitie:': 'Note :',
+  'Kcal zijn ruwe schattingen. Slaap slaat op de nacht vóór die dag.': 'Les calories sont des estimations. Le sommeil correspond à la nuit précédant cette journée.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Nog geen beoordelingen': 'Noch keine Bewertungen', 'Nog geen beoordelingen.': 'Noch keine Bewertungen.', 'Schema bekijken ›': 'Plan ansehen ›',
+  'Samenvatting van de laatste {count} dagen ({start} – {end})': 'Zusammenfassung der letzten {count} Tage ({start} – {end})',
+  'Geen registratie': 'Kein Eintrag', 'Kcal onbekend': 'Kalorien unbekannt', 'hours': 'Std.', 'niets': 'nichts', 'Notitie:': 'Notiz:',
+  'Kcal zijn ruwe schattingen. Slaap slaat op de nacht vóór die dag.': 'Kalorien sind grobe Schätzungen. Der Schlaf bezieht sich auf die Nacht vor diesem Tag.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['nl-BE'], {
+  '{count} days': '{count} dagen', '{count} logged days': '{count} dagen geregistreerd', '{count} days with data': '{count} dagen met registratie',
+  'Report for {audience}': 'Rapport voor {audience}',
+  'Self-reported. Calories and nutrition values are rough estimates; “–” means unknown. Sleep refers to the night before that day.': 'Zelf geregistreerd. Calorieën en voedingswaarden zijn schattingen; “–” betekent onbekend. Slaap slaat op de nacht vóór die dag.',
+  'Mood scores are daily self-reflections, not a validated psychological assessment.': 'Stemmingsscores zijn dagelijkse zelfreflecties, geen gevalideerde psychologische beoordeling.',
+  '{count} years': '{count} jaar', 'Goals: {kcal} kcal, {protein} g protein, {fiber} g fibre, {water} l water, {stepsMin}–{stepsMax} steps.': 'Doelen: {kcal} kcal, {protein} g eiwit, {fiber} g vezels, {water} l water, {stepsMin}–{stepsMax} stappen.',
+  'Food was logged after dinner on {late} of {days} days; lunch was skipped on {lunch} days.': 'Na het avondeten werd eten geregistreerd op {late} van {days} dagen; de lunch werd overgeslagen op {lunch} dagen.',
+  'No alcohol entries were recorded in this period; missing entries are unknown.': 'Er is in deze periode geen alcohol geregistreerd; ontbrekende registraties zijn onbekend.',
+  '{total} glasses across {logged} logged days; average {average} glasses per logged day. {zero} logged days had zero; {unknown} days are unknown or unrecorded.': '{total} glazen op {logged} geregistreerde dagen; gemiddeld {average} glazen per geregistreerde dag. Op {zero} geregistreerde dagen was dit nul; {unknown} dagen zijn onbekend of niet geregistreerd.',
+  '{used} days with at least one nicotine form logged; {none} days explicitly logged as none; {unknown} of {total} days unknown or unrecorded.': '{used} dagen met minstens één geregistreerde nicotinevorm; {none} dagen expliciet zonder nicotine geregistreerd; {unknown} van {total} dagen onbekend of niet geregistreerd.',
+  'Recorded nicotine forms (a day can include more than one):': 'Geregistreerde nicotinevormen (meerdere per dag mogelijk):', 'Older vaping frequency entries (days):': 'Oudere registraties van vape-frequentie (dagen):',
+  'These older options are rough frequency descriptions, not a count of puffs or a nicotine dose. Current nicotine entries record the form, not the amount used.': 'De oudere opties geven alleen een ruwe frequentie aan, geen aantal trekjes of nicotinedosis. De huidige registraties tonen de nicotinevorm, niet de gebruikte hoeveelheid.',
+  '{full} full night, {partial} part night, {no} no use': '{full} volledige nacht, {partial} deel van de nacht, {no} geen gebruik', 'Average {weight} kg across {count} weigh-ins.': 'Gemiddeld {weight} kg over {count} wegingen.', 'No weigh-ins recorded.': 'Geen wegingen geregistreerd.',
+  'Nicotine': 'Nicotine', 'Vape': 'Vape', 'min': 'min', 'glasses': 'glazen', 'days': 'dagen', 'hours': 'u',
+  'Substances and mood': 'Middelen en stemming', 'Mood comparisons are off. Enable them in Mood and habits if you want this report to compare substances with mood.': 'Stemmingsvergelijkingen staan uit. Schakel ze in bij Stemming en gewoontes als je middelen met stemming wilt vergelijken.',
+  'These optional comparisons use only days with both a mood score and a known substance entry. Missing entries are excluded; a pattern does not show cause or effect.': 'Deze optionele vergelijkingen gebruiken alleen dagen met zowel een stemmingsscore als een bekende registratie van middelen. Ontbrekende registraties tellen niet mee; een patroon toont geen oorzaak of gevolg.',
+  '{label}: not enough mood-scored days for a comparison (at least 5 in each group are needed).': '{label}: te weinig dagen met een stemmingsscore voor een vergelijking (minstens 5 per groep nodig).',
+  'Median mood was {withMood}/10 on days with {label} logged ({withDays} days) and {withoutMood}/10 on days with none logged ({withoutDays} days). This describes co-occurrence, not cause.': 'De mediane stemming was {withMood}/10 op dagen waarop {label} was geregistreerd ({withDays} dagen) en {withoutMood}/10 op dagen zonder registratie ({withoutDays} dagen). Dit beschrijft samen voorkomen, geen oorzaak.',
+  'alcohol': 'alcohol', 'nicotine': 'nicotine', 'Coffee servings': 'Koffieporties', 'servings': 'porties'
+});
+
 function currentLocale() { return UI_LOCALES.includes(DB && DB.settings && DB.settings.language) ? DB.settings.language : 'nl-BE'; }
 function tr(text) {
   const locale = currentLocale();
