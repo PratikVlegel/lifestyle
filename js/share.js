@@ -144,15 +144,39 @@ async function renderRecipes() {
   if (!navigator.onLine) { view().innerHTML = h + '<p class="note">' + tr('Je bent offline. Gedeelde recepten laden kan alleen met internet.') + '</p>'; return; }
   try {
     RECIPE_ROWS = await fetchRecipes();
-    h += '<div class="card"><label class="fld"><span>' + tr('Zoek op recept, ingrediënt of communitynaam') + '</span><input type="search" id="communityRecipeSearch" data-community-filter="recipes" placeholder="' + tr('Zoek in gedeelde recepten') + '"></label><label class="fld"><span>' + tr('Energie per portie') + '</span><select id="communityRecipeKcal" data-community-filter="recipes"><option value="all">' + tr('Alle waarden') + '</option><option value="low">' + tr('Minder dan 400 kcal') + '</option><option value="mid">' + tr('400–700 kcal') + '</option><option value="high">' + tr('Meer dan 700 kcal') + '</option></select></label><small class="muted">' + tr('De zoekopdracht doorzoekt de nieuwste 100 gedeelde recepten. Dieetlabels zijn nog niet beschikbaar.') + '</small></div><div id="communityRecipeResults"></div>';
+    h += '<div class="card"><label class="fld"><span>' + tr('Zoek op recept, ingrediënt of communitynaam') + '</span><input type="search" id="communityRecipeSearch" data-community-filter="recipes" placeholder="' + tr('Zoek in gedeelde recepten') + '"></label>' +
+      '<div class="community-filter-grid">' +
+      communityFilterSelect('communityRecipeKcal', 'Energie per portie', [['all','Alle waarden'],['low','Minder dan 400 kcal'],['mid','400–700 kcal'],['high','Meer dan 700 kcal']]) +
+      communityFilterSelect('communityRecipeDiet', 'Vlees of vis in de ingrediënten', [['all','Maakt niet uit'],['yes','Vlees of vis herkend'],['no','Geen vlees of vis herkend']]) +
+      communityFilterSelect('communityRecipeProtein', 'Eiwit per portie', [['all','Maakt niet uit'],['high','Veel: minstens 25 g'],['low','Weinig: maximaal 10 g']]) +
+      communityFilterSelect('communityRecipeFiber', 'Vezels per portie', [['all','Maakt niet uit'],['high','Veel: minstens 8 g'],['low','Weinig: maximaal 3 g']]) +
+      communityFilterSelect('communityRecipeCarbs', 'Koolhydraten per portie', [['all','Maakt niet uit'],['high','Veel: minstens 45 g'],['low','Weinig: maximaal 20 g']]) + '</div>' +
+      '<small class="muted">' + tr('Alle gekozen filters worden gecombineerd. Voedingswaarden gelden per portie; “veel” en “weinig” zijn zoekfilters, geen gezondheidsnorm. Vlees/vis wordt herkend in de zichtbare ingrediëntenlijst; controleer altijd zelf de ingrediënten.') + ' ' + tr('De zoekopdracht doorzoekt de nieuwste 100 gedeelde recepten.') + '</small></div><div id="communityRecipeResults"></div>';
   } catch (e) { h += '<p class="note">' + tr('Laden mislukt: ') + esc(e.message) + '</p>'; }
   view().innerHTML = h;
   if (RECIPE_ROWS.length) renderCommunityRecipes();
+}
+function communityFilterSelect(id, label, options) {
+  return '<label class="fld"><span>' + tr(label) + '</span><select id="' + id + '" data-community-filter="recipes">' + options.map(([value, text]) => '<option value="' + value + '">' + tr(text) + '</option>').join('') + '</select></label>';
+}
+function recipeHasMeatOrFish(r) {
+  const text = (r.ingredients || []).map(x => x && x.name || '').join(' ').toLocaleLowerCase();
+  return /\b(kip(?:filet|pen)?|rund|gehakt|varkens?|ham|spek|bacon|worst|kalf|lam|eend|kalkoen|vlees|chicken|beef|pork|sausage|lamb|duck|turkey|veal|meat|fish|vis|zalm|tonijn|makreel|kabeljauw|garnalen|scampi|mossel|oester|sardine|salmon|tuna|cod|shrimp|prawn|mussel|oyster|poulet|boeuf|porc|jambon|lardons|agneau|canard|dinde|viande|poisson|saumon|thon|crevettes|moules|huhn|rind|schwein|speck|wurst|pute|ente|truthahn|fleisch|fisch|lachs|thunfisch|garnele|muschel)\b/i.test(text);
+}
+function recipeMacroPass(r, filter, field, high, low) {
+  if (filter === 'all') return true;
+  const value = r.per && r.per[field];
+  if (!isNum(value)) return false;
+  return filter === 'high' ? value >= high : value <= low;
 }
 function renderCommunityRecipes() {
   const target = document.getElementById('communityRecipeResults'); if (!target) return;
   const needle = ((document.getElementById('communityRecipeSearch') || {}).value || '').toLocaleLowerCase().trim();
   const kcalFilter = (document.getElementById('communityRecipeKcal') || {}).value || 'all';
+  const dietFilter = (document.getElementById('communityRecipeDiet') || {}).value || 'all';
+  const proteinFilter = (document.getElementById('communityRecipeProtein') || {}).value || 'all';
+  const fiberFilter = (document.getElementById('communityRecipeFiber') || {}).value || 'all';
+  const carbsFilter = (document.getElementById('communityRecipeCarbs') || {}).value || 'all';
   const rows = RECIPE_ROWS.filter(r => {
     const searchable = [r.name, r.authorName, r.note, ...(r.ingredients || []).map(x => x.name)].join(' ').toLocaleLowerCase();
     if (needle && !searchable.includes(needle)) return false;
@@ -161,6 +185,11 @@ function renderCommunityRecipes() {
     if (kcalFilter === 'low' && kcal >= 400) return false;
     if (kcalFilter === 'mid' && (kcal < 400 || kcal > 700)) return false;
     if (kcalFilter === 'high' && kcal <= 700) return false;
+    const meat = recipeHasMeatOrFish(r);
+    if (dietFilter === 'yes' && !meat || dietFilter === 'no' && meat) return false;
+    if (!recipeMacroPass(r, proteinFilter, 'protein', 25, 10)) return false;
+    if (!recipeMacroPass(r, fiberFilter, 'fiber', 8, 3)) return false;
+    if (!recipeMacroPass(r, carbsFilter, 'carbs', 45, 20)) return false;
     return true;
   });
   target.innerHTML = rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' ' + tr('porties') + '</span></div><small class="muted">' + tr('Gedeeld door') + ' ' + esc(r.authorName) + '</small>' +

@@ -29,6 +29,7 @@ function defaultData() {
     settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, pushEnabled: false, glassMl: 250, theme: 'auto', moodInsights: false, communityName: '', language: 'nl-BE', homeFocus: 'balanced', palette: 'forest', textSize: 'normal' },
     training: { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, rehabCleared: false, generated: null, plans: [], activePlanId: null },
     days: {},
+    cycleTracking: { enabled: false, selectedDate: '', periodStarts: [], logs: {} },
     preps: [],
     foods: [],
     ai: []
@@ -55,6 +56,23 @@ function migrate(d) {
   out.training.plans = Array.isArray(out.training.plans) ? out.training.plans.filter(p => p && typeof p === 'object' && typeof p.id === 'string' && Array.isArray(p.weeks) && p.weeks.length > 0 && p.weeks.every(w => w && Array.isArray(w.sessions))) : [];
   if (!out.training.plans.some(p => p.id === out.training.activePlanId && p.status === 'active')) out.training.activePlanId = null;
   out.days = d.days || {};
+  const cycle = d.cycleTracking && typeof d.cycleTracking === 'object' && !Array.isArray(d.cycleTracking) ? d.cycleTracking : {};
+  out.cycleTracking = {
+    enabled: cycle.enabled === true,
+    selectedDate: typeof cycle.selectedDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(cycle.selectedDate) ? cycle.selectedDate : '',
+    periodStarts: Array.isArray(cycle.periodStarts) ? [...new Set(cycle.periodStarts.filter(k => typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k)))].sort().slice(-120) : [],
+    logs: {}
+  };
+  if (cycle.logs && typeof cycle.logs === 'object' && !Array.isArray(cycle.logs)) {
+    const allowed = ['bleeding', 'pain', 'mood', 'energy', 'cravings', 'sleep', 'bloating', 'headache'];
+    for (const [key, value] of Object.entries(cycle.logs).slice(-5000)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !value || typeof value !== 'object' || Array.isArray(value)) continue;
+      const clean = {};
+      for (const field of allowed) if (Number.isInteger(value[field]) && value[field] >= 0 && value[field] <= 3) clean[field] = value[field];
+      if (Number.isInteger(value.support) && value.support >= 0 && value.support <= 5) clean.support = value.support;
+      out.cycleTracking.logs[key] = clean;
+    }
+  }
   out.preps = d.preps || [];
   out.foods = d.foods || [];
   out.ai = d.ai || [];
@@ -226,9 +244,11 @@ function validateImportData(obj) {
   const record = v => !!v && typeof v === 'object' && !Array.isArray(v);
   const fail = message => { throw new Error('Ongeldige back-up: ' + message); };
   if (!record(obj)) fail('verwacht een JSON-object.');
-  for (const field of ['days', 'profile', 'goals', 'settings', 'training']) {
+  for (const field of ['days', 'profile', 'goals', 'settings', 'training', 'cycleTracking']) {
     if (obj[field] !== undefined && obj[field] !== null && !record(obj[field])) fail('het veld ' + field + ' heeft een ongeldig formaat.');
   }
+  if (obj.cycleTracking && obj.cycleTracking.periodStarts !== undefined && (!Array.isArray(obj.cycleTracking.periodStarts) || obj.cycleTracking.periodStarts.length > 120)) fail('cyclusregistraties hebben een ongeldig formaat.');
+  if (obj.cycleTracking && obj.cycleTracking.logs !== undefined && (!record(obj.cycleTracking.logs) || Object.keys(obj.cycleTracking.logs).length > 5000)) fail('cyclusdagboek heeft een ongeldig formaat.');
   for (const field of ['preps', 'foods', 'ai', 'reminders', 'mealPatch']) {
     if (obj[field] !== undefined && obj[field] !== null && !Array.isArray(obj[field])) fail('het veld ' + field + ' moet een lijst zijn.');
     if (Array.isArray(obj[field]) && obj[field].length > 10000) fail('de lijst ' + field + ' is te groot.');

@@ -25,7 +25,7 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming', 'cycle'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -39,6 +39,7 @@ function render() {
       case 'prep': return renderPrep(a);
       case 'inzicht': return renderInsights();
       case 'stemming': return renderMoodModule();
+      case 'cycle': return renderCycleModule();
       case 'meer': return renderMore(a);
       case 'train': return renderTrainingPlan();
       case 'schemas': return renderTrainingHub();
@@ -95,6 +96,7 @@ function header(title, sub, back) {
   return '<header class="top">' + (back ? '<button class="iconbtn" data-act="back" aria-label="' + esc(tr('Terug')) + '">‹</button>' : '') +
     '<div><h1>' + esc(tr(title)) + '</h1>' + (sub ? '<p class="muted">' + esc(tr(sub)) + '</p>' : '') + '</div></header>';
 }
+function reminderDisplayLabel(label) { return ['Ontbijt + weging', 'Lunch', 'Avondeten', 'Dagopname', 'Tussendoor'].includes(label) ? tr(label) : label; }
 
 /* ================= home ================= */
 const KPI_ORDER = ['kcal', 'protein', 'water', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fiber', 'caffeine', 'fat'];
@@ -106,7 +108,7 @@ function renderHome() {
   if (due) {
     h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(due.label) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
   }
-  h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(x.r.label) + '</button>').join('') + '</div>';
+  h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
   const homeCards = { week: weekCard(), training: activeTrainingHomeCard(), mood: moodHomeCard(), feedback: feedbackCard() };
   const homeOrders = { food: ['week', 'feedback', 'training', 'mood'], movement: ['training', 'week', 'feedback', 'mood'], wellbeing: ['mood', 'week', 'feedback', 'training'], balanced: ['week', 'training', 'mood', 'feedback'] };
   h += '<div class="home-focus-list">' + (homeOrders[DB.settings.homeFocus] || homeOrders.balanced).map(key => homeCards[key]).join('') + '</div>';
@@ -268,7 +270,7 @@ function renderCheckin(rid, dateKey) {
   const k = dateKey || (new Date().getHours() < 4 ? addDays(todayKey(), -1) : todayKey());
   if (!CI || CI.rid !== r.id || CI.k !== k) CI = newCheckin(r, k);
   const day = getDay(k);
-  let h = header(r.label, fmtDay(k, true) + ' · ' + r.time, true);
+  let h = header(reminderDisplayLabel(r.label), fmtDay(k, true) + ' · ' + r.time, true);
   if (day && day.done && day.done[r.id]) h += '<p class="note">' + tr('Deze check-in is vandaag al ingevuld. Wat je nu bewaart, komt erbij.') + '</p>';
   h += '<div class="seg small">' + [addDays(todayKey(), -1), todayKey()].map(x => '<button class="' + (x === k ? 'on' : '') + '" data-act="ciDate" data-k="' + x + '">' + tr(x === todayKey() ? 'Vandaag' : 'Gisteren') + '</button>').join('') + '</div>';
   const kind = r.kind;
@@ -624,7 +626,7 @@ function renderDay(k) {
     f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'text') +
     (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
     '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
-  if (d.done && Object.keys(d.done).length) h += '<p class="muted small">Check-ins gedaan: ' + DB.reminders.filter(r => d.done[r.id]).map(r => r.label).join(', ') + '</p>';
+  if (d.done && Object.keys(d.done).length) h += '<p class="muted small">' + tr('Check-ins gedaan:') + ' ' + DB.reminders.filter(r => d.done[r.id]).map(r => reminderDisplayLabel(r.label)).join(', ') + '</p>';
   h += '<button class="link danger" data-act="delDay" data-k="' + k + '">' + tr('Hele dag verwijderen') + '</button>';
   view().innerHTML = h;
 }
@@ -844,7 +846,7 @@ async function shareText(txt, title) {
 
 /* ================= inzicht ================= */
 function aiDataDisclosure() {
-  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, nicotinevormen, frisdrank, snoep en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.');
+  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, nicotinevormen, frisdrank, snoep en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.') + ' ' + tr('Het optionele cyclusdagboek blijft lokaal en wordt nooit meegestuurd met AI-analyses.');
 }
 function insightCard(i) {
   return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + tr(i.cat) + '</span>' + (i.isNew ? '<span class="tag new">' + tr('nieuw') + '</span>' : '') + '<b>' + esc(tr(i.title)) + '</b></div><p>' + esc(tr(i.text)).replace(/\n/g, '<br>') + '</p><small class="muted">' + tr('Op basis van {evidence}').replace('{evidence}', tr(i.evidence)) + '</small></div>';
@@ -906,7 +908,7 @@ function renderMore(sub) {
   const G = DB.goals, P = DB.profile, S = DB.settings;
   h += '<a class="card" href="#/inzicht"><b>' + tr('Inzicht en advies') + '</b><p class="small">' + tr('Persoonlijke patronen, onderbouwde acties en weekrapport.') + '</p></a>';
   h += '<div class="card"><h3>' + tr('Herinneringen') + '</h3><p class="muted small">' + tr('Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.') + '</p>';
-  h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="aan"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(r.label) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="verwijder">✕</button></div>').join('');
+  h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="' + tr('aan') + '"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(reminderDisplayLabel(r.label)) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="' + tr('verwijder') + '">✕</button></div>').join('');
   h += '<button class="btn ghost" data-act="remAdd">' + tr('+ herinnering') + '</button>';
   h += '<h3>' + tr('Meldingen op je gsm') + '</h3><p class="muted small">' + tr('Als je push inschakelt, bewaart Supabase de pushverbinding van dit toestel, tijdzone, taal en herinneringstijden. Namen en dagboekgegevens blijven lokaal; pushberichten zijn algemeen.') + '</p>' +
     (pushPublicKey() ? (S.pushEnabled ? '<p class="small">' + tr('Push staat aan op dit toestel.') + '</p><button class="btn ghost" data-act="webPushDisable">' + tr('Push uitschakelen') + '</button>' : '<button class="btn" data-act="webPushEnable">' + tr('Push instellen op dit toestel') + '</button>') : '<p class="muted small">' + tr('Webpush wordt nog geconfigureerd. De agenda-export blijft beschikbaar.') + '</p>') +
@@ -1079,8 +1081,8 @@ ACT.ics = () => {
     const end = pad(mm + 5 >= 60 ? hh + 1 : hh) + pad((mm + 5) % 60) + '00';
     const link = base + '#/checkin/' + r.id;
     ics += 'BEGIN:VEVENT\r\nUID:' + r.id + '-' + start + '@voedingsdagboek\r\nDTSTAMP:' + stamp + '\r\nDTSTART;TZID=Europe/Brussels:' + start + 'T' + t + '\r\nDTEND;TZID=Europe/Brussels:' + start + 'T' + end + '\r\nRRULE:FREQ=DAILY\r\nTRANSP:TRANSPARENT\r\nCLASS:PRIVATE\r\n' +
-      'SUMMARY:' + fold('Check-in: ' + r.label) + '\r\nDESCRIPTION:' + fold('Open je voedingsdagboek: ' + link) + '\r\nURL:' + link + '\r\n' +
-      'BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:' + fold(r.label) + '\r\nTRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n';
+      'SUMMARY:' + fold(tr('Check-in:') + ' ' + reminderDisplayLabel(r.label)) + '\r\nDESCRIPTION:' + fold(tr('Open je voedingsdagboek:') + ' ' + link) + '\r\nURL:' + link + '\r\n' +
+      'BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:' + fold(reminderDisplayLabel(r.label)) + '\r\nTRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n';
   }
   ics += 'END:VCALENDAR\r\n';
   download('voedingsdagboek-herinneringen.ics', ics, 'text/calendar');
@@ -1129,11 +1131,13 @@ function renderIntake(step) {
   const I = INTAKE;
   let h = '';
   if (step === '1') {
-    h = '<div class="hero"><h1>' + tr('Voedingsdagboek') + '</h1><p>' + tr('Je eigen dagboek voor eten, drinken, slaap, stemming en stappen. Werkt offline, alles blijft op je gsm.') + '</p></div>' +
+    const lang = DB.settings.language || 'nl-BE';
+    h = '<div class="card intake-language"><label class="fld"><span>' + tr('Kies eerst je taal') + '</span><select data-chg="language" aria-label="' + esc(tr('Taal')) + '"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>' +
+      '<div class="hero"><h1>' + tr('Voedingsdagboek') + '</h1><p>' + tr('Je eigen dagboek voor eten, drinken, slaap, stemming en stappen. Werkt offline, alles blijft op je gsm.') + '</p></div>' +
       '<div class="card"><h3>' + tr('Heb je al een dagboek?') + '</h3><p class="muted small">' + tr('Importeer het bestand dat je kreeg (.json). Dan staan je dagen, mealpreps, doelen en check-in-tijden er meteen in.') + '</p><label class="btn">' + tr('Dagboek importeren') + '<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
       '<div class="card"><h3>' + tr('Nieuw beginnen') + '</h3><p class="muted small">' + tr('Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.') + '</p><button class="btn ghost" data-act="intakeGo" data-s="2">' + tr('Start intake') + '</button></div>' + installCard();
   } else if (step === '2') {
-    h = header('Over jou', 'Stap 1 van 3') + '<div class="card"><div class="grid2">' +
+    h = header('Over jou', 'Stap 1 van 4') + '<div class="card"><div class="grid2">' +
       ifield('profile.name', 'Naam', I.profile.name, 'text') +
       '<label class="fld"><span>' + tr('Geslacht') + '</span><select data-chg="intakeSet" data-p="profile.sex"><option value="m"' + (I.profile.sex === 'm' ? ' selected' : '') + '>' + tr('man') + '</option><option value="v"' + (I.profile.sex === 'v' ? ' selected' : '') + '>' + tr('vrouw') + '</option></select></label>' +
       ifield('profile.age', 'Leeftijd', I.profile.age) + ifield('profile.heightCm', 'Lengte (cm)', I.profile.heightCm) + ifield('weight', 'Gewicht nu (kg, optioneel)', I.weight) +
@@ -1142,17 +1146,17 @@ function renderIntake(step) {
       '<button class="btn big" data-act="intakeGo" data-s="3">' + tr('Verder') + '</button>';
   } else if (step === '3') {
     const bmr = mifflin(I);
-    h = header('Je doelen', 'Stap 2 van 3') + '<div class="card">' + (bmr ? '<p class="note">' + trf('Onderhoud volgens de formule ≈ {bmr} kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.', { bmr: fmtNum(bmr) }) + '</p>' : '') + '<div class="grid2">' +
+    h = header('Je doelen', 'Stap 2 van 4') + '<div class="card">' + (bmr ? '<p class="note">' + trf('Onderhoud volgens de formule ≈ {bmr} kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.', { bmr: fmtNum(bmr) }) + '</p>' : '') + '<div class="grid2">' +
       ifield('goals.kcal', 'Kcal per dag', I.goals.kcal) + ifield('goals.protein', 'Eiwit (g)', I.goals.protein) + ifield('goals.fiber', 'Vezels (g)', I.goals.fiber) + ifield('goals.waterMl', 'Water (ml)', I.goals.waterMl) +
       ifield('goals.stepsMin', 'Stappen min.', I.goals.stepsMin) + ifield('goals.stepsMax', 'Stappen max.', I.goals.stepsMax) + ifield('goals.sleepH', 'Slaap (u)', I.goals.sleepH) + ifield('goals.caffeineMax', 'Max. cafeïne (shots)', I.goals.caffeineMax) + '</div></div>' +
       '<button class="btn big" data-act="intakeGo" data-s="4">' + tr('Verder') + '</button>';
   } else if (step === '4') {
-    h = header('Je check-ins', 'Stap 3 van 3') + '<div class="card"><p class="muted small">' + tr('Op deze momenten vraagt de app wat je at, dronk en hoe je je voelt. Je kan ze later altijd aanpassen.') + '</p>' +
-      I.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="intakeRem" data-f="on" data-i="' + i + '"><input type="time" value="' + r.time + '" data-chg="intakeRem" data-f="time" data-i="' + i + '"><span>' + esc(r.label) + '</span></div>').join('') + '</div>' +
+    h = header('Je check-ins', 'Stap 3 van 4') + '<div class="card"><p class="muted small">' + tr('Op deze momenten vraagt de app wat je at, dronk en hoe je je voelt. Je kan ze later altijd aanpassen.') + '</p>' +
+      I.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="intakeRem" data-f="on" data-i="' + i + '"><input type="time" value="' + r.time + '" data-chg="intakeRem" data-f="time" data-i="' + i + '"><span>' + esc(reminderDisplayLabel(r.label)) + '</span></div>').join('') + '</div>' +
       '<button class="btn big" data-act="intakeGo" data-s="5">' + tr('Verder') + '</button>';
   } else if (step === '5') {
     const S = I.settings;
-    h = header('Maak de app persoonlijk', 'Optioneel · later aanpasbaar') + '<div class="card"><p>' + tr('Kies wat je eerst wilt zien en hoe de app eruitziet. Dit verandert alleen de weergave op dit toestel.') + '</p>' +
+    h = header('Maak de app persoonlijk', 'Stap 4 van 4 · optioneel') + '<div class="card"><p>' + tr('Kies wat je eerst wilt zien en hoe de app eruitziet. Dit verandert alleen de weergave op dit toestel.') + '</p>' +
       '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="intakePersonalize" data-p="homeFocus">' + [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']].map(([v, l]) => '<option value="' + v + '"' + (S.homeFocus === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
       '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="intakePersonalize" data-p="palette">' + [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen'], ['berry', 'Bes'], ['lavender', 'Lavendel'], ['sand', 'Zand'], ['midnight', 'Middernachtblauw']].map(([v, l]) => '<option value="' + v + '"' + (S.palette === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
       '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="intakePersonalize" data-p="textSize">' + [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']].map(([v, l]) => '<option value="' + v + '"' + (S.textSize === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label></div>' +
@@ -1189,7 +1193,7 @@ ACT.intakeDone = () => {
   DB.settings.homeFocus = INTAKE.settings.homeFocus; DB.settings.palette = INTAKE.settings.palette; DB.settings.textSize = INTAKE.settings.textSize;
   if (INTAKE.weight) { DB.profile.startWeight = INTAKE.weight; const d = getDay(todayKey(), true); if (!isNum(d.weight)) d.weight = INTAKE.weight; }
   DB.intakeDone = true; save(); INTAKE = null;
-  toast('Klaar! Zet nu je herinneringen op je gsm via Meer.');
+  toast(tr('Klaar! Zet nu je herinneringen op je gsm via Meer.'));
   go('#/');
 };
 
@@ -1202,13 +1206,13 @@ function tickReminders() {
     const key = k + r.id;
     if (r.time === t && !NOTIFIED[key] && !(day && day.done && day.done[r.id])) {
       NOTIFIED[key] = true;
-      navigator.serviceWorker && navigator.serviceWorker.ready.then(reg => reg.showNotification('Check-in: ' + r.label, { body: 'Tik om in te vullen.', tag: key, icon: 'icons/icon-192.png', data: { url: appBase() + '#/checkin/' + r.id } }));
+      navigator.serviceWorker && navigator.serviceWorker.ready.then(reg => reg.showNotification(tr('Check-in:') + ' ' + reminderDisplayLabel(r.label), { body: tr('Tik om in te vullen.'), tag: key, icon: 'icons/icon-192.png', data: { url: appBase() + '#/checkin/' + r.id } }));
     }
   }
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.16';
+const APP_VERSION = '1.10.17';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

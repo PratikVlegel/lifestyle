@@ -20,6 +20,7 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `js/charts.js` | SVG-grafieken (zonder externe bibliotheken) |
 | `js/insights.js` | Offline advies, optionele AI-analyse |
 | `js/mood.js` | Opt-in, lokale vergelijkingen van stemming met geregistreerde gewoontes en bronnen voor onderbouwde adviezen |
+| `js/cycle.js` | Optioneel lokaal cyclus- en symptoomdagboek met persoonlijke terugblik en ondersteunende adviezen; geen fase- of ovulatievoorspellingen |
 | `js/app.js` | Schermen, check-ins, mealprep, instellingen |
 | `js/training.js` | Offline trainingsplanner: afvallen/conditie, kracht/spiermassa, lopen, terugkeer na revalidatie, marathon en HYROX |
 | `js/library.js` | Productenbibliotheek, producteditor, eenheden, barcode |
@@ -38,5 +39,9 @@ Live: https://pratikvlegel.github.io/lifestyle/
 Webpush gebruikt per toestel een browserabonnement. Supabase bewaart het endpoint, de encryptiesleutels, tijdzone, taal en alleen herinnerings-ID's en -tijden. Vrije herinneringsnamen, dagboek, stemming en gezondheidsgegevens blijven lokaal. De meldingstekst is algemeen. De gebruiker kan push per toestel uitschakelen; de agenda-export blijft beschikbaar.
 
 De databasebasis staat in `supabase/008_web_push.sql`; de functie en de Supabase Cron-taak zijn actief. De cron controleert elke minuut op herinneringen en gebruikt de tijdzone van elk toestel. De cron-aanroep gebruikt de openbare project-publishable key plus de aparte `PUSH_CRON_SECRET`-header; de functie weigert verzoeken zonder die geheime header. De Edge Function staat zonder JWT-controle omdat Cron geen gebruikers-JWT heeft, maar controleert altijd de aparte geheime header. Geheimen staan alleen in Supabase Secrets/Vault, nooit in deze repository. Een gebruiker moet push nog per toestel inschakelen en browsertoestemming geven. Op iPhone/iPad is daarvoor een geïnstalleerde webapp nodig. Een geslaagde cronrun bevestigt dat de servertaak liep; aflevering op een toestel kan pas worden bevestigd zodra dat toestel is aangemeld. De functie verwerkt abonnementen in stabiele pagina's en heeft geen vaste limiet van 500 apparaten.
+
+## Cyclusdagboek
+
+Het cyclus- en symptoomdagboek is optioneel en blijft in de lokale browseropslag. Het wordt niet gesynchroniseerd met Supabase, niet gedeeld met de community en uitgesloten van AI-verzoeken. Een handmatige JSON-back-up bevat de cyclusgegevens. De app voorspelt geen menstruatie, ovulatie of vruchtbare dagen en geeft geen vaste trainings- of voedingsadviezen per cyclusfase. De persoonlijke samenvatting beschrijft alleen wat iemand zelf heeft geregistreerd.
 
 `supabase/010_private_feedback_notes.sql` is toegepast op het Supabase-project om vrije feedbacknotities uit de selecteerbare communityvelden te halen. Nieuwe vrije notities worden lokaal bewaard; gestructureerde feedback en de expliciet openbare beoordeling/reactie blijven deelbaar.

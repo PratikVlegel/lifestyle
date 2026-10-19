@@ -328,6 +328,18 @@ nav.tabs a.on{color:var(--accent)}
 #offline{background:var(--lentil);color:#fff;text-align:center;font-size:.8rem;padding:3px;position:sticky;top:0;z-index:6}
 @media (max-width:370px){ .grid5{grid-template-columns:repeat(3,1fr)} .hb{grid-template-columns:84px 1fr 48px} }
 @media (max-width:430px){.evidence-grid{grid-template-columns:1fr}.plan-session{grid-template-columns:minmax(0,1fr)}.plan-session .chip{justify-self:start}.plan-home .plan-head b{width:100%;margin-left:0;text-align:left}}
+.cycle-intro,.cycle-warm,.cycle-care,.cycle-patterns{line-height:1.55}
+.cycle-intro{border-left:4px solid var(--accent)}
+.cycle-warm{background:var(--accent-soft);border-color:transparent}
+.cycle-warm h2,.cycle-care h2{font-size:1.05rem;margin-top:2px}
+.cycle-warm p{margin:.65rem 0}
+.cycle-patterns h3{margin:16px 0 6px}.cycle-patterns h3:first-child{margin-top:0}
+.cycle-start-list{list-style:none;padding:0;margin:8px 0}.cycle-start-list li{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:6px 2px}
+.cycle-mood{padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:12px}
+.cycle-entry{padding-top:8px}.cycle-link{border-left:4px solid var(--c5)}
+.cycle-evidence{line-height:1.5;padding:0 4px}
+.community-filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+@media(max-width:420px){.community-filter-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -358,6 +370,7 @@ nav.tabs a.on{color:var(--accent)}
 <script src="js/share.js"></script>
 <script src="js/insights2.js"></script>
 <script src="js/mood.js"></script>
+<script src="js/cycle.js"></script>
 <script src="js/week.js"></script>
 <script src="js/extras.js"></script>
 <script src="js/invite.js"></script>

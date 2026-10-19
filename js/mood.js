@@ -21,6 +21,7 @@ function renderMoodModule() {
   const enabled = DB.settings.moodInsights === true;
   let h = header('Stemming en gewoontes', 'Een rustige terugblik op je eigen registraties', true);
   h += '<div class="card mood-intro"><h2>' + tr('Wat valt samen met hoe je je voelt?') + '</h2><p>' + tr('Deze optionele module vergelijkt je stemming met slaap, alcohol, nicotinevormen, frisdrank, snoep, beweging en geregistreerde vezels. Ze zoekt geen diagnose en gebruikt je vrije notities niet.') + '</p><label class="toggle"><input type="checkbox" data-chg="setMoodInsights"' + (enabled ? ' checked' : '') + '><span>' + tr('Persoonlijke vergelijkingen inschakelen') + '</span></label><p class="muted small">' + tr('Alles wordt op dit toestel berekend. Alleen dagen waarop beide waarden zijn ingevuld tellen mee. Uitgeschakelde of niet ingevulde waarden worden niet als nul gezien.') + '</p></div>';
+  h += '<a class="card fb cycle-link" href="#/cycle"><b>' + tr('Cyclus en menstruatie') + '</b><p class="small">' + tr('Houd optioneel je eigen ervaringen bij en krijg steun die aansluit op wat jij registreert.') + '</p></a>';
   if (!enabled) {
     h += '<div class="card muted">' + tr('Je stemming wordt niet met andere gewoontes vergeleken. Schakel de optie hierboven in als je dat zelf wilt.') + '</div>';
     view().innerHTML = h; return;
