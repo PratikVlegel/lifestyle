@@ -2269,4 +2269,22 @@ for (const [locale, labels] of Object.entries({
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { 'Omschrijving': 'Description' });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { 'Omschrijving': 'Description' });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Omschrijving': 'Beschreibung' });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Een mealprep kan maximaal 50 ingrediënten bevatten.': 'A meal prep can contain up to 50 ingredients.',
+  'De naam mag maximaal 200 tekens bevatten.': 'The name can contain up to 200 characters.',
+  'De bereidingsnotitie mag maximaal 2000 tekens bevatten.': 'The preparation notes can contain up to 2,000 characters.',
+  'Een ingrediëntnaam mag maximaal 200 tekens bevatten.': 'An ingredient name can contain up to 200 characters.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Een mealprep kan maximaal 50 ingrediënten bevatten.': 'Une préparation peut contenir au maximum 50 ingrédients.',
+  'De naam mag maximaal 200 tekens bevatten.': 'Le nom peut contenir au maximum 200 caractères.',
+  'De bereidingsnotitie mag maximaal 2000 tekens bevatten.': 'Les instructions de préparation peuvent contenir au maximum 2 000 caractères.',
+  'Een ingrediëntnaam mag maximaal 200 tekens bevatten.': 'Le nom d’un ingrédient peut contenir au maximum 200 caractères.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Een mealprep kan maximaal 50 ingrediënten bevatten.': 'Eine Mahlzeit kann höchstens 50 Zutaten enthalten.',
+  'De naam mag maximaal 200 tekens bevatten.': 'Der Name darf höchstens 200 Zeichen enthalten.',
+  'De bereidingsnotitie mag maximaal 2000 tekens bevatten.': 'Die Zubereitungshinweise dürfen höchstens 2.000 Zeichen enthalten.',
+  'Een ingrediëntnaam mag maximaal 200 tekens bevatten.': 'Ein Zutatenname darf höchstens 200 Zeichen enthalten.'
+});
 if (currentLocale() === 'nl-BE') applyLocale();

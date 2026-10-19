@@ -842,14 +842,14 @@ function renderPrep(id) {
   if (!PREP) return go('#/preps');
   const P = PREP;
   let h = header(P.isNew ? 'Nieuwe mealprep' : P.name, 'Vul per ingrediënt de hoeveelheid en het etiket in', true);
-  h += '<div class="card"><label class="fld"><span>Naam</span><input data-pp="name" value="' + esc(P.name) + '" placeholder="bv. Chili met bioburger en rijst"></label>' +
+  h += '<div class="card"><label class="fld"><span>Naam</span><input maxlength="200" data-pp="name" value="' + esc(P.name) + '" placeholder="bv. Chili met bioburger en rijst"></label>' +
     '<div class="grid2"><label class="fld"><span>Porties</span><input type="number" inputmode="numeric" data-pp="portions" value="' + P.portions + '"></label><label class="fld"><span>Nog over</span><input type="number" inputmode="decimal" step="0.25" data-pp="left" value="' + (isNum(P.left) ? P.left : '') + '"></label></div><label class="fld"><span>Gemaakt op</span><input type="date" data-pp="date" value="' + esc(P.date || '') + '"></label>' +
     '<label class="fld"><span>Planning (optioneel)</span><input data-pp="plan" value="' + esc(P.plan || '') + '" placeholder="bv. lunch ma–wo"></label>' +
     '<label class="fld"><span>Gewicht bereid, hele pot (optioneel)</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="cooked" value="' + (isNum(P.cooked) ? P.cooked : '') + '"><em>g</em></div></label></div>';
   h += prepExtrasHtml(P);
   h += '<h2 class="sec">Ingrediënten</h2>';
   h += P.ingredients.map((g, i) => '<div class="card ing" data-i="' + i + '">' +
-    '<div class="inrow"><input class="grow" data-pp="ing.' + i + '.name" value="' + esc(g.name) + '" placeholder="Ingrediënt" list="foodlist"><button class="iconbtn sm" data-act="delIng" data-i="' + i + '" aria-label="Verwijder">✕</button></div>' +
+    '<div class="inrow"><input class="grow" maxlength="200" data-pp="ing.' + i + '.name" value="' + esc(g.name) + '" placeholder="Ingrediënt" list="foodlist"><button class="iconbtn sm" data-act="delIng" data-i="' + i + '" aria-label="Verwijder">✕</button></div>' +
     '<div class="grid2"><label class="fld"><span>Hoeveelheid (hele prep)</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="ing.' + i + '.grams" value="' + (isNum(g.grams) ? g.grams : '') + '"><em>g/ml</em></div></label>' +
     '<label class="fld"><span>Waarden zijn</span><select data-pp="ing.' + i + '.mode"><option value="per100"' + (g.mode !== 'totaal' ? ' selected' : '') + '>per 100 g (etiket)</option><option value="totaal"' + (g.mode === 'totaal' ? ' selected' : '') + '>totaal voor deze hoeveelheid</option></select></label></div>' +
     '<div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + NUTR_LABEL[n] + '</span><input type="number" inputmode="decimal" data-pp="ing.' + i + '.per.' + n + '" value="' + (isNum(g.per[n]) ? g.per[n] : '') + '"></label>').join('') + '</div>' +
@@ -897,7 +897,7 @@ function prepInput(el) {
   }
   $('#preptot').innerHTML = prepTotalsHtml();
 }
-ACT.addIng = () => { PREP.ingredients.push(blankIng()); const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y + 200); };
+ACT.addIng = () => { if (PREP.ingredients.length >= 50) return toast(tr('Een mealprep kan maximaal 50 ingrediënten bevatten.')); PREP.ingredients.push(blankIng()); const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y + 200); };
 ACT.delIng = el => { PREP.ingredients.splice(Number(el.dataset.i), 1); if (!PREP.ingredients.length) PREP.ingredients.push(blankIng()); const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y); };
 function ingUnitChips(g, i) {
   const f = g.foodId && DB.foods.find(x => x.id === g.foodId);
@@ -933,12 +933,16 @@ ACT.ingPhoto = async el => {
 };
 ACT.savePrep = () => {
   if (!PREP.name.trim()) return toast('Geef de mealprep een naam.');
+  if (PREP.name.length > 200) return toast(tr('De naam mag maximaal 200 tekens bevatten.'));
+  if ((PREP.recipeNote || '').length > 2000) return toast(tr('De bereidingsnotitie mag maximaal 2000 tekens bevatten.'));
   if (!Number.isInteger(Number(PREP.portions)) || Number(PREP.portions) < 1 || Number(PREP.portions) > 200) return toast('Kies 1 tot 200 porties.');
   if (PREP.left !== null && PREP.left !== undefined && (!isNum(PREP.left) || PREP.left < 0 || PREP.left > Number(PREP.portions))) return toast('Resterende porties moeten tussen 0 en het totaal liggen.');
   if (PREP.cooked !== null && PREP.cooked !== undefined && (!isNum(PREP.cooked) || PREP.cooked < 0 || PREP.cooked > 100000)) return toast('Controleer het bereid gewicht (0–100.000 g).');
   const ingr = PREP.ingredients.filter(g => g.name || isNum(g.grams));
   if (!ingr.length) return toast('Voeg minstens één ingrediënt toe.');
+  if (ingr.length > 50) return toast(tr('Een mealprep kan maximaal 50 ingrediënten bevatten.'));
   for (const g of ingr) {
+    if ((g.name || '').length > 200) return toast(tr('Een ingrediëntnaam mag maximaal 200 tekens bevatten.'));
     if (g.grams !== null && g.grams !== undefined && (!isNum(g.grams) || g.grams < 0 || g.grams > 100000)) return toast('Controleer de hoeveelheid van ' + (g.name || 'het ingrediënt') + '.');
     if (g.mode === 'per100' && g.name && (!isNum(g.grams) || g.grams <= 0)) return toast('Vul een hoeveelheid in voor ' + g.name + '.');
     for (const n of NUTR) {
@@ -1358,7 +1362,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.63';
+const APP_VERSION = '1.10.64';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
