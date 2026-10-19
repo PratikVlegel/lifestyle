@@ -98,7 +98,15 @@ function header(title, sub, back) {
   return '<header class="top">' + (back ? '<button class="iconbtn" data-act="back" aria-label="' + esc(tr('Terug')) + '">‹</button>' : '') +
     '<div><h1>' + esc(tr(title)) + '</h1>' + (sub ? '<p class="muted">' + esc(tr(sub)) + '</p>' : '') + '</div></header>';
 }
-function reminderDisplayLabel(label) { return ['Ontbijt + weging', 'Lunch', 'Avondeten', 'Dagopname', 'Tussendoor'].includes(label) ? tr(label) : label; }
+const SYSTEM_REMINDER_LABELS = new Map([
+  ['ontbijt + weging', 'Ontbijt + weging'], ['lunch', 'Lunch'], ['avondeten', 'Avondeten'],
+  ['dagopname', 'Dagopname'], ['tussendoor', 'Tussendoor']
+]);
+function reminderDisplayLabel(label) {
+  const value = String(label || '');
+  const canonical = SYSTEM_REMINDER_LABELS.get(value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('nl-BE'));
+  return canonical ? tr(canonical) : value;
+}
 
 /* ================= home ================= */
 const KPI_ORDER = ['kcal', 'protein', 'water', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fiber', 'caffeine', 'fat'];
@@ -1283,7 +1291,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.33';
+const APP_VERSION = '1.10.34';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
