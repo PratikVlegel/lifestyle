@@ -1014,17 +1014,19 @@ ACT.exportData = async () => {
 ACT.importFile = async el => {
   const f = el.files[0]; if (!f) return;
   try {
+    if (f.size > 20 * 1024 * 1024) throw new Error(tr('Het bestand is groter dan 20 MB.'));
     const obj = JSON.parse(await f.text());
     const n = Object.keys(obj.days || {}).length;
     const mode = obj.kind === 'prep-update' ? 'merge' : Object.keys(DB.days).length && !confirm(n + ' dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.') ? 'replace' : 'merge';
     if (mode === 'replace' && !confirm('Zeker? Alles op deze gsm wordt vervangen.')) return;
     importJSON(obj, mode); runMigrations(); toast(obj.kind === 'prep-update' ? (importJSON.lastUpdated || 0) + ' mealpreps bijgewerkt.' : n + ' dagen ingelezen.'); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
-  } catch (e) { alert('Import mislukt: ' + e.message); }
+  } catch (e) { console.warn('Import mislukt', e); alert(tr('Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.')); }
   el.value = '';
 };
 ACT.importMd = async el => {
   const f = el.files[0]; if (!f) return;
   if (!DB.settings.apiKey) { el.value = ''; return alert('Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.'); }
+  if (f.size > 1024 * 1024) { el.value = ''; return alert(tr('Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.')); }
   toast('Dagboek wordt ingelezen… (kan een minuut duren)');
   try { const obj = await aiImportMarkdown(await f.text()); importJSON(obj, 'merge'); toast(Object.keys(obj.days || {}).length + ' dagen ingelezen. Controleer even in het dagboek.'); go('#/dagboek'); }
   catch (e) { alert('Inlezen mislukt: ' + e.message); }

@@ -4,6 +4,9 @@
 const UI_LOCALES = ['nl-BE', 'en-GB', 'fr-FR', 'de-DE'];
 const UI_TRANSLATIONS = {
   'en-GB': {
+    "Het bestand is groter dan 20 MB.": "The file is larger than 20 MB.",
+    "Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.": "Import failed. The backup is invalid or contains values outside the allowed ranges.",
+    "Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.": "This file is larger than 1 MB. Split the diary or use a .json backup.",
     "Beweging: richtlijn en start": "Activity: guidance and getting started",
     "Voor volwassenen: 150–300 minuten matig intensief of 75–150 minuten intensief per week, plus minstens 2 dagen spierversterking. Dit is een richtpunt, geen toegangsdrempel: als je weinig beweegt, start met korte wandelingen en bouw duur of frequentie rustig uit.": "For adults: aim for 150–300 minutes of moderate activity or 75–150 minutes of vigorous activity each week, plus muscle strengthening on at least 2 days. This is a guide, not an entry requirement. If you are not very active, start with short walks and gradually add time or frequency.",
     "WHO · richtlijnen": "WHO · guidance",
@@ -169,6 +172,9 @@ const UI_TRANSLATIONS = {
     'Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.': 'For an AI request, the app sends the following directly to Anthropic: your profile (name, sex, age, height, activity level, context and goals), your question and up to 21 days of logged data. This may include meals and nutrition values, weight, sleep/CPAP, mood, energy, stress, steps, water, caffeine, alcohol, vaping and free-text notes. A selected label photo is sent too; Markdown imports send up to 150,000 characters. Mood comparisons stay on your device and do not send notes.',
   },
   'fr-FR': {
+    "Het bestand is groter dan 20 MB.": "Le fichier dépasse 20 Mo.",
+    "Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.": "Échec de l’importation. La sauvegarde est invalide ou contient des valeurs hors des limites autorisées.",
+    "Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.": "Ce fichier dépasse 1 Mo. Divisez le journal ou utilisez une sauvegarde .json.",
     "Beweging: richtlijn en start": "Activité : recommandations et premiers pas",
     "Voor volwassenen: 150–300 minuten matig intensief of 75–150 minuten intensief per week, plus minstens 2 dagen spierversterking. Dit is een richtpunt, geen toegangsdrempel: als je weinig beweegt, start met korte wandelingen en bouw duur of frequentie rustig uit.": "Pour les adultes : visez 150 à 300 minutes d’activité modérée ou 75 à 150 minutes d’activité soutenue par semaine, ainsi que du renforcement musculaire au moins 2 jours. C’est un repère, pas une condition préalable. Si vous bougez peu, commencez par de courtes marches et augmentez progressivement leur durée ou leur fréquence.",
     "WHO · richtlijnen": "OMS · recommandations",
@@ -334,6 +340,9 @@ const UI_TRANSLATIONS = {
     'Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.': 'Pour une demande d’IA, l’application envoie directement à Anthropic votre profil (nom, sexe, âge, taille, activité, contexte et objectifs), votre question et jusqu’à 21 jours de données enregistrées. Cela peut inclure repas et valeurs nutritionnelles, poids, sommeil/CPAP, humeur, énergie, stress, pas, eau, caféine, alcool, vapotage et notes libres. Une photo d’étiquette sélectionnée est également envoyée ; l’import Markdown transmet jusqu’à 150 000 caractères. Les comparaisons d’humeur restent sur votre appareil et n’envoient aucune note.',
   },
   'de-DE': {
+    "Het bestand is groter dan 20 MB.": "Die Datei ist größer als 20 MB.",
+    "Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.": "Import fehlgeschlagen. Die Sicherung ist ungültig oder enthält Werte außerhalb der erlaubten Bereiche.",
+    "Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.": "Diese Datei ist größer als 1 MB. Teile das Tagebuch auf oder verwende eine .json-Sicherung.",
     "Beweging: richtlijn en start": "Bewegung: Empfehlungen und Einstieg",
     "Voor volwassenen: 150–300 minuten matig intensief of 75–150 minuten intensief per week, plus minstens 2 dagen spierversterking. Dit is een richtpunt, geen toegangsdrempel: als je weinig beweegt, start met korte wandelingen en bouw duur of frequentie rustig uit.": "Für Erwachsene: 150–300 Minuten moderate oder 75–150 Minuten intensive Aktivität pro Woche sowie an mindestens 2 Tagen Muskelkräftigung. Das ist ein Richtwert, keine Voraussetzung. Wenn du bisher wenig aktiv bist, beginne mit kurzen Spaziergängen und steigere Dauer oder Häufigkeit langsam.",
     "WHO · richtlijnen": "WHO · Empfehlungen",

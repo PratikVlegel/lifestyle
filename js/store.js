@@ -221,13 +221,106 @@ function dueReminder() {
 
 /* ---------- import / export ---------- */
 function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: Object.assign({}, DB.settings, { apiKey: '', pushEnabled: false }) }), null, 1); }
+function validateImportData(obj) {
+  const record = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  const fail = message => { throw new Error('Ongeldige back-up: ' + message); };
+  if (!record(obj)) fail('verwacht een JSON-object.');
+  for (const field of ['days', 'profile', 'goals', 'settings', 'training']) {
+    if (obj[field] !== undefined && obj[field] !== null && !record(obj[field])) fail('het veld ' + field + ' heeft een ongeldig formaat.');
+  }
+  for (const field of ['preps', 'foods', 'ai', 'reminders', 'mealPatch']) {
+    if (obj[field] !== undefined && obj[field] !== null && !Array.isArray(obj[field])) fail('het veld ' + field + ' moet een lijst zijn.');
+    if (Array.isArray(obj[field]) && obj[field].length > 10000) fail('de lijst ' + field + ' is te groot.');
+    if (Array.isArray(obj[field]) && field !== 'mealPatch' && obj[field].some(item => !record(item))) fail('de lijst ' + field + ' bevat een ongeldig item.');
+  }
+  const stack = [{ value: obj, depth: 0 }];
+  while (stack.length) {
+    const { value, depth } = stack.pop();
+    if (depth > 40) fail('de structuur is te diep genest.');
+    if (!value || typeof value !== 'object') continue;
+    for (const [key, child] of Object.entries(value)) {
+      if (['__proto__', 'prototype', 'constructor'].includes(key)) fail('de structuur bevat een onveilige sleutel.');
+      if (child && typeof child === 'object') stack.push({ value: child, depth: depth + 1 });
+    }
+  }
+  const days = obj.days || {};
+  const dayKeys = Object.keys(days);
+  if (dayKeys.length > 5000) fail('er staan meer dan 5.000 dagen in.');
+  const numeric = (value, bounds, label) => {
+    if (value === undefined || value === null) return;
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < bounds[0] || value > bounds[1]) fail(label + ' bevat een waarde buiten het toegestane bereik.');
+  };
+  const profileRanges = { age: [0, 120], heightCm: [0, 300], startWeight: [0, 500] };
+  const goalRanges = { kcal: [0, 15000], protein: [0, 1000], fiber: [0, 1000], waterMl: [0, 30000], stepsMin: [0, 200000], stepsMax: [0, 200000], sleepH: [0, 24], caffeineMax: [0, 100] };
+  for (const [field, bounds] of Object.entries(profileRanges)) numeric(obj.profile && obj.profile[field], bounds, 'profiel · ' + field);
+  for (const [field, bounds] of Object.entries(goalRanges)) numeric(obj.goals && obj.goals[field], bounds, 'doelen · ' + field);
+  const integerFields = ['age', 'kcal', 'waterMl', 'stepsMin', 'stepsMax', 'caffeineMax'];
+  for (const field of integerFields) {
+    const value = field === 'age' ? obj.profile && obj.profile[field] : obj.goals && obj.goals[field];
+    if (value !== undefined && value !== null && !Number.isInteger(value)) fail('profiel of doelen bevatten een waarde die geen geheel getal is.');
+  }
+  if (obj.goals && Number.isFinite(obj.goals.stepsMin) && Number.isFinite(obj.goals.stepsMax) && obj.goals.stepsMax < obj.goals.stepsMin) fail('het stappendoelmaximum is lager dan het minimum.');
+  const ranges = { weight: [20, 500], sleepH: [0, 24], mood: [1, 10], energy: [1, 10], stress: [1, 10], steps: [0, 200000], waterMl: [0, 30000], caffeine: [0, 100], alcohol: [0, 50] };
+  for (const [key, day] of Object.entries(days)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !record(day)) fail('een dag heeft een ongeldige datum of structuur.');
+    const date = new Date(key + 'T00:00:00Z');
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== key) fail('een dag bevat een ongeldige datum.');
+    if (day.meals !== undefined && !Array.isArray(day.meals)) fail('de maaltijden van ' + key + ' zijn geen lijst.');
+    if ((day.meals || []).length > 100) fail('er staan meer dan 100 maaltijden op ' + key + '.');
+    if (day.done !== undefined && day.done !== null && !record(day.done)) fail('de herinneringen van ' + key + ' hebben een ongeldig formaat.');
+    for (const [field, bounds] of Object.entries(ranges)) numeric(day[field], bounds, key + ' · ' + field);
+    if (day.weight !== undefined && day.weight !== null && day.weight !== '?' && (typeof day.weight !== 'number' || !Number.isFinite(day.weight) || day.weight < 20 || day.weight > 500)) fail(key + ' · gewicht bevat een ongeldige waarde.');
+    if (day.kcalOverride !== undefined && day.kcalOverride !== null) {
+      if (!record(day.kcalOverride)) fail(key + ' · kcal heeft een ongeldig formaat.');
+      if (typeof day.kcalOverride.v !== 'number') fail(key + ' · kcal bevat een ongeldige waarde.');
+      numeric(day.kcalOverride.v, [0, 20000], key + ' · kcal');
+    }
+    for (const meal of day.meals || []) {
+      if (!record(meal)) fail('een maaltijd op ' + key + ' heeft een ongeldig formaat.');
+      if (meal.slot !== undefined && !SLOT_ORDER.includes(meal.slot)) fail('een maaltijd op ' + key + ' heeft een onbekend eetmoment.');
+      if (meal.time !== undefined && meal.time !== null && (typeof meal.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(meal.time))) fail('een maaltijd op ' + key + ' heeft een ongeldige tijd.');
+      if (meal.desc !== undefined && (typeof meal.desc !== 'string' || meal.desc.length > 2000)) fail('een maaltijdtekst op ' + key + ' is ongeldig of te lang.');
+      for (const field of ['kcal', 'protein', 'carbs', 'fat', 'fiber']) numeric(meal[field], field === 'kcal' ? [0, 20000] : [0, 1000], key + ' · ' + field);
+    }
+  }
+  for (const prep of obj.preps || []) {
+    if (typeof prep.id !== 'string' || !prep.id || typeof prep.name !== 'string' || prep.name.length > 200 || !Array.isArray(prep.ingredients) || prep.ingredients.length > 200) fail('een mealprep heeft een ongeldige structuur.');
+    numeric(prep.portions, [0.01, 1000], 'mealprep · porties');
+    numeric(prep.left, [0, 10000], 'mealprep · voorraad');
+    for (const ing of prep.ingredients) {
+      if (!record(ing) || (ing.name !== undefined && (typeof ing.name !== 'string' || ing.name.length > 200)) || (ing.mode !== undefined && !['per100', 'totaal'].includes(ing.mode)) || (ing.per !== undefined && !record(ing.per))) fail('een ingrediënt heeft een ongeldige structuur.');
+      numeric(ing.grams, [0, 1000000], 'ingrediënt · hoeveelheid');
+      for (const field of NUTR) numeric(ing.per && ing.per[field], [0, 100000], 'ingrediënt · ' + field);
+    }
+  }
+  for (const food of obj.foods || []) {
+    if (typeof food.id !== 'string' || !food.id || typeof food.name !== 'string' || food.name.length > 200 || (food.per !== undefined && !record(food.per))) fail('een product heeft een ongeldige structuur.');
+    for (const field of NUTR) numeric(food.per && food.per[field], [0, 100000], 'product · ' + field);
+    if (food.units !== undefined && (!Array.isArray(food.units) || food.units.length > 100 || food.units.some(unit => !record(unit) || typeof unit.n !== 'string' || unit.n.length > 100 || typeof unit.g !== 'number' || !Number.isFinite(unit.g) || unit.g <= 0 || unit.g > 100000))) fail('een producteenheid heeft een ongeldige structuur.');
+  }
+  for (const patch of obj.mealPatch || []) {
+    if (!record(patch) || typeof patch.desc !== 'string' || patch.desc.length > 2000 || !record(patch.set)) fail('een maaltijdcorrectie heeft een ongeldige structuur.');
+    for (const [field, value] of Object.entries(patch.set)) if (!NUTR.includes(field)) fail('een maaltijdcorrectie bevat een onbekend veld.'); else numeric(value, field === 'kcal' ? [0, 20000] : [0, 1000], 'maaltijdcorrectie · ' + field);
+  }
+  if (obj.reminders && obj.reminders.length > 100) fail('er staan meer dan 100 herinneringen in.');
+  if (obj.reminders) {
+    const ids = new Set();
+    for (const r of obj.reminders) {
+      if (typeof r.id !== 'string' || !r.id || r.id.length > 80 || ids.has(r.id) || typeof r.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) || typeof r.label !== 'string' || r.label.length > 120 || (r.on !== undefined && typeof r.on !== 'boolean') || (r.kind !== undefined && !['ontbijt', 'lunch', 'avond', 'dag', 'vrij'].includes(r.kind))) fail('een herinnering heeft een ongeldige naam of tijd.');
+      ids.add(r.id);
+    }
+  }
+  return obj;
+}
 function importJSON(obj, mode) {
+  validateImportData(obj);
   if (!obj || typeof obj !== 'object' || !(obj.days || obj.preps || obj.foods)) throw new Error('Dit lijkt geen back-up van deze app.');
   obj.days = obj.days || {};
   if (mode === 'replace') {
     const key = DB.settings.apiKey;
     DB = migrate(obj);
-    if (!DB.settings.apiKey) DB.settings.apiKey = key;
+    DB.settings.apiKey = key;
+    DB.settings.pushEnabled = false;
   } else {
     for (const [k, d] of Object.entries(obj.days)) {
       if (!DB.days[k]) DB.days[k] = d;
