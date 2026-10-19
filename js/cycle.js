@@ -66,6 +66,7 @@ function cyclePatterns(c) {
     h += '<p>' + tr('Tijd tussen opeenvolgende datums die jij als start noteerde:') + ' ' + intervals.map(x => x + ' ' + tr('dagen')).join(' · ') + '.</p><p class="muted small">' + tr('Dit beschrijft alleen je ingevoerde datums. Het voorspelt niets en zegt niet of een cyclus medisch normaal is.') + '</p>';
   } else h += '<p class="muted small">' + tr('Na minstens drie startdatums kan de app alleen de eerder geregistreerde tussenpozen tonen.') + '</p>';
   const entries = Object.entries(c.logs).filter(([k, v]) => cycleDateValid(k) && v && typeof v === 'object').sort(([a], [b]) => a.localeCompare(b));
+  h += cycleSupplementPatterns(entries);
   h += '<h3>' + tr('Symptomen in je eigen woorden') + '</h3>';
   if (entries.length < 5) h += '<p class="muted">' + trf('Je hebt {count} dagen vastgelegd. Na vijf of meer dagen kan de app samenvatten wat jij vaker als matig of ernstig noteerde.', { count: entries.length }) + '</p>';
   else {
@@ -77,6 +78,38 @@ function cyclePatterns(c) {
     else h += '<p class="muted small">' + tr('Een vergelijking met je dagelijkse stemming verschijnt pas als er minstens vijf stemmingsdagen in beide groepen zijn. Ontbrekende scores tellen niet als nul.') + '</p>';
   }
   h += '</section><p class="muted small cycle-evidence">' + tr('Onderbouwing: klachten kunnen per persoon verschillen. Zorgbronnen adviseren een dagboek over meerdere cycli bij terugkerende klachten. Onderzoek ondersteunt geen vaste trainings- of voedingsvoorschriften per cyclusfase; jouw ervaring staat voorop.') + ' <a href="https://www.acog.org/womens-health/faqs/premenstrual-syndrome" target="_blank" rel="noopener">ACOG</a> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12334928/" target="_blank" rel="noopener">IOC</a></p>';
+  return h;
+}
+function cycleSupplementPatterns(entries) {
+  const known = entries.filter(([k]) => DB.days[k] && DB.days[k].supplementsLogged === true);
+  if (!known.length) return '<h3>' + tr('Supplementen naast je cyclusklachten') + '</h3><p class="muted small">' + tr('Registreer je supplementen via Dagboek → een dag bekijken. Alleen dagen waarop je supplementen of expliciet geen gebruik vastlegt kunnen worden vergeleken.') + '</p>';
+  const names = new Map();
+  known.forEach(([k]) => (DB.days[k].supplements || []).forEach(s => { const id = s.name.trim().toLocaleLowerCase('nl-BE'); if (id) names.set(id, s.name.trim()); }));
+  let h = '<h3>' + tr('Supplementen naast je cyclusklachten') + '</h3><p class="muted small">' + tr('Dit kijkt naar de symptomen die jij op dezelfde dagen registreerde. De app raadt geen supplementen aan en leidt geen cyclusfase of oorzaak af.') + '</p>';
+  let shown = 0;
+  for (const [id, name] of [...names.entries()].slice(0, 6)) {
+    const yes = known.filter(([k]) => (DB.days[k].supplements || []).some(s => s.name.trim().toLocaleLowerCase('nl-BE') === id));
+    const no = known.filter(([k]) => !(DB.days[k].supplements || []).some(s => s.name.trim().toLocaleLowerCase('nl-BE') === id));
+    const metrics = CYCLE_SYMPTOMS.filter(([key]) => ['mood', 'energy', 'pain', 'cravings', 'sleep', 'bloating', 'headache'].includes(key));
+    const comparable = metrics.map(([key, label]) => ({ key, label,
+      a: yes.filter(([, x]) => Number.isInteger(x[key])).map(([, x]) => x[key]),
+      b: no.filter(([, x]) => Number.isInteger(x[key])).map(([, x]) => x[key])
+    })).filter(x => x.a.length >= 5 && x.b.length >= 5);
+    h += '<article class="card mood-factor"><div class="mood-factor-head"><h4>' + esc(name) + '</h4><span class="pill">' + tr('Cycluslog') + '</span></div>';
+    if (!comparable.length) h += '<p class="muted small">' + trf('Nog onvoldoende gegevens: {withCount} dagen met dit supplement en {withoutCount} dagen waarop dit supplement niet is geregistreerd, met een geregistreerd symptoom.', { withCount: yes.length, withoutCount: no.length }) + '</p>';
+    else {
+      for (const x of comparable) {
+        const a = moodMedian(x.a), b = moodMedian(x.b), delta = a - b;
+        h += '<div class="cycle-mood"><b>' + tr(x.label) + '</b><p>' + tr('Met dit supplement') + ': ' + fmtNum(a, 1) + '/3 (' + x.a.length + ' ' + tr('dagen') + '); ' + tr('Zonder dit supplement') + ': ' + fmtNum(b, 1) + '/3 (' + x.b.length + ' ' + tr('dagen') + ').</p>';
+        if (Math.abs(delta) >= 1) h += '<p><b>' + tr('Mogelijke vervolgstap') + '</b><br>' + tr('Je eigen registratie toont een verschil van minstens één symptoomniveau. Dat kan samenhangen met de reden waarom je het supplement nam, andere gewoontes of toeval. Verander niets op basis hiervan. Als klachten terugkeren of je supplement voor klachten gebruikt, bespreek je log en het etiket met je huisarts, gynaecoloog of apotheker.') + '</p>';
+        h += '</div>';
+      }
+    }
+    const evidence = supplementEvidence(name, true);
+    h += '<details class="supplement-evidence"><summary>' + tr('Waarom zie ik dit? Onderzoek en uitleg') + '</summary><p>' + tr(evidence.text) + '</p><p class="muted small">' + tr('PMS-beoordeling steunt op terugkerende klachten over meerdere maanden. Een klein persoonlijk logboek stelt geen diagnose en test geen behandeling. De grens van 1 symptoomniveau is alleen een weergavedrempel, geen klinische grens. Andere supplementen kunnen op vergelijkingsdagen ook voorkomen; de invloed van één ingrediënt is niet apart gemeten.') + '</p><a href="' + evidence.url + '" target="_blank" rel="noopener">' + tr('Bekijk de bron') + ' ↗</a> · <a href="https://www.acog.org/womens-health/faqs/premenstrual-syndrome" target="_blank" rel="noopener">ACOG: symptoomdagboek en PMS ↗</a></details></article>';
+    shown++;
+  }
+  if (!shown) h += '<p class="muted small">' + tr('Nog geen supplementen in je cycluslog geregistreerd.') + '</p>';
   return h;
 }
 ACT.cycleEnabled = el => { cycleSafeState().enabled = !!el.checked; save(); renderCycleModule(); };

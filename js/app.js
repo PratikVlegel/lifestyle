@@ -619,6 +619,7 @@ function renderDay(k) {
   const dayTextLimits = { moodNote: 1000, cpap: 100, notes: 4000 };
   const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow">' + (step === 'textarea' ? '<textarea rows="3" maxlength="' + dayTextLimits[n] + '" data-dk="' + n + '">' + (d[n] === undefined || d[n] === null ? '' : esc(d[n])) + '</textarea>' : '<input type="' + (step === 'text' ? 'text' : 'number') + '"' + (step === 'text' ? ' maxlength="' + (dayTextLimits[n] || 200) + '"' : ' inputmode="decimal" step="' + (step || 'any') + '"') + ' data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">') + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
   h += '<div class="card"><h3>' + tr('Beweging') + '</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">' + tr('+ activiteit') + '</button></div>';
+  h += supplementDiary(d, k);
   h += '<div class="card diary-wellbeing"><h3>' + tr('Welzijn') + '</h3><p class="muted small">' + tr('Optioneel: noteer hoe je je voelde. Je hoeft niet alles in te vullen.') + '</p><div class="grid2">' +
     f('mood', tr('Stemming'), '/10', '1') + f('energy', tr('Energie'), '/10', '1') + f('stress', tr('Stress / spanning'), '/10', '1') + '</div>' +
     f('moodNote', tr('Wat droeg bij aan hoe je je voelde? (optioneel)'), '', 'textarea') +
@@ -632,6 +633,29 @@ function renderDay(k) {
   h += '<button class="link danger" data-act="delDay" data-k="' + k + '">' + tr('Hele dag verwijderen') + '</button>';
   view().innerHTML = h;
 }
+function supplementDiary(d, k) {
+  const entries = Array.isArray(d.supplements) ? d.supplements : [];
+  let h = '<section class="card"><h3>' + tr('Supplementen (optioneel)') + '</h3><p class="muted small">' + tr('Noteer alleen wat je al gebruikt, met de dosis zoals op het etiket. Dit logboek geeft geen start-, stop- of doseeradvies en wordt niet naar AI verstuurd.') + ' ' + tr('Deze gegevens blijven op dit toestel; ze gaan mee in een back-up die je zelf maakt.') + '</p>';
+  if (d.supplementsLogged) {
+    h += entries.length ? '<ul class="supplement-list">' + entries.map((s, i) => '<li><span><b>' + esc(s.name) + '</b>' + (s.dose ? ' · ' + esc(s.dose) : '') + '</span><button class="link danger" data-act="supplementRemove" data-k="' + k + '" data-i="' + i + '" aria-label="' + esc(tr('Verwijderen')) + '">×</button></li>').join('') + '</ul>' : '<p class="muted">' + tr('Je hebt voor deze dag genoteerd dat je geen supplementen nam.') + '</p>';
+  } else h += '<p class="muted">' + tr('Nog niet bijgehouden. Een lege dag is geen registratie van geen gebruik.') + '</p>';
+  if (entries.length < 8) h += '<div class="grid2"><label class="fld"><span>' + tr('Naam') + '</span><input type="text" maxlength="80" data-supp-name="' + k + '" placeholder="' + esc(tr('bv. vitamine D, zink')) + '"></label><label class="fld"><span>' + tr('Dosis (zoals op etiket)') + '</span><input type="text" maxlength="40" data-supp-dose="' + k + '" placeholder="' + esc(tr('bv. 25 µg, 1 tablet')) + '"></label></div><div class="inrow wrap"><button class="btn" data-act="supplementAdd" data-k="' + k + '">' + tr('Supplement toevoegen') + '</button>';
+  if (!d.supplementsLogged && !entries.length) h += '<button class="btn ghost" data-act="supplementNone" data-k="' + k + '">' + tr('Vandaag geen supplementen') + '</button>';
+  h += '</div>';
+  if (d.supplementsLogged) h += '<button class="link" data-act="supplementClear" data-k="' + k + '">' + tr('Registratie wissen') + '</button>';
+  return h + '</section>';
+}
+ACT.supplementAdd = el => {
+  const k = el.dataset.k, nameInput = document.querySelector('[data-supp-name="' + k + '"]'), doseInput = document.querySelector('[data-supp-dose="' + k + '"]');
+  const name = (nameInput && nameInput.value || '').trim().slice(0, 80), dose = (doseInput && doseInput.value || '').trim().slice(0, 40);
+  if (!name) { toast(tr('Vul eerst de naam van het supplement in.')); if (nameInput) nameInput.focus(); return; }
+  const d = getDay(k, true); d.supplements = Array.isArray(d.supplements) ? d.supplements.slice(0, 8) : [];
+  if (d.supplements.length >= 8) return;
+  d.supplements.push({ name, dose }); d.supplementsLogged = true; save(); renderDay(k);
+};
+ACT.supplementRemove = el => { const d = getDay(el.dataset.k, true); d.supplements = Array.isArray(d.supplements) ? d.supplements : []; d.supplements.splice(Number(el.dataset.i), 1); save(); renderDay(el.dataset.k); };
+ACT.supplementNone = el => { const d = getDay(el.dataset.k, true); d.supplements = []; d.supplementsLogged = true; save(); renderDay(el.dataset.k); };
+ACT.supplementClear = el => { const d = getDay(el.dataset.k, true); delete d.supplements; delete d.supplementsLogged; save(); renderDay(el.dataset.k); };
 ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }); save(); render(); });
 ACT.saveDay = el => {
   const d = getDay(el.dataset.k, true);
@@ -852,7 +876,7 @@ async function shareText(txt, title) {
 
 /* ================= inzicht ================= */
 function aiDataDisclosure() {
-  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, nicotinevormen, frisdrank, snoep en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.') + ' ' + tr('Het optionele cyclusdagboek blijft lokaal en wordt nooit meegestuurd met AI-analyses.');
+  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, nicotinevormen, frisdrank, snoep en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.') + ' ' + tr('Het optionele cyclusdagboek en supplementlogboek blijven op dit toestel en worden niet meegestuurd met AI-analyses.');
 }
 function insightCard(i) {
   return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + tr(i.cat) + '</span>' + (i.isNew ? '<span class="tag new">' + tr('nieuw') + '</span>' : '') + '<b>' + esc(tr(i.title)) + '</b></div><p>' + esc(tr(i.text)).replace(/\n/g, '<br>') + '</p><small class="muted">' + tr('Op basis van {evidence}').replace('{evidence}', tr(i.evidence)) + '</small></div>';
@@ -1230,7 +1254,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.22';
+const APP_VERSION = '1.10.23';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

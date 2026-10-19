@@ -280,6 +280,7 @@ function weekSummaryText(n) {
     const kc = dayNutr(d, 'kcal');
     lines.push(fmtDay(k, true) + ': ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('Kcal onbekend')) +
       ' · ' + tr('Slaap') + ' ' + (d.sleepH ?? '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (d.energy ?? '?') + ' · ' + tr('Stemming') + ' ' + (d.mood ?? '?') + ' · ' + (d.steps ?? '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + d.weight + ' kg' : ''));
+    if (d.supplementsLogged) lines.push('   ' + tr('Supplementen') + ': ' + ((d.supplements || []).length ? d.supplements.map(s => s.name + (s.dose ? ' (' + s.dose + ')' : '')).join(', ') : tr('geen supplementen genomen')));
     for (const s of SLOT_ORDER) for (const m of (d.meals || []).filter(m => m.slot === s)) lines.push('   ' + tr(SLOTS[s]) + (m.time ? ' ' + m.time : '') + ': ' + (m.nothing ? tr('niets') : m.desc) + (isNum(m.kcal) ? ' (≈ ' + Math.round(m.kcal) + ' kcal)' : ''));
     if (d.notes || d.moodNote) lines.push('   ' + tr('Notitie:') + ' ' + [d.moodNote, d.notes].filter(Boolean).join(' · '));
   }

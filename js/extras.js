@@ -83,11 +83,11 @@ ACT.shopShare = () => { const S = shopState(); shareText('Boodschappen\n' + shop
 
 /* ---------- rapporten per doelgroep ---------- */
 const AUDIENCES = {
-  dietist: { label: 'Diëtist', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'gewicht', 'drinken'] },
-  psycholoog: { label: 'Psycholoog', parts: ['stemming', 'slaap', 'ritme', 'honger', 'middelen', 'notities'] },
-  coach: { label: 'Sportcoach', parts: ['beweging', 'voeding', 'slaap', 'gewicht', 'energie'] },
-  arts: { label: 'Huisarts', parts: ['profiel', 'slaap', 'gewicht', 'middelen', 'stemming', 'voeding'] },
-  alles: { label: 'Alles', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'beweging', 'slaap', 'stemming', 'energie', 'notities', 'middelen', 'gewicht', 'drinken'] }
+  dietist: { label: 'Diëtist', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'gewicht', 'drinken', 'supplementen'] },
+  psycholoog: { label: 'Psycholoog', parts: ['stemming', 'slaap', 'ritme', 'honger', 'middelen', 'supplementen', 'notities'] },
+  coach: { label: 'Sportcoach', parts: ['beweging', 'voeding', 'slaap', 'gewicht', 'energie', 'supplementen'] },
+  arts: { label: 'Huisarts', parts: ['profiel', 'slaap', 'gewicht', 'middelen', 'stemming', 'voeding', 'supplementen'] },
+  alles: { label: 'Alles', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'beweging', 'slaap', 'stemming', 'energie', 'notities', 'middelen', 'gewicht', 'drinken', 'supplementen'] }
 };
 const REPORT_NICOTINE_FORMS = {
   cigarette: 'Sigaretten', vape: 'Vape', nicotineGum: 'Nicotinekauwgom', nicotinePouch: 'Nicotinezakjes of snus',
@@ -149,6 +149,18 @@ function reportSubstanceMood(dateKeys) {
     })) + '</p>';
   }).join('');
   return '<p class="muted small">' + tr('These optional comparisons use only days with both a mood score and a known substance entry. Missing entries are excluded; a pattern does not show cause or effect.') + '</p>' + rows;
+}
+function supplementReport(dateKeys) {
+  const logged = dateKeys.filter(k => DB.days[k] && DB.days[k].supplementsLogged === true);
+  const noUse = logged.filter(k => !(DB.days[k].supplements || []).length).length;
+  const unknown = dateKeys.length - logged.length, products = new Map();
+  for (const k of logged) for (const s of DB.days[k].supplements || []) {
+    const id = s.name.trim().toLocaleLowerCase('nl-BE'); if (!id) continue;
+    if (!products.has(id)) products.set(id, { name: s.name.trim(), dates: new Set(), doses: new Set() });
+    const p = products.get(id); p.dates.add(k); if (s.dose) p.doses.add(s.dose);
+  }
+  const entries = [...products.values()].map(p => '<li><b>' + esc(p.name) + '</b> · ' + esc(trf('{count} logged days', { count: p.dates.size })) + (p.doses.size ? ' · ' + esc(tr('Recorded dose(s):')) + ' ' + [...p.doses].map(esc).join(', ') : '') + '</li>').join('');
+  return '<p>' + esc(trf('Supplement use was explicitly logged on {logged} of {total} days; {none} days were marked as no use; {unknown} days are unknown or unrecorded.', { logged: logged.length, total: dateKeys.length, none: noUse, unknown })) + '</p>' + (entries ? '<ul>' + entries + '</ul>' : '') + '<p class="small muted">' + tr('Self-reported product names and label doses; this report does not assess whether use or dose is appropriate.') + '</p>';
 }
 let REP = { a: 'dietist', n: 14 };
 function renderReport() {
@@ -233,6 +245,7 @@ function reportHtml(aud, n) {
     if (part === 'stemming') h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', trf('{count} of {total} mood-scored days', { count: keys.filter(k => isNum(dv('mood', k)) && dv('mood', k) <= 5).length, total: cntOf('mood') }))]));
     if (part === 'notities') { const ns = keys.slice().reverse().filter(k => DB.days[k].moodNote || DB.days[k].notes); if (ns.length) h += sec('Notities', '<ul>' + ns.map(k => '<li><b>' + fmtDay(k) + (isNum(DB.days[k].mood) ? ' (' + DB.days[k].mood + '/10)' : '') + ':</b> ' + esc([DB.days[k].moodNote, DB.days[k].notes].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>'); }
     if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4><p>' + alcoholReport(periodKeys) + '</p></div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
+    if (part === 'supplementen') h += sec('Supplementen', supplementReport(periodKeys));
     if (part === 'gewicht') {
       const w = keys.map(k => ({ k, v: DB.days[k].weight })).filter(x => isNum(x.v));
       h += sec('Gewicht (vóór ontbijt)', w.length ? '<p>' + w.map(x => fmtDay(x.k) + ': ' + fmtNum(x.v, 1) + ' kg').join(' · ') + '</p><p class="small">' + trf('Average {weight} kg across {count} weigh-ins.', { weight: fmtNum(avg(w.map(x => x.v)), 1), count: w.length }) + '</p>' : '<p>' + tr('No weigh-ins recorded.') + '</p>');

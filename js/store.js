@@ -56,6 +56,14 @@ function migrate(d) {
   out.training.plans = Array.isArray(out.training.plans) ? out.training.plans.filter(p => p && typeof p === 'object' && typeof p.id === 'string' && Array.isArray(p.weeks) && p.weeks.length > 0 && p.weeks.every(w => w && Array.isArray(w.sessions))) : [];
   if (!out.training.plans.some(p => p.id === out.training.activePlanId && p.status === 'active')) out.training.activePlanId = null;
   out.days = d.days || {};
+  for (const day of Object.values(out.days)) {
+    if (!day || typeof day !== 'object' || Array.isArray(day)) continue;
+    day.supplementsLogged = day.supplementsLogged === true;
+    day.supplements = Array.isArray(day.supplements) ? day.supplements.slice(0, 8).map(item => ({
+      name: String(item && item.name || '').trim().slice(0, 80),
+      dose: String(item && item.dose || '').trim().slice(0, 40)
+    })).filter(item => item.name) : [];
+  }
   const cycle = d.cycleTracking && typeof d.cycleTracking === 'object' && !Array.isArray(d.cycleTracking) ? d.cycleTracking : {};
   out.cycleTracking = {
     enabled: cycle.enabled === true,
