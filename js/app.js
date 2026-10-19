@@ -12,7 +12,13 @@ let PICK_CB = null;     // callback van de itemkiezer
 /* ================= router ================= */
 function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
 window.addEventListener('hashchange', () => { if (!$('#sheet').hidden) closeSheet(); render(); });
+function applyPersonalSettings() {
+  const S = DB.settings || {};
+  document.documentElement.dataset.palette = ['forest', 'ocean', 'plum'].includes(S.palette) ? S.palette : 'forest';
+  document.documentElement.dataset.textSize = ['compact', 'normal', 'large'].includes(S.textSize) ? S.textSize : 'normal';
+}
 function render() {
+  applyPersonalSettings();
   const h = location.hash.replace(/^#\/?/, '');
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
@@ -94,10 +100,9 @@ function renderHome() {
     h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(due.label) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
   }
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(x.r.label) + '</button>').join('') + '</div>';
-  h += weekCard();
-  h += activeTrainingHomeCard();
-  h += moodHomeCard();
-  h += feedbackCard();
+  const homeCards = { week: weekCard(), training: activeTrainingHomeCard(), mood: moodHomeCard(), feedback: feedbackCard() };
+  const homeOrders = { food: ['week', 'feedback', 'training', 'mood'], movement: ['training', 'week', 'feedback', 'mood'], wellbeing: ['mood', 'week', 'feedback', 'training'], balanced: ['week', 'training', 'mood', 'feedback'] };
+  h += (homeOrders[DB.settings.homeFocus] || homeOrders.balanced).map(key => homeCards[key]).join('');
   h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
   h += '<h2 class="sec">' + tr('Kerncijfers') + '</h2><div class="kpis">' + KPI_ORDER.map(kpiTile).join('') + '</div>';
   const day = getDay(k);
@@ -873,7 +878,8 @@ function mdLite(t) {
 function renderMore(sub) {
   let h = header('Meer', '');
   const lang = currentLocale();
-  h += '<div class="card"><h3>' + tr('Taal (vertaling in opbouw)') + '</h3><p class="muted small">' + tr('De taalkeuze wordt bewaard op dit toestel. Sommige schermen zijn nog niet vertaald.') + '</p><label class="fld"><span>' + tr('Taal') + '</span><select data-chg="language"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>';
+  h += '<div class="card"><h3>' + tr('Taal') + '</h3><p class="muted small">' + tr('De taalkeuze wordt bewaard op dit toestel.') + '</p><label class="fld"><span>' + tr('Taal') + '</span><select data-chg="language"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>';
+  h += personalizationCard(DB.settings);
   if (DB.settings.admin) h += '<a class="card fb wk" href="#/uitnodigen"><b>' + tr('Vrienden uitnodigen') + '</b><p class="small">' + tr('Maak een persoonlijke code en stuur de uitnodiging meteen door.') + '</p></a>';
   const G = DB.goals, P = DB.profile, S = DB.settings;
   h += '<a class="card" href="#/inzicht"><b>' + tr('Inzicht en advies') + '</b><p class="small">' + tr('Persoonlijke patronen, onderbouwde acties en weekrapport.') + '</p></a>';
@@ -912,6 +918,14 @@ function renderMore(sub) {
   h += '<p class="muted small center">Voedingsdagboek · werkt offline · versie ' + APP_VERSION + '</p>';
   view().innerHTML = h;
   runDiag();
+}
+function personalizationCard(S) {
+  const options = (current, values) => values.map(([v, l]) => '<option value="' + v + '"' + (current === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('');
+  return '<div class="card"><h3>' + tr('Maak de app persoonlijk') + '</h3><p class="muted small">' + tr('Kies wat op je startscherm eerst komt. Je kunt alles later aanpassen; je dagboek blijft privé.') + '</p>' +
+    '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="personalize" data-p="homeFocus">' + options(S.homeFocus || 'balanced', [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']]) + '</select></label>' +
+    '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="personalize" data-p="palette">' + options(S.palette || 'forest', [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim']]) + '</select></label>' +
+    '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="personalize" data-p="textSize">' + options(S.textSize || 'normal', [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']]) + '</select></label>' +
+    '<small class="muted">' + tr('Je keuze verandert alleen de weergave op dit toestel.') + '</small></div>';
 }
 let INSTALL_EVT = null, DIAG = [];
 /* Sommige toestellen of netwerkfilters halen de manifest-link uit de pagina. Dan zetten we hem er zelf terug. */
@@ -1008,6 +1022,12 @@ ACT.language = el => {
   if (!UI_LOCALES.includes(el.value)) { el.value = currentLocale(); return; }
   DB.settings.language = el.value; save(); applyLocale(); refreshWebPushSchedule(true); render();
 };
+ACT.personalize = el => {
+  const choices = { homeFocus: ['balanced', 'food', 'movement', 'wellbeing'], palette: ['forest', 'ocean', 'plum'], textSize: ['compact', 'normal', 'large'] };
+  const key = el.dataset.p;
+  if (!choices[key] || !choices[key].includes(el.value)) { render(); return; }
+  DB.settings[key] = el.value; save(); applyPersonalSettings(); render();
+};
 ACT.setAppUrl = el => { DB.settings.appUrl = el.value.trim(); save(); };
 ACT.setShare = el => { DB.settings.share = el.checked; save(); if (el.checked) cloudSync(false); };
 ACT.setNotify = async el => {
@@ -1082,7 +1102,7 @@ ACT.wipe = async () => { if (!confirm('Alles op deze gsm wissen? Maak eerst een 
 /* ================= intake ================= */
 let INTAKE = null;
 function renderIntake(step) {
-  if (!INTAKE) INTAKE = { profile: Object.assign({}, DB.profile), goals: Object.assign({}, DB.goals), reminders: JSON.parse(JSON.stringify(DB.reminders)), weight: null };
+  if (!INTAKE) INTAKE = { profile: Object.assign({}, DB.profile), goals: Object.assign({}, DB.goals), reminders: JSON.parse(JSON.stringify(DB.reminders)), settings: { homeFocus: DB.settings.homeFocus || 'balanced', palette: DB.settings.palette || 'forest', textSize: DB.settings.textSize || 'normal' }, weight: null };
   const I = INTAKE;
   let h = '';
   if (step === '1') {
@@ -1096,17 +1116,24 @@ function renderIntake(step) {
       ifield('profile.age', 'Leeftijd', I.profile.age) + ifield('profile.heightCm', 'Lengte (cm)', I.profile.heightCm) + ifield('weight', 'Gewicht nu (kg, optioneel)', I.weight) +
       '<label class="fld"><span>Activiteit</span><select data-chg="intakeSet" data-p="profile.activity">' + [['zittend', 'zittend werk'], ['licht', 'licht actief'], ['matig', 'matig actief'], ['actief', 'actief']].map(([v, l]) => '<option value="' + v + '"' + (I.profile.activity === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label></div>' +
       '<label class="fld"><span>Wat moet de app weten? (medisch, werk, gewoontes, wat je wil bereiken)</span><textarea rows="4" data-chg="intakeSet" data-p="profile.notes" placeholder="bv. CPAP voor slaapapneu, bureauwerk, vaak honger \'s avonds">' + esc(I.profile.notes || '') + '</textarea></label></div>' +
-      '<button class="btn big" data-act="intakeGo" data-s="3">Verder</button>';
+      '<button class="btn big" data-act="intakeGo" data-s="3">' + tr('Verder') + '</button>';
   } else if (step === '3') {
     const bmr = mifflin(I);
     h = header('Je doelen', 'Stap 2 van 3') + '<div class="card">' + (bmr ? '<p class="note">Onderhoud volgens de formule ≈ ' + fmtNum(bmr) + ' kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.</p>' : '') + '<div class="grid2">' +
       ifield('goals.kcal', 'Kcal per dag', I.goals.kcal) + ifield('goals.protein', 'Eiwit (g)', I.goals.protein) + ifield('goals.fiber', 'Vezels (g)', I.goals.fiber) + ifield('goals.waterMl', 'Water (ml)', I.goals.waterMl) +
       ifield('goals.stepsMin', 'Stappen min.', I.goals.stepsMin) + ifield('goals.stepsMax', 'Stappen max.', I.goals.stepsMax) + ifield('goals.sleepH', 'Slaap (u)', I.goals.sleepH) + ifield('goals.caffeineMax', 'Max. cafeïne (shots)', I.goals.caffeineMax) + '</div></div>' +
-      '<button class="btn big" data-act="intakeGo" data-s="4">Verder</button>';
+      '<button class="btn big" data-act="intakeGo" data-s="4">' + tr('Verder') + '</button>';
   } else if (step === '4') {
     h = header('Je check-ins', 'Stap 3 van 3') + '<div class="card"><p class="muted small">Op deze momenten vraagt de app wat je at, dronk en hoe je je voelt. Je kan ze later altijd aanpassen.</p>' +
       I.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="intakeRem" data-f="on" data-i="' + i + '"><input type="time" value="' + r.time + '" data-chg="intakeRem" data-f="time" data-i="' + i + '"><span>' + esc(r.label) + '</span></div>').join('') + '</div>' +
-      '<button class="btn big" data-act="intakeDone">Klaar, start het dagboek</button>';
+      '<button class="btn big" data-act="intakeGo" data-s="5">' + tr('Verder') + '</button>';
+  } else if (step === '5') {
+    const S = I.settings;
+    h = header('Maak de app persoonlijk', 'Optioneel · later aanpasbaar') + '<div class="card"><p>' + tr('Kies wat je eerst wilt zien en hoe de app eruitziet. Dit verandert alleen de weergave op dit toestel.') + '</p>' +
+      '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="intakePersonalize" data-p="homeFocus">' + [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']].map(([v, l]) => '<option value="' + v + '"' + (S.homeFocus === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
+      '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="intakePersonalize" data-p="palette">' + [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim']].map(([v, l]) => '<option value="' + v + '"' + (S.palette === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
+      '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="intakePersonalize" data-p="textSize">' + [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']].map(([v, l]) => '<option value="' + v + '"' + (S.textSize === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label></div>' +
+      '<button class="btn big" data-act="intakeDone">' + tr('Klaar, start het dagboek') + '</button><button class="link" data-act="intakeDone">' + tr('Overslaan en starten') + '</button>';
   }
   view().innerHTML = h;
   if (step === '1') runDiag();
@@ -1133,8 +1160,10 @@ function mifflin(I) {
   const f = { zittend: 1.2, licht: 1.375, matig: 1.55, actief: 1.725 }[I.profile.activity] || 1.2;
   return Math.round((10 * w + 6.25 * hgt - 5 * a + (I.profile.sex === 'v' ? -161 : 5)) * f / 10) * 10;
 }
+ACT.intakePersonalize = el => { INTAKE.settings[el.dataset.p] = el.value; };
 ACT.intakeDone = () => {
   DB.profile = INTAKE.profile; DB.goals = INTAKE.goals; DB.reminders = INTAKE.reminders.sort((a, b) => a.time.localeCompare(b.time));
+  DB.settings.homeFocus = INTAKE.settings.homeFocus; DB.settings.palette = INTAKE.settings.palette; DB.settings.textSize = INTAKE.settings.textSize;
   if (INTAKE.weight) { DB.profile.startWeight = INTAKE.weight; const d = getDay(todayKey(), true); if (!isNum(d.weight)) d.weight = INTAKE.weight; }
   DB.intakeDone = true; save(); INTAKE = null;
   toast('Klaar! Zet nu je herinneringen op je gsm via Meer.');
