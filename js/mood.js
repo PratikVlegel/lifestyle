@@ -2,6 +2,13 @@
 'use strict';
 
 const MOOD_VAPE = { 'niet': 0, 'paar keer': 1, 'om de 3 u': 2, 'om de 2 u': 3, 'elk uur': 4 };
+function moodDiaryReadiness() {
+  const count = rangeKeys(todayKey(), 60).filter(k => {
+    const value = DB.days[k] && DB.days[k].mood;
+    return isNum(value) && value >= 0 && value <= 10;
+  }).length;
+  return { count, ready: count >= 14 };
+}
 function moodMedian(values) {
   const a = values.filter(isNum).slice().sort((x, y) => x - y);
   if (!a.length) return null;

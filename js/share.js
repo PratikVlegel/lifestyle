@@ -125,7 +125,7 @@ function recipeCommunityReviews(r) {
   return '<div class="card">' + form + (list.length ? '<h3>' + tr('Reacties van leden') + '</h3>' + list.slice(0, 12).map(x => '<p class="community-review"><b>' + esc(x.author) + '</b>' + (isNum(x.rating) ? ' · ' + '★'.repeat(x.rating) + ' ' + x.rating + '/5' : '') + (x.comment ? '<br>' + esc(x.comment) : '') + '</p>').join('') : '<p class="muted small">' + tr('Nog geen openbare beoordelingen.') + '</p>') + '</div>';
 }
 ACT.saveCommunityName = async () => {
-  try { const name = await saveCommunityProfile($('#communityName').value); $('#communityName').value = name; toast(tr('Communitynaam opgeslagen.')); }
+  try { const name = await saveCommunityProfile($('#communityName').value); $('#communityName').value = name; toast(tr('Communitynaam opgeslagen.')); if (location.hash.startsWith('#/community-profiel')) renderCommunityProfile(); }
   catch (e) { toast(e.message); }
 };
 ACT.saveRecipeCommunityReview = async el => {
@@ -144,7 +144,8 @@ async function renderRecipes() {
   if (!navigator.onLine) { view().innerHTML = h + '<p class="note">' + tr('Je bent offline. Gedeelde recepten laden kan alleen met internet.') + '</p>'; return; }
   try {
     RECIPE_ROWS = await fetchRecipes();
-    h += '<div class="card"><label class="fld"><span>' + tr('Zoek op recept, ingrediënt of communitynaam') + '</span><input type="search" id="communityRecipeSearch" data-community-filter="recipes" placeholder="' + tr('Zoek in gedeelde recepten') + '"></label>' +
+    h += '<div class="card community-guide"><b>' + tr('Zo werkt recepten delen') + '</b><p class="small">' + tr('Gedeelde recepten tonen ingrediënten en voedingswaarden per portie. Andere leden kunnen sterren en een openbare reactie achterlaten. Je eigen dagboek blijft privé. Je communitynaam verschijnt bij wat je deelt.') + '</p><a class="link" href="#/community-profiel">' + tr('Communitynaam instellen ›') + '</a></div>' +
+      '<div class="card"><label class="fld"><span>' + tr('Zoek op recept, ingrediënt of communitynaam') + '</span><input type="search" id="communityRecipeSearch" data-community-filter="recipes" placeholder="' + tr('Zoek in gedeelde recepten') + '"></label>' +
       '<div class="community-filter-grid">' +
       communityFilterSelect('communityRecipeKcal', 'Energie per portie', [['all','Alle waarden'],['low','Minder dan 400 kcal'],['mid','400–700 kcal'],['high','Meer dan 700 kcal']]) +
       communityFilterSelect('communityRecipeDiet', 'Vlees of vis in de ingrediënten', [['all','Maakt niet uit'],['yes','Vlees of vis herkend'],['no','Geen vlees of vis herkend']]) +

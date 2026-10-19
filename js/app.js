@@ -25,12 +25,14 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming', 'cycle'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming', 'cycle'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi', 'community-profiel'].includes(page)) || (el.dataset.tab === 'home' && ['kpi', 'checkin', 'ontdek'].includes(page))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
     switch (page || 'home') {
       case 'home': return renderHome();
+      case 'ontdek': return renderDiscoveryGuide();
+      case 'community-profiel': return renderCommunityProfile();
       case 'kpi': return renderKpi(a);
       case 'checkin': return renderCheckin(a, b);
       case 'dagboek': return renderDays();
@@ -104,15 +106,16 @@ function renderHome() {
   const k = todayKey();
   const due = dueReminder();
   const st = reminderStatus(k);
-  let h = header('Vandaag', fmtDay(k, true));
+  let h = '<div class="home-heading">' + header('Vandaag', fmtDay(k, true)) + '<a class="iconbtn guide-button" href="#/ontdek" aria-label="' + esc(tr('Ontdek wat je met de app kunt doen')) + '" title="' + esc(tr('Ontdek de app')) + '">?</a></div>';
   if (due) {
-    h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(due.label) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
+    h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(reminderDisplayLabel(due.label)) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
   }
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
   const homeCards = { week: weekCard(), training: activeTrainingHomeCard(), mood: moodHomeCard(), feedback: feedbackCard() };
   const homeOrders = { food: ['week', 'feedback', 'training', 'mood'], movement: ['training', 'week', 'feedback', 'mood'], wellbeing: ['mood', 'week', 'feedback', 'training'], balanced: ['week', 'training', 'mood', 'feedback'] };
   h += '<div class="home-focus-list">' + (homeOrders[DB.settings.homeFocus] || homeOrders.balanced).map(key => homeCards[key]).join('') + '</div>';
   h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
+  h += '<a class="card diary-discover" href="#/dag/' + k + '"><b>' + tr('Je dagboek kan meer bijhouden') + '</b><p class="small">' + tr('Stemming, energie, slaap, stress, nicotine, frisdrank, zoetigheden en supplementen vind je bij de details van een dag.') + '</p><span class="plan-go">' + tr('Dagboek van vandaag aanvullen ›') + '</span></a>';
   const focusKpis = {
     food: ['kcal', 'protein', 'fiber', 'water', 'caffeine', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fat'],
     movement: ['steps', 'burn', 'sleep', 'kcal', 'protein', 'water', 'fiber', 'mood', 'energy', 'weight', 'caffeine', 'fat'],
@@ -123,6 +126,21 @@ function renderHome() {
   const day = getDay(k);
   h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
   h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
+  view().innerHTML = h;
+}
+function renderDiscoveryGuide() {
+  const readiness = moodDiaryReadiness();
+  let h = header('Ontdek de app', 'Snel naar logboek, inzichten, community en instellingen', true);
+  h += '<section class="card guide-card"><span class="pill">' + tr('Begin hier') + '</span><h2>' + tr('Je dagboek is het vertrekpunt') + '</h2><p>' + tr('Je kunt per dag niet alleen maaltijden noteren, maar ook slaap, stemming, energie, stress, beweging, cafeïne, alcohol, nicotinevormen, frisdrank, zoetigheden en supplementen. Alleen ingevulde gegevens tellen mee.') + '</p><a class="btn" href="#/dag/' + todayKey() + '">' + tr('Vandaag aanvullen') + '</a><a class="link" href="#/dagboek">' + tr('Alle dagen bekijken ›') + '</a></section>';
+  h += '<section class="card guide-card"><span class="pill">' + tr('Persoonlijk welzijn') + '</span><h2>' + tr('Inzichten groeien mee met je dagboek') + '</h2><p>' + trf('Je hebt {count} stemmingsdagen genoteerd in de laatste 60 dagen. Voor persoonlijke vergelijkingen zijn minstens 14 stemmingsdagen nodig; daarna vergelijkt de app alleen dagen waarop beide waarden bekend zijn.', { count: readiness.count }) + '</p><a class="btn ghost" href="#/stemming">' + tr(readiness.ready ? 'Persoonlijke vergelijkingen bekijken' : 'Uitleg over stemming en gewoontes') + '</a></section>';
+  h += '<section class="card guide-card"><span class="pill">' + tr('Community') + '</span><h2>' + tr('Recepten, plannen en ervaringen') + '</h2><p>' + tr('Deel een mealprep met voedingswaarden per portie, zoek recepten en geef sterren of een reactie. Je kunt ook trainingsschema’s delen, door anderen laten beoordelen en een kopie bewaren.') + '</p><p class="small muted">' + tr('Communityrangschikkingen tonen op dit moment alleen vrijwillig gedeelde stappen en beweegminuten. Voedingswaarden en macro’s worden niet gedeeld.') + '</p><a class="link" href="#/recepten">' + tr('Gedeelde recepten ›') + '</a> · <a class="link" href="#/train-community">' + tr('Communityschema’s ›') + '</a> · <a class="link" href="#/community-kpi/weekly">' + tr('Communitycijfers ›') + '</a></section>';
+  h += '<section class="card guide-card"><span class="pill">' + tr('Eenmalig instellen') + '</span><h2>' + tr('Kies je naam, taal en uitstraling') + '</h2><p>' + tr('Je communitynaam verschijnt bij recepten, beoordelingen, schema’s en cijfers die je zelf deelt. Je echte naam en dagboek worden niet met die naam gedeeld. Pas ook je taal, kleuren, tekstgrootte en startscherm aan.') + '</p><div class="inrow wrap"><a class="btn" href="#/community-profiel">' + tr('Communitynaam instellen') + '</a><a class="btn ghost" href="#/meer">' + tr('Taal en personalisatie ›') + '</a></div></section>';
+  h += '<section class="card guide-card"><span class="pill">' + tr('Herinneringen') + '</span><h2>' + tr('Laat je op een handig moment herinneren') + '</h2><p>' + tr('Pas check-intijden aan in Meer. Webpush werkt per toestel nadat je meldingen inschakelt; anders kun je een agenda-export gebruiken.') + '</p><a class="link" href="#/meer">' + tr('Herinneringen instellen ›') + '</a></section>';
+  view().innerHTML = h;
+}
+function renderCommunityProfile() {
+  let h = header('Communityprofiel', 'Kies de naam die andere leden zien', true);
+  h += '<div class="card"><p>' + tr('Deze naam wordt getoond bij recepten, beoordelingen, gedeelde schema’s en vrijwillig gedeelde beweegcijfers. Je echte naam, e-mailadres en dagboek worden niet getoond.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(DB.settings.communityName || '') + '" placeholder="' + esc(tr('Kies een naam')) + '"></label><button class="btn" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
   view().innerHTML = h;
 }
 function kpiTile(key) {
@@ -595,7 +613,9 @@ function renderDays() {
   const keys = Object.keys(DB.days).sort().reverse();
   let h = header('Dagboek', keys.length + ' dagen geregistreerd');
   h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><div class="diary-date-control"><button class="btn ghost" data-act="chooseDiaryDate">' + tr('Andere dag') + '</button><input class="diary-date" type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" data-chg="openDate"></div></div>';
-  h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">' + tr('Welzijn') + '</span><h3>' + tr('Hoe is het met je, los van de cijfers?') + '</h3><p class="small">' + tr('Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.') + '</p><span class="plan-go">' + tr('Stemming en gewoontes bekijken ›') + '</span></a>';
+  const readiness = moodDiaryReadiness();
+  if (DB.settings.moodInsights && readiness.ready) h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">' + tr('Welzijn') + '</span><h3>' + tr('Persoonlijke vergelijkingen staan klaar') + '</h3><p class="small">' + tr('Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.') + '</p><span class="plan-go">' + tr('Stemming en gewoontes bekijken ›') + '</span></a>';
+  else h += '<a class="card diary-wellbeing" href="#/dag/' + todayKey() + '"><span class="pill">' + tr('Dagboek') + '</span><h3>' + tr('Hoe is het met je, los van de cijfers?') + '</h3><p class="small">' + tr('Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Persoonlijke vergelijkingen verschijnen pas als er genoeg stemmingsdagen zijn.') + '</p>' + (DB.settings.moodInsights ? '<p class="small muted">' + trf('{count} van de 14 stemmingsdagen bijgehouden.', { count: readiness.count }) + '</p>' : '') + '<span class="plan-go">' + tr('Dagboek van vandaag aanvullen ›') + '</span></a>';
   const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
     const wellbeing = [isNum(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isNum(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isNum(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
@@ -941,6 +961,7 @@ function mdLite(t) {
 function renderMore(sub) {
   let h = header('Meer', '');
   h += '<a class="card fb wk" href="#/community-kpi/weekly"><b>' + tr('Community-KPI’s') + '</b><p class="small">' + tr('Vergelijk vrijwillig gedeelde stappen en beweegminuten met andere leden.') + '</p></a>';
+  h += '<a class="card fb wk" href="#/community-profiel"><b>' + tr('Communitynaam instellen') + '</b><p class="small">' + tr('Kies de naam die bij jouw gedeelde recepten, beoordelingen, schema’s en cijfers verschijnt.') + '</p></a>';
   const lang = currentLocale();
   h += '<div class="card"><h3>' + tr('Taal') + '</h3><p class="muted small">' + tr('De taalkeuze wordt bewaard op dit toestel.') + '</p><label class="fld"><span>' + tr('Taal') + '</span><select data-chg="language"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>';
   h += personalizationCard(DB.settings);
@@ -968,7 +989,7 @@ function renderMore(sub) {
 
   h += '<div class="card"><h3>' + tr('Gedeelde bibliotheek') + '</h3><p class="muted small">' + tr('Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.') + '</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> ' + tr('Mijn productbibliotheek synchroniseren (producten delen en ophalen)') + '</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">' + tr('Bibliotheek openen') + '</a><button class="btn ghost" data-act="syncNow">' + tr('Nu bijwerken') + '</button></div>' : '<p class="note">' + tr('Niet ingesteld.') + '</p>') + '</div>';
-  h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
+  h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><div class="inrow wrap"><a class="btn ghost" href="#/community-profiel">' + tr(DB.settings.communityName ? 'Communitynaam wijzigen' : 'Communitynaam instellen') + '</a></div></div>';
   h += '<div class="card"><h3>' + tr('AI (optioneel)') + '</h3><p class="muted small">' + tr('With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.') + ' ' + esc(aiDataDisclosure()) + ' ' + tr('You pay Anthropic for each request. Your key is stored in this browser and is excluded from backups.') + '</p>' +
     '<label class="fld"><span>' + tr('API-sleutel') + '</span><input type="password" maxlength="512" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>' + tr('Model') + '</span><input type="text" maxlength="100" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
@@ -1262,7 +1283,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.26';
+const APP_VERSION = '1.10.27';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
