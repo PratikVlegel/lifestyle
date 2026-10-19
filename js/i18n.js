@@ -1938,3 +1938,10 @@ const TRAINING_DEFAULT_TRANSLATIONS = {
   'de-DE': { 'Krachttraining': 'Krafttraining' }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], TRAINING_DEFAULT_TRANSLATIONS[locale]);
+const MOOD_EVIDENCE_TRANSLATIONS = {
+  'nl-BE': { '{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.': '{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.' },
+  'en-GB': { '{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.': '{metric}: {withCount} days with the supplement and a score, {withoutCount} days without the supplement and a score; at least five per group are needed.' },
+  'fr-FR': { '{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.': '{metric} : {withCount} jours avec le complément et un score, {withoutCount} jours sans le complément et avec un score ; au moins cinq par groupe sont nécessaires.' },
+  'de-DE': { '{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.': '{metric}: {withCount} Tage mit dem Supplement und einem Wert, {withoutCount} Tage ohne das Supplement und mit einem Wert; mindestens fünf pro Gruppe erforderlich.' }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], MOOD_EVIDENCE_TRANSLATIONS[locale]);
