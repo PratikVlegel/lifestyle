@@ -14,7 +14,7 @@ function go(hash) { if (location.hash === hash) render(); else location.hash = h
 window.addEventListener('hashchange', () => { if (!$('#sheet').hidden) closeSheet(); render(); });
 function applyPersonalSettings() {
   const S = INTAKE && location.hash.startsWith('#/intake') ? INTAKE.settings : DB.settings || {};
-  document.documentElement.dataset.palette = ['forest', 'ocean', 'plum', 'sunset', 'slate'].includes(S.palette) ? S.palette : 'forest';
+  document.documentElement.dataset.palette = ['forest', 'ocean', 'plum', 'sunset', 'slate', 'berry', 'lavender', 'sand', 'midnight'].includes(S.palette) ? S.palette : 'forest';
   document.documentElement.dataset.textSize = ['compact', 'normal', 'large'].includes(S.textSize) ? S.textSize : 'normal';
   const themeColor = document.querySelector('meta[name="theme-color"]');
   if (themeColor) themeColor.content = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2F6247';
@@ -931,7 +931,7 @@ function personalizationCard(S) {
   const options = (current, values) => values.map(([v, l]) => '<option value="' + v + '"' + (current === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('');
   return '<div class="card"><h3>' + tr('Maak de app persoonlijk') + '</h3><p class="muted small">' + tr('Je focus bepaalt welke kaarten en kerncijfers bovenaan Vandaag staan. Kleur en tekstgrootte werken door in de hele app.') + '</p>' +
     '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="personalize" data-p="homeFocus">' + options(S.homeFocus || 'balanced', [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']]) + '</select></label>' +
-    '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="personalize" data-p="palette">' + options(S.palette || 'forest', [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen']]) + '</select></label>' +
+    '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="personalize" data-p="palette">' + options(S.palette || 'forest', [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen'], ['berry', 'Bes'], ['lavender', 'Lavendel'], ['sand', 'Zand'], ['midnight', 'Middernachtblauw']]) + '</select></label>' +
     '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="personalize" data-p="textSize">' + options(S.textSize || 'normal', [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']]) + '</select></label>' +
     '<small class="muted">' + tr('Je keuze verandert alleen de weergave op dit toestel.') + '</small></div>';
 }
@@ -1031,7 +1031,7 @@ ACT.language = el => {
   DB.settings.language = el.value; save(); applyLocale(); refreshWebPushSchedule(true); render();
 };
 ACT.personalize = el => {
-  const choices = { homeFocus: ['balanced', 'food', 'movement', 'wellbeing'], palette: ['forest', 'ocean', 'plum', 'sunset', 'slate'], textSize: ['compact', 'normal', 'large'] };
+  const choices = { homeFocus: ['balanced', 'food', 'movement', 'wellbeing'], palette: ['forest', 'ocean', 'plum', 'sunset', 'slate', 'berry', 'lavender', 'sand', 'midnight'], textSize: ['compact', 'normal', 'large'] };
   const key = el.dataset.p;
   if (!choices[key] || !choices[key].includes(el.value)) { render(); return; }
   DB.settings[key] = el.value; save(); applyPersonalSettings(); render();
@@ -1139,7 +1139,7 @@ function renderIntake(step) {
     const S = I.settings;
     h = header('Maak de app persoonlijk', 'Optioneel · later aanpasbaar') + '<div class="card"><p>' + tr('Kies wat je eerst wilt zien en hoe de app eruitziet. Dit verandert alleen de weergave op dit toestel.') + '</p>' +
       '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="intakePersonalize" data-p="homeFocus">' + [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']].map(([v, l]) => '<option value="' + v + '"' + (S.homeFocus === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
-      '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="intakePersonalize" data-p="palette">' + [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen']].map(([v, l]) => '<option value="' + v + '"' + (S.palette === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
+      '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="intakePersonalize" data-p="palette">' + [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen'], ['berry', 'Bes'], ['lavender', 'Lavendel'], ['sand', 'Zand'], ['midnight', 'Middernachtblauw']].map(([v, l]) => '<option value="' + v + '"' + (S.palette === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
       '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="intakePersonalize" data-p="textSize">' + [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']].map(([v, l]) => '<option value="' + v + '"' + (S.textSize === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label></div>' +
       '<button class="btn big" data-act="intakeDone">' + tr('Klaar, start het dagboek') + '</button><button class="link" data-act="intakeDone">' + tr('Overslaan en starten') + '</button>';
   }
@@ -1193,7 +1193,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.2';
+const APP_VERSION = '1.10.3';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

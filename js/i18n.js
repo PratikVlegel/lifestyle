@@ -880,6 +880,10 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Kcal uit geregistreerde maaltijden vóór het avondeten': 'Kalorien aus erfassten Mahlzeiten vor dem Abendessen', 'Kcal uit geregistreerde maaltijden vanaf het avondeten': 'Kalorien aus erfassten Mahlzeiten ab dem Abendessen'
 });
 
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { 'Bes': 'Berry', 'Lavendel': 'Lavender', 'Zand': 'Sand', 'Middernachtblauw': 'Midnight blue' });
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { 'Bes': 'Baies', 'Lavendel': 'Lavande', 'Zand': 'Sable', 'Middernachtblauw': 'Bleu nuit' });
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Bes': 'Beere', 'Lavendel': 'Lavendel', 'Zand': 'Sand', 'Middernachtblauw': 'Mitternachtsblau' });
+
 function currentLocale() { return UI_LOCALES.includes(DB && DB.settings && DB.settings.language) ? DB.settings.language : 'nl-BE'; }
 function tr(text) {
   const locale = currentLocale();
