@@ -334,11 +334,24 @@ function renderGeneratedTraining(g) {
 }
 function draftPlanActions() { return '<div class="card plan-draft"><h3>Wil je dit schema volgen?</h3><p class="muted small">Start het om je trainingen af te vinken. Je kan het later pauzeren, hervatten of stopzetten.</p><button class="btn big" data-act="startTrainingPlan">Start dit schema</button><a class="link" href="#/schemas">Terug naar mijn schema’s</a></div>'; }
 function trTrainingText(value) {
-  const walk = String(value).match(/^(\d+) min op een matig tempo waarbij praten nog lukt\. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies\.$/);
-  if (walk) return trf('{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.', { minutes: walk[1] });
-  const match = String(value).match(/^Kies (\d+(?:–\d+)?) pijnvrije bewegingen voor benen, heupen, duwen, trekken en romp met (.+?)\. Doe (1–2|2–3) beheerste sets; stop met 2–3 herhalingen over\.(.*)$/);
-  if (!match) return tr(value);
-  return trf('Kies {count} pijnvrije bewegingen voor benen, heupen, duwen, trekken en romp met {equipment}. Doe {sets} beheerste sets; stop met 2–3 herhalingen over.', { count: match[1], equipment: tr(match[2]), sets: match[3] }) + tr(match[4]);
+  const text = String(value || '');
+  const walk = text.match(/^(\d+) min op een matig tempo waarbij praten nog lukt\. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies\.$/);
+  if (walk) return trf('{minutes} min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.', { minutes: walk[1] });
+  const match = text.match(/^Kies (\d+(?:–\d+)?) pijnvrije bewegingen voor benen, heupen, duwen, trekken en romp met (.+?)\. Doe (1–2|2–3) beheerste sets; stop met 2–3 herhalingen over\.(.*)$/);
+  if (match) {
+    const base = trf('Kies {count} pijnvrije bewegingen voor benen, heupen, duwen, trekken en romp met {equipment}. Doe {sets} beheerste sets; stop met 2–3 herhalingen over.', { count: match[1], equipment: tr(match[2]), sets: match[3] });
+    let tail = match[4].trim();
+    tail = tail.replace(/Richtlijn voor deze opbouwfase: (.+?) per oefening\./g, (_, sets) => trf('Richtlijn voor deze opbouwfase: {sets} per oefening.', { sets: tr(sets) }));
+    tail = tail.replace(/Doe ongeveer de helft van je sets uit week (\d+); week 8 is eveneens lichter\./g, (_, week) => trf('Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.', { week }));
+    tail = tail.replace(/Houd de sessie kort en beheersbaar\./g, () => tr('Houd de sessie kort en beheersbaar.'));
+    tail = tail.replace(/Werk doorgaans in een comfortabele reeks van 6–15 herhalingen\. Verhoog pas als de huidige sets goed herstellen; wie al ervaring heeft kan op termijn richting ongeveer 10 wekelijkse sets per spiergroep opbouwen\./g, () => tr('Werk doorgaans in een comfortabele reeks van 6–15 herhalingen. Verhoog pas als de huidige sets goed herstellen; wie al ervaring heeft kan op termijn richting ongeveer 10 wekelijkse sets per spiergroep opbouwen.'));
+    return base + (tail ? ' ' + tail : '');
+  }
+  let dynamic = text.match(/^Richtlijn voor deze opbouwfase: (.+?) per oefening\.$/);
+  if (dynamic) return trf('Richtlijn voor deze opbouwfase: {sets} per oefening.', { sets: tr(dynamic[1]) });
+  dynamic = text.match(/^Doe ongeveer de helft van je sets uit week (\d+); week 8 is eveneens lichter\.$/);
+  if (dynamic) return trf('Do about half as many sets as in week {week}; week 8 is also lighter.', { week: dynamic[1] });
+  return tr(text);
 }
 function renderProgressiveProgram(g) {
   const cards = g.weeks.map(w => '<details class="card train-week"' + (w.number === 1 ? ' open' : '') + '><summary><b>' + tr('Week') + ' ' + w.number + ' · ' + tr(w.phase) + '</b><span class="muted small">' + tr(w.focus) + '</span></summary>' + w.sessions.map(s => '<div class="train-session"><b>' + tr(s.day) + ' · ' + tr(s.title) + '</b><p>' + trTrainingText(s.detail) + '</p></div>').join('') + '</details>').join('');
