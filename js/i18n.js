@@ -1783,16 +1783,16 @@ Object.assign(UI_EXTRA_TRANSLATIONS['nl-BE'], {
   '{count} sessions; duration not recorded': '{count} sessies; duur niet geregistreerd'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
-  'Water toegevoegd vandaag: {amount} l': 'Water added today: {amount} L',
-  'Cafeïne genoteerd vandaag: {count} porties': 'Caffeine logged today: {count} servings'
+  'Water vandaag: {amount} l': 'Water today: {amount} L',
+  'Cafeïne vandaag: {count} porties': 'Caffeine today: {count} servings'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
-  'Water toegevoegd vandaag: {amount} l': 'Eau ajoutée aujourd’hui : {amount} L',
-  'Cafeïne genoteerd vandaag: {count} porties': 'Caféine notée aujourd’hui : {count} doses'
+  'Water vandaag: {amount} l': 'Eau aujourd’hui : {amount} L',
+  'Cafeïne vandaag: {count} porties': 'Caféine aujourd’hui : {count} doses'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
-  'Water toegevoegd vandaag: {amount} l': 'Heute hinzugefügtes Wasser: {amount} l',
-  'Cafeïne genoteerd vandaag: {count} porties': 'Heute erfasstes Koffein: {count} Portionen'
+  'Water vandaag: {amount} l': 'Wasser heute: {amount} l',
+  'Cafeïne vandaag: {count} porties': 'Koffein heute: {count} Portionen'
 });
 const COMMON_TOAST_TRANSLATIONS = {
   'en-GB': {
