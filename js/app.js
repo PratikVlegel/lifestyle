@@ -362,6 +362,13 @@ ACT.ciDelItem = el => { const s = el.dataset.s; CI.items[s].splice(Number(el.dat
 ACT.ciAdd = el => { const s = el.dataset.s; openPicker(items => { CI.items[s] = (CI.items[s] || []).concat(items); CI.ans[s] = undefined; rerenderCI(); }); };
 
 ACT.ciSave = () => {
+  for (const f of ['weight', 'sleepH', 'waterL', 'steps', 'caffeine', 'alcohol']) {
+    const v = CI.f[f];
+    if (typeof v === 'number') {
+      const err = numericError(f, v, DB);
+      if (err) { toast(err); const input = document.querySelector('[data-ci="' + f + '"]'); if (input) input.focus(); return; }
+    }
+  }
   const errs = [];
   document.querySelectorAll('[data-req]').forEach(n => n.classList.remove('bad'));
   document.querySelectorAll('[data-req]').forEach(n => {
@@ -452,6 +459,10 @@ ACT.pickFood = el => {
 ACT.pickFree = () => {
   const desc = $('#vdesc').value.trim(); if (!desc) return toast('Wat at je?');
   const num = id => { const v = $(id).value.replace(',', '.'); return v === '' ? null : Number(v); };
+  for (const [id, key] of [['#vkcal', 'kcal'], ['#vprot', 'protein'], ['#vfib', 'fiber']]) {
+    const err = numericError(key, num(id), DB);
+    if (err) { toast(err); $(id).focus(); return; }
+  }
   const it = { id: uid(), src: 'vrij', desc, kcal: num('#vkcal'), protein: num('#vprot'), fiber: num('#vfib') };
   closeSheet(); PICK_CB && PICK_CB([it]);
 };
@@ -566,7 +577,15 @@ function renderDay(k) {
 ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }); save(); render(); });
 ACT.saveDay = el => {
   const d = getDay(el.dataset.k, true);
-  document.querySelectorAll('[data-dk]').forEach(i => {
+  const fields = [...document.querySelectorAll('[data-dk]')];
+  for (const i of fields) {
+    if (i.type !== 'number') continue;
+    let v = numericValue(i);
+    if (i.dataset.dk === 'waterMl' && v !== null) v = Math.round(v * 1000);
+    const err = numericError(i.dataset.dk, v, DB);
+    if (err) { toast(err); i.focus(); return; }
+  }
+  fields.forEach(i => {
     const n = i.dataset.dk; let v = i.value.trim();
     if (i.type === 'number') { v = v === '' ? null : Number(v.replace(',', '.')); if (n === 'waterMl' && isNum(v)) v = Math.round(v * 1000); }
     else if (v === '') v = null;
@@ -590,6 +609,10 @@ ACT.editMeal = el => {
 ACT.saveMeal = el => {
   const m = getDay(el.dataset.k).meals.find(x => x.id === el.dataset.id);
   const num = id => { const v = $(id).value.replace(',', '.'); return v === '' ? null : Number(v); };
+  for (const [id, key] of [['#em_kcal', 'kcal'], ['#em_protein', 'protein'], ['#em_fiber', 'fiber']]) {
+    const err = numericError(key, num(id), DB);
+    if (err) { toast(err); $(id).focus(); return; }
+  }
   m.desc = $('#em_desc').value; m.time = $('#em_time').value; m.slot = $('#em_slot').value; m.nothing = false;
   m.kcal = num('#em_kcal'); m.protein = num('#em_protein'); m.fiber = num('#em_fiber'); delete m.lb;
   save(); closeSheet(); render();
@@ -707,8 +730,19 @@ ACT.ingPhoto = async el => {
 };
 ACT.savePrep = () => {
   if (!PREP.name.trim()) return toast('Geef de mealprep een naam.');
+  if (!Number.isInteger(Number(PREP.portions)) || Number(PREP.portions) < 1 || Number(PREP.portions) > 200) return toast('Kies 1 tot 200 porties.');
+  if (PREP.left !== null && PREP.left !== undefined && (!isNum(PREP.left) || PREP.left < 0 || PREP.left > Number(PREP.portions))) return toast('Resterende porties moeten tussen 0 en het totaal liggen.');
+  if (PREP.cooked !== null && PREP.cooked !== undefined && (!isNum(PREP.cooked) || PREP.cooked < 0 || PREP.cooked > 100000)) return toast('Controleer het bereid gewicht (0–100.000 g).');
   const ingr = PREP.ingredients.filter(g => g.name || isNum(g.grams));
   if (!ingr.length) return toast('Voeg minstens één ingrediënt toe.');
+  for (const g of ingr) {
+    if (g.grams !== null && g.grams !== undefined && (!isNum(g.grams) || g.grams < 0 || g.grams > 100000)) return toast('Controleer de hoeveelheid van ' + (g.name || 'het ingrediënt') + '.');
+    if (g.mode === 'per100' && g.name && (!isNum(g.grams) || g.grams <= 0)) return toast('Vul een hoeveelheid in voor ' + g.name + '.');
+    for (const n of NUTR) {
+      const value = g.per && g.per[n], max = g.mode === 'totaal' ? (n === 'kcal' ? 20000 : 2000) : (n === 'kcal' ? 1000 : 100);
+      if (value !== null && value !== undefined && (!isNum(value) || value < 0 || value > max)) return toast('Controleer de ' + NUTR_LABEL[n] + '-waarde van ' + (g.name || 'het ingrediënt') + '.');
+    }
+  }
   PREP.ingredients = ingr;
   for (const g of ingr) {
     if (g.mode === 'per100' && g.name && NUTR.some(n => isNum(g.per[n])) && !g.foodId && !DB.foods.some(f => f.name.toLowerCase() === g.name.toLowerCase())) { const nf = { id: uid(), name: g.name, per: Object.assign({}, g.per), units: [], source: 'eigen', dirty: true }; DB.foods.push(nf); g.foodId = nf.id; if (navigator.onLine && cloudReady()) pushFood(nf).catch(() => { }); }
@@ -880,15 +914,20 @@ async function runDiag() {
 }
 function gfield(p, l, v, type) { return '<label class="fld"><span>' + l + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="setG" data-p="' + p + '"></label>'; }
 const NUM_LIMITS = {
-  'profile.age': [0, 120], 'profile.heightCm': [0, 300], 'profile.startWeight': [0, 500], weight: [0, 500],
+  'profile.age': [1, 120], 'profile.heightCm': [50, 300], 'profile.startWeight': [20, 500], weight: [20, 500],
   'goals.kcal': [0, 15000], 'goals.protein': [0, 1000], 'goals.fiber': [0, 1000], 'goals.waterMl': [0, 30000],
   'goals.stepsMin': [0, 200000], 'goals.stepsMax': [0, 200000], 'goals.sleepH': [0, 24], 'goals.caffeineMax': [0, 100],
-  'settings.glassMl': [1, 10000]
+  'settings.glassMl': [1, 10000],
+  sleepH: [0, 24], waterL: [0, 30], waterMl: [0, 30000], steps: [0, 200000],
+  caffeine: [0, 100], alcohol: [0, 50], mood: [1, 10], energy: [1, 10], stress: [1, 10],
+  kcal: [0, 20000], protein: [0, 1000], fiber: [0, 1000]
 };
+const NUM_INTEGERS = new Set(['profile.age', 'goals.kcal', 'goals.waterMl', 'goals.stepsMin', 'goals.stepsMax', 'goals.caffeineMax', 'settings.glassMl', 'steps', 'caffeine', 'alcohol']);
 function numericValue(el) { return el.value === '' ? null : Number(String(el.value).replace(',', '.')); }
 function numericError(path, value, data) {
   if (value === null) return '';
   if (!Number.isFinite(value)) return 'Vul een geldig getal in.';
+  if (NUM_INTEGERS.has(path) && !Number.isInteger(value)) return 'Vul een geheel getal in.';
   const limit = NUM_LIMITS[path];
   if (limit && (value < limit[0] || value > limit[1])) return 'Kies een waarde tussen ' + limit[0] + ' en ' + fmtNum(limit[1]) + '.';
   if (path === 'goals.stepsMin' && isNum(data.goals.stepsMax) && value > data.goals.stepsMax) return 'Stappen minimum mag niet hoger zijn dan het maximum.';
@@ -1057,7 +1096,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.8.1';
+const APP_VERSION = '1.8.2';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

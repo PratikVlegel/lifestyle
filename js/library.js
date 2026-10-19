@@ -125,6 +125,10 @@ ACT.pedSave = () => {
   const P = PED;
   if (!String(P.name || '').trim()) return toast('Geef het product een naam.');
   if (!isNum(P.per.kcal)) return toast('Vul minstens de kcal per 100 g in.');
+  for (const n of NUTR) {
+    const value = P.per[n];
+    if (value !== null && value !== undefined && (!isNum(value) || value < 0 || value > (n === 'kcal' ? 1000 : 100))) return toast('Controleer de ' + NUTR_LABEL[n] + '-waarde per 100 g; die moet binnen een realistische positieve grens vallen.');
+  }
   if (P.barcode && !/^[0-9]{6,14}$/.test(P.barcode)) return toast('De barcode bestaat alleen uit cijfers.');
   P.units = (P.units || []).filter(u => u.n && isNum(u.g) && u.g > 0);
   const isNew = P.isNew; delete P.isNew; delete P.uncertain;

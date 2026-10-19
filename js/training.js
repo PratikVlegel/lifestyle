@@ -118,6 +118,12 @@ function customTrainingDraft() {
   d.weeks = Math.max(1, Math.min(24, Math.floor(Number(d.weeks) || 8)));
   return d;
 }
+function validRepRange(value) {
+  const m = String(value || '').trim().match(/^(\d{1,3})(?:[–-](\d{1,3}))?$/);
+  if (!m) return false;
+  const low = Number(m[1]), high = m[2] ? Number(m[2]) : low;
+  return low >= 1 && high >= low;
+}
 function renderCustomTrainingBuilder() {
   const d = customTrainingDraft();
   let h = header('Zelf samenstellen', 'Maak een weekschema met je eigen oefeningen, sets en herhalingen', true);
@@ -155,14 +161,14 @@ ACT.customExerciseField = el => {
   const d = customTrainingDraft(), x = d.sessions[el.dataset.day]?.exercises[Number(el.dataset.i)]; if (!x) return;
   const f = el.dataset.f, value = ['sets', 'rest'].includes(f) ? Number(el.value) : el.value;
   if (['sets', 'rest'].includes(f) && (!Number.isInteger(value) || value < (f === 'sets' ? 1 : 0) || value > (f === 'sets' ? 10 : 600))) { el.value = x[f]; return toast(f === 'sets' ? 'Sets: kies 1 tot 10.' : 'Rust: kies 0 tot 600 seconden.'); }
-  if (f === 'reps' && !/^\d{1,3}([–-]\d{1,3})?$/.test(value.trim())) { el.value = x.reps; return toast('Vul herhalingen in, bv. 8 of 8–12.'); }
+  if (f === 'reps' && !validRepRange(value)) { el.value = x.reps; return toast('Vul een geldige herhaling of reeks in, bv. 8 of 8–12.'); }
   x[f] = f === 'name' ? value.slice(0, 80) : value; save();
 };
 ACT.customExerciseAdd = el => { const d = customTrainingDraft(); if (d.sessions[el.dataset.day].exercises.length >= 20) return toast('Maximaal 20 oefeningen per training.'); d.sessions[el.dataset.day].exercises.push({ name: '', sets: 3, reps: '8–12', rest: 90 }); save(); renderCustomTrainingBuilder(); };
 ACT.customExerciseRemove = el => { const d = customTrainingDraft(); d.sessions[el.dataset.day]?.exercises.splice(Number(el.dataset.i), 1); save(); renderCustomTrainingBuilder(); };
 ACT.generateCustomTraining = () => {
   const d = customTrainingDraft(); if (!d.name.trim()) return toast('Geef je schema een naam.'); if (!d.days.length) return toast('Kies minstens één trainingsdag.');
-  for (const day of d.days) { const s = d.sessions[day]; if (!s.exercises.length || s.exercises.some(x => !x.name.trim() || !Number.isInteger(Number(x.sets)) || !/^\d{1,3}([–-]\d{1,3})?$/.test(String(x.reps).trim()))) return toast('Vul per trainingsdag minstens één oefening, sets en herhalingen in.'); }
+  for (const day of d.days) { const s = d.sessions[day]; if (!s.exercises.length || s.exercises.some(x => !x.name.trim() || !Number.isInteger(Number(x.sets)) || Number(x.sets) < 1 || Number(x.sets) > 10 || !Number.isInteger(Number(x.rest)) || Number(x.rest) < 0 || Number(x.rest) > 600 || !validRepRange(x.reps))) return toast('Vul per trainingsdag minstens één oefening in met 1–10 sets, geldige herhalingen en 0–600 seconden rust.'); }
   const labels = Object.fromEntries(TRAIN_DAYS), sessions = d.days.map(k => Object.assign({}, JSON.parse(JSON.stringify(d.sessions[k])), { day: labels[k] }));
   const weeks = Array.from({ length: d.weeks }, (_, i) => ({ number: i + 1, phase: 'Eigen weekschema', focus: 'Pas je belasting alleen aan als je techniek en herstel goed blijven.', sessions: JSON.parse(JSON.stringify(sessions)) }));
   DB.training.generated = { programType: 'custom', customPlan: true, name: d.name.trim().slice(0, 60), goal: d.goal, level: d.level, days: d.days.slice(), weeks };

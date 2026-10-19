@@ -5,6 +5,7 @@ Offline web-app (PWA) voor een voedingsdagboek: check-ins op vaste tijden, mealp
 Live: https://pratikvlegel.github.io/lifestyle/
 
 - Het dagboek, trainingsschema's en de optionele vergelijkingen van stemming met gewoontes blijven op het toestel (localStorage). Je kan stemming, energie en optioneel stress/spanning registreren. De vergelijkingen gebruiken alleen ingevulde gestructureerde waarden; vrije notities worden niet gelezen. Ze tonen persoonlijke samenhang, geen oorzaak of diagnose. Als je zelf een AI-analyse start, verstuurt de app je profiel en maximaal 21 dagen relevante dagboekgegevens, inclusief notities, naar Anthropic.
+- Numerieke invoer wordt begrensd en waar nodig op gehele waarden gecontroleerd. Dagboekmetingen, maaltijdwaarden, etiketwaarden en zelf samengestelde oefeningen worden gevalideerd voordat ze worden opgeslagen.
 - Producten, gedeelde mealprep-recepten en communitybeoordelingen gaan naar Supabase wanneer je ze deelt. Gedeelde trainingsschema's en de gekozen communitynaam zijn zichtbaar voor communityleden. Een beoordeling of reactie is alleen mogelijk op content van een ander lid. Receptfoto's staan in een openbare opslagbucket en zijn bereikbaar via hun afbeeldingslink. De gedeelde bibliotheek is alleen toegankelijk voor accounts die een uitnodiging hebben aanvaard.
 - In deze repo staat alleen code. **Zet hier nooit een back-up of importbestand (.json) met persoonlijke gegevens.**
 
