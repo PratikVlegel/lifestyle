@@ -70,7 +70,7 @@ function renderActivitySheet() {
   const A = ACT_DRAFT;
   let h = '<div class="sheet-h"><h2>' + tr('Activiteit') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + tr('Sluiten') + '">✕</button></div>';
   h += '<div class="chips">' + Object.entries(ACTIVITIES).map(([k, v]) => '<button class="chip ' + (A.type === k ? 'on' : '') + '" data-act="actType" data-t="' + k + '">' + tr(v.label) + '</button>').join('') + '</div>';
-  if (A.type === 'anders') h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="actnote" value="' + esc(A.note || '') + '" placeholder="' + tr('bv. klimmen') + '"></label>';
+  if (A.type === 'anders') h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="actnote" maxlength="200" value="' + esc(A.note || '') + '" placeholder="' + tr('bv. klimmen') + '"></label>';
   h += '<div class="fld"><span>' + tr('Hoe lang?') + '</span><div class="amt-q"><button type="button" class="amt-b" data-act="actMin" data-d="-5">−</button><input type="number" inputmode="numeric" id="actmin" min="1" max="1440" step="1" value="' + A.min + '"><button type="button" class="amt-b" data-act="actMin" data-d="5">+</button></div><small class="muted">' + tr('minuten') + '</small></div>';
   h += '<div class="fld"><span>' + tr('Hoe zwaar?') + '</span><div class="seg">' + INTENS.map(i => '<button class="' + (A.int === i ? 'on' : '') + '" data-act="actInt" data-i="' + i + '">' + tr(i) + '</button>').join('') + '</div><small class="muted">' + tr('Licht: praten gaat makkelijk. Matig: praten gaat, zingen niet. Zwaar: praten lukt amper.') + '</small></div>';
   if (A.type === 'wandelen') h += '<p class="note small">' + tr('Heb je je stappen al ingevuld? Dan telt een wandeling niet dubbel: het verbruik komt dan uit je stappen.') + '</p>';
@@ -88,7 +88,7 @@ document.addEventListener('input', e => {
 ACT.actSave = () => {
   const A = ACT_DRAFT;
   if (!Number.isInteger(Number(A.min)) || Number(A.min) < 1 || Number(A.min) > 1440) return toast(tr('Kies een duur tussen 1 minuut en 24 uur.'));
-  const a = { id: A.id, type: A.type, min: Number(A.min), int: A.int }; if (A.note) a.note = A.note.trim();
+  const a = { id: A.id, type: A.type, min: Number(A.min), int: A.int }; if (A.note) a.note = String(A.note).trim().slice(0, 200);
   const cb = ACT_CB; ACT_DRAFT = null; closeSheet();
   if (cb) cb(a); else { const d = getDay(A.k, true); d.activities = (d.activities || []).concat(a); save(); toast(tr('Activiteit bewaard')); render(); }
 };
