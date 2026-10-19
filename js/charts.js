@@ -56,7 +56,7 @@ function lineChart(data, opts) {
   opts = opts || {};
   const W = 340, H = 190, L = 34, R = 8, T = 10, B = 24;
   const vals = data.map(d => d.v).filter(isNum);
-  if (!vals.length) return '<p class="muted small">Nog geen gegevens in deze periode.</p>';
+  if (!vals.length) return '<p class="muted small">' + tr('Nog geen gegevens in deze periode.') + '</p>';
   let lo = isNum(opts.min) ? opts.min : Math.floor(Math.min(...vals) - 1);
   let hi = isNum(opts.max) ? opts.max : Math.ceil(Math.max(...vals) + 1);
   if (hi === lo) hi = lo + 1;
@@ -127,7 +127,7 @@ function stackChart(rows, opts) {
 
 /* Spreidingsdiagram: pts [{x, y, k}] */
 function scatterChart(pts, opts) {
-  if (pts.length < 3) return '<p class="muted small">Te weinig dagen met beide waarden (minstens 3 nodig).</p>';
+  if (pts.length < 3) return '<p class="muted small">' + tr('Te weinig dagen met beide waarden (minstens 3 nodig).') + '</p>';
   const W = 340, H = 200, L = 34, R = 10, T = 10, B = 30;
   const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
   const x0 = isNum(opts.xmin) ? opts.xmin : Math.floor(Math.min(...xs)), x1 = isNum(opts.xmax) ? opts.xmax : Math.ceil(Math.max(...xs));
@@ -146,7 +146,7 @@ function scatterChart(pts, opts) {
   const fit = linFit(pts);
   if (fit) g += '<line class="trend" x1="' + X(x0) + '" y1="' + Y(fit.a + fit.b * x0) + '" x2="' + X(x1) + '" y2="' + Y(fit.a + fit.b * x1) + '"/>';
   pts.forEach(p => { g += '<circle class="dot" cx="' + X(p.x) + '" cy="' + Y(p.y) + '" r="4"><title>' + fmtDay(p.k) + ': ' + p.x + ' → ' + p.y + '</title></circle>'; });
-  return svgEl(W, H, g, opts.label) + '<p class="muted small">Verticaal: ' + esc(opts.yLabel) + '. Elke stip is een dag.</p>';
+  return svgEl(W, H, g, opts.label) + '<p class="muted small">' + trf('Verticaal: {label}. Elke stip is een dag.', { label: opts.yLabel }) + '</p>';
 }
 function linFit(pts) {
   const n = pts.length; if (n < 3) return null;
@@ -180,6 +180,6 @@ function sparkline(data, kind) {
   return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + pathOf(vals.map((v, i) => [i, v]), i => i * step, v => H - 3 - ((v - lo) / rng) * (H - 6), 'sl') + '</svg>';
 }
 
-function shortNum(v) { return v >= 1000 ? (Math.round(v / 100) / 10).toLocaleString('nl-BE') + 'k' : fmtNum(v, v < 10 && v % 1 ? 1 : 0); }
-function xLab(k, n) { const d = parseKey(k); return n <= 8 ? WD[d.getDay()].slice(0, 2) + ' ' + d.getDate() : d.getDate() + '/' + (d.getMonth() + 1); }
+function shortNum(v) { return v >= 1000 ? (Math.round(v / 100) / 10).toLocaleString(currentLocale()) + 'k' : fmtNum(v, v < 10 && v % 1 ? 1 : 0); }
+function xLab(k, n) { const d = parseKey(k); return n <= 8 ? d.toLocaleDateString(currentLocale(), { weekday: 'short' }) + ' ' + d.getDate() : d.getDate() + '/' + (d.getMonth() + 1); }
 function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }

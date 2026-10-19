@@ -46,7 +46,7 @@ function render() {
       case 'train-custom': return renderCustomTrainingBuilder();
       case 'train-community': return renderTrainingCommunity();
       case 'train-shared': return renderSharedTraining(a);
-      case 'community-kpi': return renderCommunityKpis(a);
+      case 'community-kpi': return renderCommunityKpis(a, b);
       case 'intake': return renderIntake(a || '1');
       case 'bieb': return renderLibrary();
       case 'recepten': return renderRecipes();
@@ -199,17 +199,17 @@ function renderKpi(key) {
   const ser = metricSeries(key, todayKey(), PERIOD);
   const vals = statVals(key, ser);
   const goal = M.goal ? M.goal() : null;
-  let h = header(M.label, 'Laatste ' + PERIOD + ' dagen', true);
-  h += '<div class="seg">' + [7, 30, 90].map(p => '<button class="' + (p === PERIOD ? 'on' : '') + '" data-act="period" data-p="' + p + '">' + p + ' d</button>').join('') + '</div>';
+  let h = header(M.label, trf('Laatste {count} dagen', { count: PERIOD }), true);
+  h += '<div class="seg">' + [7, 30, 90].map(p => '<button class="' + (p === PERIOD ? 'on' : '') + '" data-act="period" data-p="' + p + '">' + p + ' ' + tr('dagen') + '</button>').join('') + '</div>';
   h += '<div class="stats">' +
-    stat('Gemiddeld', fmtNum(avg(vals), M.dec) + ' ' + M.unit) +
-    stat('Laagste', vals.length ? fmtNum(Math.min(...vals), M.dec) : '–') +
-    stat('Hoogste', vals.length ? fmtNum(Math.max(...vals), M.dec) : '–') +
-    stat(M.sum || key === 'water' ? 'Volledige dagen' : 'Dagen met data', vals.length + '/' + PERIOD) + '</div>' +
-    (M.sum || key === 'water' ? '<p class="muted small">Gemiddelde, laagste en hoogste tellen alleen volledige dagen: zonder onbekende maaltijden en zonder de lopende dag.</p>' : '');
-  const opts = { goal, goal2: M.goal2 ? M.goal2() : null, goalIsMax: M.goalIsMax, dec: M.dec, unit: M.unit, label: M.label, ma: M.ma, min: M.min, max: M.max };
-  h += '<div class="card"><h3>' + M.label + ' per dag</h3>' + (M.chart === 'bar' ? barChart(ser, opts) : lineChart(ser, opts)) +
-    '<p class="muted small">' + (goal ? 'Stippellijn = ' + (M.goalIsMax ? 'maximum ' : 'doel ') + fmtNum(goal, M.dec) + (M.goal2 ? '–' + fmtNum(M.goal2()) : '') + '. ' : '') + (M.sum ? 'Lichtere staaf = ondergrens (een deel is onbekend). ' : '') + (M.ma ? 'Dikke lijn = 7-daags gemiddelde.' : '') + '</p></div>';
+    stat(tr('Gemiddeld'), fmtNum(avg(vals), M.dec) + ' ' + tr(M.unit)) +
+    stat(tr('Laagste'), vals.length ? fmtNum(Math.min(...vals), M.dec) : '–') +
+    stat(tr('Hoogste'), vals.length ? fmtNum(Math.max(...vals), M.dec) : '–') +
+    stat(tr(M.sum || key === 'water' ? 'Volledige dagen' : 'Dagen met data'), vals.length + '/' + PERIOD) + '</div>' +
+    (M.sum || key === 'water' ? '<p class="muted small">' + tr('Gemiddelde, laagste en hoogste tellen alleen volledige dagen: zonder onbekende maaltijden en zonder de lopende dag.') + '</p>' : '');
+  const opts = { goal, goal2: M.goal2 ? M.goal2() : null, goalIsMax: M.goalIsMax, dec: M.dec, unit: tr(M.unit), label: tr(M.label), ma: M.ma, min: M.min, max: M.max };
+  h += '<div class="card"><h3>' + trf('{metric} per dag', { metric: tr(M.label) }) + '</h3>' + (M.chart === 'bar' ? barChart(ser, opts) : lineChart(ser, opts)) +
+    '<p class="muted small">' + (goal ? trf('Stippellijn = {target} {value}{range}.', { target: M.goalIsMax ? tr('maximum') : tr('doel'), value: fmtNum(goal, M.dec), range: M.goal2 ? '–' + fmtNum(M.goal2()) : '' }) + ' ' : '') + (M.sum ? tr('Lichtere staaf = ondergrens (een deel is onbekend).') + ' ' : '') + (M.ma ? tr('Dikke lijn = 7-daags gemiddelde.') : '') + '</p></div>';
 
   if (key === 'kcal') {
     const rows = rangeKeys(todayKey(), Math.min(PERIOD, 30)).map(k => {
@@ -217,34 +217,35 @@ function renderKpi(key) {
       if (d && !d.kcalOverride) for (const m of d.meals || []) if (isNum(m.kcal)) parts[m.slot] = (parts[m.slot] || 0) + m.kcal;
       return { k, parts };
     });
-    h += '<div class="card"><h3>Wanneer komen je kcal binnen?</h3>' + stackChart(rows, { goal, label: 'kcal per maaltijdmoment' }) + slotAverages(rows) + '</div>';
+    h += '<div class="card"><h3>' + tr('Wanneer komen je kcal binnen?') + '</h3>' + stackChart(rows, { goal, label: tr('kcal per maaltijdmoment') }) + slotAverages(rows) + '</div>';
   }
   if (key === 'mood' || key === 'energy') {
     const pts = pairs(PERIOD, d => d.sleepH, d => M.get(d));
-    h += '<div class="card"><h3>' + M.label + ' tegenover slaap</h3>' + scatterChart(pts, { xLabel: 'slaap (u, nacht ervoor)', yLabel: M.label.toLowerCase() + ' /10', ymin: 0, ymax: 10 }) + '</div>';
+    h += '<div class="card"><h3>' + trf('{metric} tegenover slaap', { metric: tr(M.label) }) + '</h3>' + scatterChart(pts, { xLabel: tr('slaap (u, nacht ervoor)'), yLabel: tr(M.label).toLowerCase() + ' /10', ymin: 0, ymax: 10 }) + '</div>';
     const pts2 = pairs(PERIOD, d => d.steps, d => M.get(d));
-    h += '<div class="card"><h3>' + M.label + ' tegenover stappen</h3>' + scatterChart(pts2, { xLabel: 'stappen', yLabel: M.label.toLowerCase() + ' /10', ymin: 0, ymax: 10 }) + '</div>';
+    h += '<div class="card"><h3>' + trf('{metric} tegenover stappen', { metric: tr(M.label) }) + '</h3>' + scatterChart(pts2, { xLabel: tr('stappen'), yLabel: tr(M.label).toLowerCase() + ' /10', ymin: 0, ymax: 10 }) + '</div>';
   }
   if (key === 'sleep') {
     const pts = pairs(PERIOD, d => d.sleepH, d => d.energy);
-    h += '<div class="card"><h3>Slaap en energie</h3>' + scatterChart(pts, { xLabel: 'slaap (u)', yLabel: 'energie /10', ymin: 0, ymax: 10 }) + '</div>';
+    h += '<div class="card"><h3>' + tr('Slaap en energie') + '</h3>' + scatterChart(pts, { xLabel: tr('slaap (u)'), yLabel: tr('energie') + ' /10', ymin: 0, ymax: 10 }) + '</div>';
   }
   if (key === 'caffeine') {
     const pts = pairs(PERIOD, d => d.caffeine, d => d.sleepH, 1);
-    h += '<div class="card"><h3>Cafeïne en de nacht erna</h3>' + scatterChart(pts, { xLabel: 'shots cafeïne', yLabel: 'slaap volgende nacht (u)' }) + '</div>';
+    h += '<div class="card"><h3>' + tr('Cafeïne en de nacht erna') + '</h3>' + scatterChart(pts, { xLabel: tr('shots cafeïne'), yLabel: tr('slaap volgende nacht (u)') }) + '</div>';
   }
   if (key === 'burn') {
-    h += '<div class="card"><h3>Vandaag</h3>' + activitiesHtml(getDay(todayKey()), todayKey(), true) + '<button class="btn ghost" data-act="quickAct">+ activiteit</button>' +
-      '<p class="muted small">Geschat extra verbruik bovenop rust, op basis van je gewicht (' + fmtNum(currentWeight(), 1) + ' kg). Stappen: ≈ 0,5 kcal per kg per km. Activiteiten: MET-waarden. Het is een ruwe schatting en geen reden om meer of minder te eten.</p></div>';
+    h += '<div class="card"><h3>' + tr('Vandaag') + '</h3>' + activitiesHtml(getDay(todayKey()), todayKey(), true) + '<button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button>' +
+      '<p class="muted small">' + trf('Geschat extra verbruik bovenop rust, op basis van je gewicht ({weight} kg). Stappen: ≈ 0,5 kcal per kg per km. Activiteiten: MET-waarden. Het is een ruwe schatting en geen reden om meer of minder te eten.', { weight: fmtNum(currentWeight(), 1) }) + '</p></div>';
   }
   if (key === 'steps') {
     const wk = [1, 2, 3, 4, 5, 6, 0].map(w => ({ w, v: avg(ser.filter(x => parseKey(x.k).getDay() === w).map(x => x.v)) }));
     const mx = Math.max(1, ...wk.map(x => x.v || 0));
-    h += '<div class="card"><h3>Gemiddeld per weekdag</h3><div class="hbars">' + wk.map(x => '<div class="hb"><span>' + WD[x.w].slice(0, 2) + '</span><i style="width:' + ((x.v || 0) / mx * 100) + '%"></i><b>' + fmtNum(x.v) + '</b></div>').join('') + '</div></div>';
+    h += '<div class="card"><h3>' + tr('Gemiddeld per weekdag') + '</h3><div class="hbars">' + wk.map(x => '<div class="hb"><span>' + new Date(2021, 7, 1 + x.w).toLocaleDateString(currentLocale(), { weekday: 'short' }) + '</span><i style="width:' + ((x.v || 0) / mx * 100) + '%"></i><b>' + fmtNum(x.v) + '</b></div>').join('') + '</div></div>';
   }
+  if (key === 'steps' || key === 'burn') h += '<a class="card community-kpi-cta" href="#/community-kpi/weekly/' + (key === 'steps' ? 'steps' : 'activity_minutes') + '"><b>' + tr('Community vergelijken') + '</b><span>' + tr('Bekijk gedeelde cijfers van communityleden, met ieders eigen kleur.') + ' ›</span></a>';
   const ins = buildInsights(Math.max(PERIOD, 14)).filter(i => i.cat === KPI_CAT[key]);
-  if (ins.length) h += '<h2 class="sec">Wat valt op</h2>' + ins.map(insightCard).join('');
-  h += '<h2 class="sec">Per dag</h2><div class="card table">' + [...ser].reverse().filter(x => DB.days[x.k]).map(x => {
+  if (ins.length) h += '<h2 class="sec">' + tr('Wat valt op') + '</h2>' + ins.map(insightCard).join('');
+  h += '<h2 class="sec">' + tr('Per dag') + '</h2><div class="card table">' + [...ser].reverse().filter(x => DB.days[x.k]).map(x => {
     const d = DB.days[x.k];
     const extra = (key === 'mood' && d.moodNote) ? ' <span class="muted">' + esc(d.moodNote) + '</span>' : (key === 'sleep' && d.cpap) ? ' <span class="muted">CPAP: ' + esc(d.cpap) + '</span>' : '';
     return '<a class="tr" href="#/dag/' + x.k + '"><span>' + fmtDay(x.k, true) + '</span><b>' + (isNum(x.v) ? (x.lb ? '≥ ' : '') + fmtNum(x.v, M.dec) : '–') + '</b>' + extra + '</a>';
@@ -857,6 +858,7 @@ function renderInsights() {
   let h = header('Inzicht en advies', 'Laatste 30 dagen · offline berekend');
   h += '<div class="inrow wrap"><a class="btn ghost" href="#/week">' + tr('Weekrapport') + '</a><a class="btn ghost" href="#/experimenten">' + tr('Experimenten') + '</a><a class="btn ghost" href="#/rapport">' + tr('Rapport maken') + '</a></div>';
   h += '<a class="card fb" href="#/stemming"><b>' + tr('Stemming en gewoontes') + '</b><p class="small">' + tr('Bekijk stemming naast slaap, beweging en leefstijl. Alleen met jouw keuze, lokaal berekend en zonder vrije notities.') + '</p></a>';
+  if (DB.profile.sex === 'v') h += '<a class="card fb cycle-link" href="#/cycle"><b>' + tr('Cyclus en menstruatie') + '</b><p class="small">' + tr('Houd optioneel je eigen ervaringen bij en krijg steun die aansluit op wat jij registreert.') + '</p></a>';
   h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tr(tipOfDay())) + '</p></div>';
   h += '<h2 class="sec">' + tr('Onderbouwde acties') + '</h2>' + renderEvidenceAdvice();
   h += '<p class="muted small">' + tr('Dit zijn verbanden in je eigen cijfers, geen oorzaken en geen diagnose. Hoe meer dagen volledig ingevuld, hoe betrouwbaarder. Nieuw = sinds je laatste bezoek veranderd.') + '</p>';
@@ -901,6 +903,7 @@ function mdLite(t) {
 /* ================= meer / instellingen ================= */
 function renderMore(sub) {
   let h = header('Meer', '');
+  h += '<a class="card fb wk" href="#/community-kpi/weekly"><b>' + tr('Community-KPI’s') + '</b><p class="small">' + tr('Vergelijk vrijwillig gedeelde stappen en beweegminuten met andere leden.') + '</p></a>';
   const lang = currentLocale();
   h += '<div class="card"><h3>' + tr('Taal') + '</h3><p class="muted small">' + tr('De taalkeuze wordt bewaard op dit toestel.') + '</p><label class="fld"><span>' + tr('Taal') + '</span><select data-chg="language"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>';
   h += personalizationCard(DB.settings);
@@ -929,7 +932,6 @@ function renderMore(sub) {
   h += '<div class="card"><h3>' + tr('Gedeelde bibliotheek') + '</h3><p class="muted small">' + tr('Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.') + '</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> ' + tr('Mijn productbibliotheek synchroniseren (producten delen en ophalen)') + '</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">' + tr('Bibliotheek openen') + '</a><button class="btn ghost" data-act="syncNow">' + tr('Nu bijwerken') + '</button></div>' : '<p class="note">' + tr('Niet ingesteld.') + '</p>') + '</div>';
   h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
-  h += '<a class="card fb wk" href="#/community-kpi/weekly"><b>' + tr('Community-KPI’s') + '</b><p class="small">' + tr('Vergelijk vrijwillig gedeelde stappen en beweegminuten met andere leden.') + '</p></a>';
   h += '<div class="card"><h3>' + tr('AI (optioneel)') + '</h3><p class="muted small">' + tr('With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.') + ' ' + esc(aiDataDisclosure()) + ' ' + tr('You pay Anthropic for each request. Your key is stored in this browser and is excluded from backups.') + '</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
@@ -1212,7 +1214,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.18';
+const APP_VERSION = '1.10.19';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

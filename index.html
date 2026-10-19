@@ -144,6 +144,21 @@ svg.chart .trend{stroke:var(--bean);stroke-width:2;stroke-dasharray:5 3;vector-e
 .week-compare .week-head span{font-size:.78rem}
 .week-compare .week-head b,.week-compare .week-head small{font-size:.73rem;line-height:1.2}
 .week-compare .week-head>:nth-child(2){color:var(--accent)}
+.community-kpi-cta{display:block;text-decoration:none;border-color:var(--accent)}
+.community-kpi-cta b,.community-kpi-cta span{display:block}
+.community-kpi-cta span{font-size:.88rem;color:var(--muted);margin-top:5px}
+.community-kpi-board h3{margin-bottom:12px}
+.community-kpi-rows{display:flex;flex-direction:column;gap:2px}
+.community-kpi-row{padding:10px 0;border-top:1px solid var(--line)}
+.community-kpi-row:first-child{border-top:0}
+.community-kpi-row-main{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:9px}
+.community-kpi-rank{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--member-color) 20%,transparent);color:var(--member-color);font-weight:700;font-size:.82rem}
+.community-kpi-name{min-width:0;font-weight:650}
+.community-kpi-name i{display:inline-block;width:9px;height:9px;margin-right:7px;border-radius:50%;background:var(--member-color)}
+.community-kpi-name small{display:block;margin:3px 0 0 16px;color:var(--muted);font-weight:400;font-size:.76rem}
+.community-kpi-row-main>b{font-size:.9rem;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.community-kpi-track{height:6px;margin:8px 0 0 39px;border-radius:99px;background:var(--line);overflow:hidden}
+.community-kpi-track span{display:block;width:var(--score-width);height:100%;border-radius:inherit;background:var(--member-color)}
 .mood-home b{display:block;line-height:1.35;margin-bottom:6px}
 .mood-home span{display:block;line-height:1.45}
 .fld{display:block;margin:10px 0}

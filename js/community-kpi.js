@@ -17,30 +17,41 @@ function communityKpiValue(metric, period) {
   return entries.length ? { value: Math.round(entries.reduce((a, b) => a + b, 0)), days: entries.length } : null;
 }
 async function fetchCommunityKpiRows(metric, period, start) {
-  const rows = await sb('/rest/v1/community_kpis?select=user_id,metric,value&period_type=eq.' + encodeURIComponent(period) + '&period_start=eq.' + encodeURIComponent(start) + '&metric=eq.' + encodeURIComponent(metric) + '&order=value.desc&limit=100', {});
+  const rows = await sb('/rest/v1/community_kpis?select=user_id,metric,value,days_count&period_type=eq.' + encodeURIComponent(period) + '&period_start=eq.' + encodeURIComponent(start) + '&metric=eq.' + encodeURIComponent(metric) + '&order=value.desc&limit=100', {});
   const names = await fetchCommunityProfiles(rows.map(x => x.user_id));
   return rows.map(x => ({ ...x, name: names[x.user_id] || tr('Communitylid') }));
 }
-function renderCommunityKpis(period) {
+function communityKpiColor(userId) {
+  let hash = 0;
+  for (const ch of String(userId || '')) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  return `hsl(${Math.abs(hash) % 360} 62% 62%)`;
+}
+function renderCommunityKpis(period, focusMetric) {
   period = ['daily', 'weekly', 'monthly'].includes(period) ? period : 'weekly';
+  focusMetric = Object.prototype.hasOwnProperty.call(COMMUNITY_KPI_METRICS, focusMetric) ? focusMetric : '';
   const w = communityKpiWindow(period), selected = Array.isArray(DB.settings.communityKpis) ? DB.settings.communityKpis : [];
-  let h = header('Community-KPI’s', 'Vrijwillig gedeelde beweegcijfers', true);
+  let h = header(focusMetric ? tr(COMMUNITY_KPI_METRICS[focusMetric].label) : 'Community-KPI’s', focusMetric ? tr('Vergelijk je cijfers met communityleden') : 'Vrijwillig gedeelde beweegcijfers', true);
   h += '<div class="card note"><b>' + tr('Jij kiest wat je deelt') + '</b><p class="small">' + tr('Alleen stappen en beweegminuten staan in deze rangschikking. Calorieën, gewicht, slaap, stemming en dagboeknotities blijven privé. Deelname is opt-in; je kunt je cijfers weer verwijderen.') + '</p></div>';
   if (!cloudReady() || !DB.settings.member) { h += '<div class="card">' + tr('Meld je aan als communitylid om vrijwillig gedeelde cijfers te bekijken of te delen.') + '</div>'; view().innerHTML = h; return; }
-  h += '<div class="inrow wrap">' + [['daily', 'Dag'], ['weekly', 'Week'], ['monthly', 'Maand']].map(([v, l]) => '<a class="btn ' + (period === v ? '' : 'ghost') + '" href="#/community-kpi/' + v + '">' + tr(l) + '</a>').join('') + '</div>';
+  h += '<div class="inrow wrap">' + [['daily', 'Dag'], ['weekly', 'Week'], ['monthly', 'Maand']].map(([v, l]) => '<a class="btn ' + (period === v ? '' : 'ghost') + '" href="#/community-kpi/' + v + (focusMetric ? '/' + focusMetric : '') + '">' + tr(l) + '</a>').join('') + (focusMetric ? '<a class="btn ghost" href="#/community-kpi/weekly">' + tr('Alle communitycijfers') + '</a>' : '') + '</div>';
   h += '<div class="card"><h3>' + tr('Delen met de community') + '</h3><p class="muted small">' + trf('{period}: {start} tot {end}. Alleen de geselecteerde totaalcijfers en je communitynaam worden gedeeld.', { period: tr(w.label), start: fmtDay(w.start), end: fmtDay(w.end) }) + '</p>';
   for (const [key, def] of Object.entries(COMMUNITY_KPI_METRICS)) { const total = communityKpiValue(key, period); h += '<label class="toggle"><input type="checkbox" data-community-kpi="' + key + '"' + (selected.includes(key) ? ' checked' : '') + '> ' + tr(def.label) + ' · ' + (total ? fmtNum(total.value, 0) + ' ' + tr(def.unit) + ' · ' + trf('{count} geregistreerde dagen', { count: total.days }) : '–') + '</label>'; }
   h += '<button class="btn" data-act="shareCommunityKpis" data-period="' + period + '">' + tr('Geselecteerde cijfers delen') + '</button> <button class="btn ghost" data-act="stopCommunityKpiSharing">' + tr('Mijn gedeelde cijfers verwijderen') + '</button><p class="muted small">' + tr('Vergelijkingen kunnen motiveren, maar vertellen niet het hele verhaal. Dagcijfers schommelen; week en maand geven meer context. Rangschikking is optioneel en bevat geen voedings- of lichaamsgewichtscore.') + '</p></div>';
   h += '<div id="communityKpiBoards"><div class="card muted">' + tr('Rangschikkingen laden…') + '</div></div>';
   view().innerHTML = h;
-  loadCommunityKpiBoards(period, w.start).catch(e => { const target = document.getElementById('communityKpiBoards'); if (target) target.innerHTML = '<div class="card note">' + esc(tr('Communitycijfers konden niet worden geladen.') + ' ' + e.message) + '</div>'; });
+  loadCommunityKpiBoards(period, w.start, focusMetric).catch(e => { const target = document.getElementById('communityKpiBoards'); if (target) target.innerHTML = '<div class="card note">' + esc(tr('Communitycijfers konden niet worden geladen.') + ' ' + e.message) + '</div>'; });
 }
-async function loadCommunityKpiBoards(period, start) {
+async function loadCommunityKpiBoards(period, start, focusMetric) {
   const target = document.getElementById('communityKpiBoards'); if (!target) return;
   let html = '';
-  for (const [metric, def] of Object.entries(COMMUNITY_KPI_METRICS)) {
+  const metrics = Object.entries(COMMUNITY_KPI_METRICS).filter(([metric]) => !focusMetric || focusMetric === metric);
+  for (const [metric, def] of metrics) {
     const rows = await fetchCommunityKpiRows(metric, period, start);
-    html += '<div class="card"><h3>' + tr(def.label) + ' · ' + tr(period === 'daily' ? 'dag' : period === 'weekly' ? 'week' : 'maand') + '</h3>' + (rows.length ? '<div class="table community-kpi-table">' + rows.map((row, i) => '<div class="tr"><span>' + (i + 1) + '. ' + esc(row.name) + '<small class="muted">' + trf('{count} geregistreerde dagen', { count: row.days_count }) + '</small></span><b>' + fmtNum(Number(row.value), 0) + ' ' + tr(def.unit) + '</b></div>').join('') + '</div>' : '<p class="muted small">' + tr('Nog geen cijfers gedeeld voor deze periode.') + '</p>') + '</div>';
+    const maxValue = Math.max(1, ...rows.map(row => Number(row.value) || 0));
+    html += '<div class="card community-kpi-board"><h3>' + tr(def.label) + ' · ' + tr(period === 'daily' ? 'dag' : period === 'weekly' ? 'week' : 'maand') + '</h3>' + (rows.length ? '<div class="community-kpi-rows">' + rows.map((row, i) => {
+      const color = communityKpiColor(row.user_id), width = Math.max(2, (Number(row.value) || 0) / maxValue * 100);
+      return '<div class="community-kpi-row" style="--member-color:' + color + ';--score-width:' + width + '%"><div class="community-kpi-row-main"><span class="community-kpi-rank">' + (i + 1) + '</span><span class="community-kpi-name"><i aria-hidden="true"></i>' + esc(row.name) + '<small>' + trf('{count} geregistreerde dagen', { count: Number(row.days_count) || 0 }) + '</small></span><b>' + fmtNum(Number(row.value), 0) + ' ' + tr(def.unit) + '</b></div><div class="community-kpi-track"><span></span></div></div>';
+    }).join('') + '</div>' : '<p class="muted small">' + tr('Nog geen cijfers gedeeld voor deze periode.') + '</p>') + '</div>';
   }
   target.innerHTML = html;
 }
@@ -56,6 +67,7 @@ ACT.shareCommunityKpis = async el => {
     DB.settings.communityKpis = checked; save(); toast(tr('Je geselecteerde cijfers zijn gedeeld.')); renderCommunityKpis(period);
   } catch (e) { toast(tr('Delen is niet gelukt:') + ' ' + e.message); }
 };
+ACT.openCommunityKpi = el => go('#/community-kpi/weekly/' + el.dataset.metric);
 ACT.stopCommunityKpiSharing = async () => {
   if (!confirm(tr('Alle gedeelde communitycijfers verwijderen?'))) return;
   try { const uid = (cloudUser() || {}).id; if (!uid) throw new Error(tr('Communitylid niet gevonden.')); await sb('/rest/v1/community_kpis?user_id=eq.' + encodeURIComponent(uid), { method: 'DELETE' }); DB.settings.communityKpis = []; save(); toast(tr('Je gedeelde communitycijfers zijn verwijderd.')); renderCommunityKpis('weekly'); }

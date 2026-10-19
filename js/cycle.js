@@ -19,6 +19,10 @@ function cycleSelect(name, values, selected) {
   return '<label class="fld"><span>' + tr(name) + '</span><select data-cycle-field="' + esc(name) + '">' + values.map((label, i) => '<option value="' + (i === 0 ? '' : i - 1) + '" ' + (selected === (i === 0 ? null : i - 1) ? 'selected' : '') + '>' + esc(tr(label)) + '</option>').join('') + '</select></label>';
 }
 function renderCycleModule() {
+  if (DB.profile.sex !== 'v') {
+    view().innerHTML = header('Cyclus en menstruatie', '', true) + '<section class="card"><p>' + tr('Deze persoonlijke cyclusmodule is beschikbaar wanneer je profiel op vrouw is ingesteld.') + '</p></section>';
+    return;
+  }
   const c = cycleSafeState();
   let h = header('Cyclus en menstruatie', 'Alleen als jij dit wilt bijhouden', true);
   h += '<section class="card cycle-intro"><h2>' + tr('Jouw ervaring verdient ruimte') + '</h2><p>' + tr('Menstruatie en klachten verschillen per persoon en per maand. Je kunt bijhouden wat jij merkt, zonder dat de app voor jou invult hoe je cyclus hoort te verlopen.') + '</p><p class="muted small">' + tr('Optioneel en alleen op dit toestel. Deze gegevens worden niet gedeeld met de community en niet meegestuurd bij AI-analyses. Ze zitten wel in een back-up die jij zelf maakt. De app voorspelt geen menstruatie, ovulatie of vruchtbare dagen.') + '</p><label class="toggle"><input type="checkbox" data-chg="cycleEnabled"' + (c.enabled ? ' checked' : '') + '><span>' + tr('Cyclusdagboek inschakelen') + '</span></label></section>';
