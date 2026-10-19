@@ -26,8 +26,8 @@ function defaultData() {
       { id: 'r3', label: 'Avondeten', time: '19:00', kind: 'avond', on: true },
       { id: 'r4', label: 'Dagopname', time: '21:00', kind: 'dag', on: true }
     ],
-    settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, glassMl: 250, theme: 'auto' },
-    training: { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, rehabCleared: false, generated: null },
+    settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, glassMl: 250, theme: 'auto', moodInsights: false },
+    training: { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, rehabCleared: false, generated: null, plans: [], activePlanId: null },
     days: {},
     preps: [],
     foods: [],
@@ -52,6 +52,8 @@ function migrate(d) {
   out.settings = Object.assign(defaultData().settings, d.settings || {});
   out.training = Object.assign(defaultData().training, d.training || {});
   out.training.days = Array.isArray(out.training.days) ? out.training.days : ['ma', 'wo', 'vr'];
+  out.training.plans = Array.isArray(out.training.plans) ? out.training.plans.filter(p => p && typeof p === 'object' && typeof p.id === 'string' && Array.isArray(p.weeks) && p.weeks.length > 0 && p.weeks.every(w => w && Array.isArray(w.sessions))) : [];
+  if (!out.training.plans.some(p => p.id === out.training.activePlanId && p.status === 'active')) out.training.activePlanId = null;
   out.days = d.days || {};
   out.preps = d.preps || [];
   out.foods = d.foods || [];

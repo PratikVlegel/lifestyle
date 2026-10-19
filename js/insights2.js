@@ -1,5 +1,5 @@
-/* Uitgebreide analyses: goede tegenover moeilijke dagen, automatisch verbanden zoeken,
-   eetritme, eiwitverdeling, weekend, reeksen, honger, notities, en een wisselende tip van de dag.
+/* Uitgebreide analyses: eetritme, eiwitverdeling, weekend, reeksen, honger,
+   en een wisselende tip van de dag.
    Alles offline en op basis van je eigen gegevens. Verbanden zijn geen oorzaken. */
 'use strict';
 
@@ -31,59 +31,13 @@ function minutesOf(t) { if (!t || !/^\d\d:\d\d$/.test(t)) return null; const [h,
 
 function moreInsights(n, recent, add) {
   const keys = recent.map(x => x.k);
+  const moodEnabled = DB.settings.moodInsights === true;
 
-  /* 1. Goede tegenover moeilijke dagen */
-  const moodDays = keys.filter(k => isNum(dv('mood', k)));
-  if (moodDays.length >= 6) {
-    const sorted = moodDays.slice().sort((a, b) => dv('mood', b) - dv('mood', a));
-    const third = Math.max(2, Math.floor(sorted.length / 3));
-    const good = sorted.slice(0, third), bad = sorted.slice(-third);
-    const diffs = [];
-    for (const name of Object.keys(DVARS)) {
-      if (name === 'mood') continue;
-      // de avond ervoor telt voor slaap al mee (slaap = nacht ervoor); voor de rest dezelfde dag
-      const g = good.map(k => dv(name, k)).filter(isNum), b = bad.map(k => dv(name, k)).filter(isNum);
-      if (g.length < 2 || b.length < 2) continue;
-      const all = g.concat(b), s = sd(all) || 1;
-      diffs.push({ name, g: avg(g), b: avg(b), z: (avg(g) - avg(b)) / s });
-    }
-    diffs.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
-    const top = diffs.filter(x => Math.abs(x.z) >= 0.5).slice(0, 4);
-    if (top.length) add('stemming', 'Wat is er anders op je betere dagen?',
-      'Je ' + good.length + ' beste dagen (stemming ' + fmtNum(avg(good.map(k => dv('mood', k))), 1) + ') tegenover je ' + bad.length + ' moeilijkste (' + fmtNum(avg(bad.map(k => dv('mood', k))), 1) + '):\n' +
-      top.map(x => '• ' + DVARS[x.name].l + ': ' + fmtV(x.name, x.g) + ' tegenover ' + fmtV(x.name, x.b)).join('\n') +
-      '\nDit wijst op samenhang, niet op oorzaak. Wel een goede plek om te beginnen.', moodDays.length + ' dagen met stemming', 'tip');
-  }
-
-  /* 2. Verbanden automatisch zoeken (zelfde dag en dag erna) */
-  const targets = ['mood', 'energy', 'hungerEve', 'eveKcal', 'sleepH'];
-  const found = [];
-  for (const y of targets) for (const x of Object.keys(DVARS)) {
-    if (x === y || (x === 'eveKcal' && y === 'hungerEve')) continue;
-    for (const lag of [0, 1]) {
-      if (lag === 0 && x === 'sleepH' && y === 'sleepH') continue;
-      const pts = [];
-      for (const k of keys) { const a = dv(x, k), b = dv(y, lag ? addDays(k, 1) : k); if (isNum(a) && isNum(b)) pts.push({ x: a, y: b, k }); }
-      const r = pearson(pts);
-      if (r !== null && Math.abs(r) >= 0.45 && pts.length >= 6) found.push({ x, y, lag, r, n: pts.length });
-    }
-  }
-  found.sort((a, b) => Math.abs(b.r) - Math.abs(a.r));
-  const seenPair = new Set();
-  const lines = [];
-  for (const f of found) {
-    const key = [f.x, f.y].sort().join('|');
-    if (seenPair.has(key)) continue; seenPair.add(key);
-    lines.push('• Hoe ' + (f.r > 0 ? 'meer' : 'meer') + ' ' + DVARS[f.x].l + (f.lag ? ' op een dag' : '') + ', hoe ' + (f.r > 0 ? 'hoger' : 'lager') + ' je ' + DVARS[f.y].l + (f.lag ? ' de dag erna' : '') + ' (r = ' + f.r.toFixed(2) + ', ' + f.n + ' dagen)');
-    if (lines.length >= 4) break;
-  }
-  if (lines.length) add('verbanden', 'Sterkste verbanden in je cijfers', lines.join('\n') + '\nr loopt van −1 tot 1; vanaf ±0,5 is een verband duidelijk. Met weinig dagen kan toeval meespelen.', 'automatische zoektocht', 'info');
-
-  /* 3. Week tegenover weekend */
+  /* Week tegenover weekend */
   const wk = keys.filter(k => [1, 2, 3, 4, 5].includes(parseKey(k).getDay())), we = keys.filter(k => [0, 6].includes(parseKey(k).getDay()));
   if (wk.length >= 4 && we.length >= 2) {
     const parts = [];
-    for (const name of ['kcal', 'steps', 'sleepH', 'mood', 'alcohol']) {
+    for (const name of ['kcal', 'steps', 'sleepH', ...(moodEnabled ? ['mood'] : []), 'alcohol']) {
       const a = avg(wk.map(k => dv(name, k)).filter(isNum)), b = avg(we.map(k => dv(name, k)).filter(isNum));
       if (isNum(a) && isNum(b) && Math.abs(a - b) / (Math.max(Math.abs(a), Math.abs(b)) || 1) > 0.12) parts.push(DVARS[name].l + ' ' + fmtV(name, a) + ' in de week, ' + fmtV(name, b) + ' in het weekend');
     }
@@ -133,7 +87,7 @@ function moreInsights(n, recent, add) {
   for (const k of keys) { const a = dv('alcohol', k), nk = addDays(k, 1); const kc = dv('kcal', nk), st = dv('steps', nk); if (!isNum(a)) continue; (a > 0 ? after : noAfter).push({ kc, st }); }
   if (after.length >= 2 && noAfter.length >= 3) {
     const s1 = avg(after.map(x => x.st).filter(isNum)), s0 = avg(noAfter.map(x => x.st).filter(isNum));
-    if (isNum(s1) && isNum(s0) && Math.abs(s1 - s0) > 800) add('stemming', 'De dag na het drinken', 'De dag na alcohol zette je gemiddeld ' + fmtNum(s1) + ' stappen, anders ' + fmtNum(s0) + '.', after.length + ' + ' + noAfter.length + ' dagen', 'info');
+    if (isNum(s1) && isNum(s0) && Math.abs(s1 - s0) > 800) add('activiteit', 'Stappen na alcoholregistratie', 'De dag na een dag met alcoholregistratie zette je gemiddeld ' + fmtNum(s1) + ' stappen; na een dag met expliciet nul alcohol was dit ' + fmtNum(s0) + '.', after.length + ' + ' + noAfter.length + ' dagen', 'info');
   }
 
   /* 8. Slaapregelmaat en korte nachten */
@@ -157,21 +111,6 @@ function moreInsights(n, recent, add) {
   }
   const hb = keys.map(k => dv('hungerDinner', k)).filter(isNum);
   if (hb.length >= 4 && avg(hb) >= 4) add('honger', 'Uitgehongerd aan tafel', 'Je komt gemiddeld met honger ' + fmtNum(avg(hb), 1) + '/5 aan het avondeten. Met veel honger eet je sneller en meer dan nodig. Een tussendoortje rond 16 u haalt de scherpste kant eraf.', hb.length + ' avonden', 'tip');
-
-  /* 10. Woorden die terugkomen in je notities op moeilijke dagen */
-  const low = recent.filter(x => isNum(x.d.mood) && x.d.mood <= 5);
-  if (low.length >= 2) {
-    const stop = new Set('de het een en op in met van te is was niet wel maar ook nog naar om er dat die dan als bij voor ik je mijn zijn heb had geen weer zo'.split(' '));
-    const cnt = {};
-    for (const x of low) new Set(String((x.d.moodNote || '') + ' ' + (x.d.notes || '')).toLowerCase().match(/[a-zà-ÿ]{3,}/g) || []).forEach(w => { if (!stop.has(w)) cnt[w] = (cnt[w] || 0) + 1; });
-    const top = Object.entries(cnt).filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 4);
-    if (top.length) add('stemming', 'Wat steeds terugkomt', 'In je notities op moeilijkere dagen komt dit het vaakst terug: ' + top.map(([w, c]) => '"' + w + '" (' + c + '×)').join(', ') + '. Patronen als dit zijn goed om met je psycholoog te bespreken.', low.length + ' dagen', 'info');
-  }
-
-  /* 11. Vapen en stemming */
-  const vp = pairs(n, d => DVARS.vape.f(d), d => d.mood);
-  const rv = pearson(vp);
-  if (rv !== null && rv < -0.4) add('stemming', 'Vapen en stemming', 'Op dagen dat je vaker vapete, was je stemming meestal lager (r = ' + rv.toFixed(2) + '). Mogelijk vape je meer op stressvolle dagen; het een hoeft het ander niet te veroorzaken.', vp.length + ' dagen', 'info');
 
   /* 12. Reeksen en records */
   let streak = 0;

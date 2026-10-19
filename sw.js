@@ -1,6 +1,6 @@
 /* Service worker: houdt de app offline beschikbaar. Verhoog VERSION bij elke update. */
-const VERSION = 'vd-1.6.0';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js', 'js/ocr.js', 'js/cloud.js', 'js/library.js', 'js/migrate.js', 'js/activity.js', 'js/share.js', 'js/insights2.js', 'js/week.js', 'js/extras.js', 'js/invite.js', 'js/admin.js', 'js/training.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'icons/icon-192.png', 'icons/icon-512.png'];
+const VERSION = 'vd-1.7.0';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js', 'js/ocr.js', 'js/cloud.js', 'js/library.js', 'js/migrate.js', 'js/activity.js', 'js/share.js', 'js/insights2.js', 'js/mood.js', 'js/week.js', 'js/extras.js', 'js/invite.js', 'js/admin.js', 'js/training.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   // Elk bestand apart: één ontbrekend bestand mag de installatie van de worker niet laten mislukken.

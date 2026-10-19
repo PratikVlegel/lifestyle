@@ -20,6 +20,18 @@ const TRAIN_LEVELS = [
 ];
 const TRAIN_MAX_DAYS = { beginner: 3, intermediate: 4, advanced: 5, competitive: 5 };
 function goalsInCategory(category) { return TRAIN_CATEGORIES[category]?.goals || TRAIN_CATEGORIES.general.goals; }
+function savedTrainingPlans() {
+  const p = DB.training || (DB.training = {});
+  if (!Array.isArray(p.plans)) p.plans = [];
+  return p.plans;
+}
+function activeTrainingPlan() {
+  return savedTrainingPlans().find(p => p.id === DB.training.activePlanId && p.status === 'active') || null;
+}
+function moodHomeCard() {
+  if (!DB.settings.moodInsights) return '';
+  return '<a class="card mood-home" href="#/stemming"><b>Stemming en gewoontes</b><span class="small">Je persoonlijke overzicht staat klaar. ›</span></a>';
+}
 function maxTrainingDays(p) {
   const levelMax = TRAIN_MAX_DAYS[p.level] || 3;
   if (p.goal === 'runStart') return Math.min(levelMax, 3);
@@ -91,17 +103,77 @@ function renderTrainingPlan() {
   if (p.category === 'events') h += renderEventGuidance(p);
   view().innerHTML = h;
 }
+function renderTrainingHub() {
+  const plans = savedTrainingPlans(), active = activeTrainingPlan();
+  let h = header('Schema’s', 'Kies, start en volg een plan op jouw tempo', true);
+  h += '<div class="card"><p>Je schema’s blijven op dit toestel bewaard. Je kan er één tegelijk actief volgen, pauzeren of stopzetten.</p><a class="btn big" href="#/train">Stel een nieuw schema samen</a></div>';
+  if (active) {
+    const wi = Math.min(Math.max(0, active.currentWeek - 1), active.weeks.length - 1), week = active.weeks[wi];
+    const done = active.doneSessions || [], count = done.filter(k => k.startsWith(week.number + ':')).length;
+    h += '<h2 class="sec">Actief schema</h2><div class="card plan-active"><div class="plan-head"><span class="pill">WEEK ' + week.number + ' VAN ' + active.weeks.length + '</span><span class="muted small">' + esc((TRAIN_LEVELS.find(x => x[0] === active.level) || ['', ''])[1]) + '</span></div><h2 class="plan-title">' + esc(TRAIN_GOALS[active.goal] || active.name || 'Trainingsschema') + '</h2><p class="muted small">' + esc(week.phase || 'Opbouw') + (week.focus ? ' · ' + esc(week.focus) : '') + '</p><div class="prog"><i style="width:' + Math.round(count / Math.max(1, week.sessions.length) * 100) + '%"></i></div><p class="muted small">' + count + ' van ' + week.sessions.length + ' trainingen afgevinkt deze week</p>';
+    h += week.sessions.map((s, i) => { const key = week.number + ':' + i, checked = done.includes(key); return '<div class="plan-session' + (checked ? ' complete' : '') + '"><div><b>' + esc(s.day || 'Training ' + (i + 1)) + ' · ' + esc(s.title) + '</b><p>' + esc(s.detail) + '</p></div><button class="chip sm ' + (checked ? 'done' : '') + '" data-act="togglePlanSession" data-id="' + esc(active.id) + '" data-week="' + week.number + '" data-i="' + i + '" aria-pressed="' + checked + '">' + (checked ? '✓ Klaar' : 'Markeer klaar') + '</button></div>'; }).join('');
+    if (done.length && week.sessions.every((_, i) => done.includes(week.number + ':' + i))) h += '<div class="card note"><b>Deze week is afgevinkt</b><p class="small">Kijk de afgevinkte trainingen nog even na. Je kan ze hierboven terugzetten voordat je verdergaat.</p><button class="btn big" data-act="advanceTrainingWeek" data-id="' + esc(active.id) + '">' + (active.currentWeek < active.weeks.length ? 'Open de volgende week' : 'Rond schema af') + '</button></div>';
+    h += '<div class="inrow wrap"><button class="btn ghost" data-act="pauseTrainingPlan" data-id="' + esc(active.id) + '">Pauzeer schema</button><button class="link danger" data-act="stopTrainingPlan" data-id="' + esc(active.id) + '">Zet schema stop</button></div></div>';
+  } else h += '<div class="card muted">Je volgt momenteel geen actief schema. Kies hieronder een gepauzeerd schema om verder te gaan of stel een nieuw schema samen.</div>';
+  const others = plans.filter(p => !active || p.id !== active.id);
+  if (others.length) h += '<h2 class="sec">Opgeslagen schema’s</h2>' + others.map(p => {
+    const status = { paused: 'Gepauzeerd', stopped: 'Gestopt', completed: 'Afgerond' }[p.status] || 'Opgeslagen';
+    const button = p.status === 'paused' ? '<button class="btn ghost" data-act="resumeTrainingPlan" data-id="' + esc(p.id) + '">Verder volgen</button>' : p.status === 'completed' ? '<button class="btn ghost" data-act="restartTrainingPlan" data-id="' + esc(p.id) + '">Opnieuw starten</button>' : '<button class="btn ghost" data-act="resumeTrainingPlan" data-id="' + esc(p.id) + '">Opnieuw activeren</button>';
+    return '<div class="card plan-saved"><div class="plan-head"><span class="pill">' + status.toUpperCase() + '</span><span class="muted small">' + esc(p.createdAt || '') + '</span></div><b>' + esc(TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema') + '</b><p class="muted small">' + esc((TRAIN_LEVELS.find(x => x[0] === p.level) || ['', ''])[1]) + ' · ' + p.weeks.length + ' weken</p><div class="inrow wrap">' + button + '<button class="link danger" data-act="deleteTrainingPlan" data-id="' + esc(p.id) + '">Verwijder</button></div></div>';
+  }).join('');
+  if (!plans.length) h += '<p class="muted small">Als je een schema maakt en op “Start dit schema” tikt, verschijnt het hier én op Vandaag.</p>';
+  view().innerHTML = h;
+}
+function activeTrainingHomeCard() {
+  const p = activeTrainingPlan();
+  if (!p) return '<a class="card plan-home-empty" href="#/schemas"><b>Trainingsschema’s</b><span class="muted small">Kies een plan en volg je voortgang hier.</span><span class="plan-go">Schema’s bekijken ›</span></a>';
+  const week = p.weeks[Math.min(Math.max(0, p.currentWeek - 1), p.weeks.length - 1)];
+  const done = (p.doneSessions || []).filter(k => k.startsWith(week.number + ':')).length;
+  return '<a class="card plan-home" href="#/schemas"><div class="plan-head"><span class="pill">ACTIEF · WEEK ' + week.number + '/' + p.weeks.length + '</span><b>' + esc(TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema') + '</b></div><p class="small">' + esc(week.phase || 'Opbouw') + ' · ' + done + '/' + week.sessions.length + ' trainingen afgerond</p><div class="prog"><i style="width:' + Math.round(done / Math.max(1, week.sessions.length) * 100) + '%"></i></div><span class="plan-go">Schema openen ›</span></a>';
+}
+ACT.startTrainingPlan = () => {
+  const draft = DB.training && DB.training.generated;
+  if (!draft) return toast('Maak eerst een schema om te starten.');
+  const weeks = Array.isArray(draft.weeks) ? draft.weeks : [{ number: 1, phase: 'Basisweek', focus: 'Herhaal deze week en bouw rustig op.', sessions: draft.sessions || [] }];
+  if (!weeks.length || !weeks[0].sessions.length) return toast('Dit schema heeft geen trainingsdagen om te volgen.');
+  const plans = savedTrainingPlans(), old = activeTrainingPlan();
+  if (old) old.status = 'paused';
+  const p = JSON.parse(JSON.stringify(draft));
+  p.id = uid(); p.name = TRAIN_GOALS[p.goal] || 'Persoonlijk schema'; p.status = 'active'; p.createdAt = todayKey(); p.currentWeek = 1; p.doneSessions = []; p.weeks = weeks;
+  plans.unshift(p); DB.training.activePlanId = p.id; save(); toast(old ? 'Nieuwe schema gestart; je vorige staat op pauze.' : 'Schema gestart. Je voortgang staat op Vandaag en Schema’s.'); go('#/schemas');
+};
+ACT.pauseTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'paused'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
+ACT.stopTrainingPlan = el => { if (!confirm('Dit schema stopzetten? Je voortgang blijft bewaard.')) return; const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'stopped'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
+ACT.resumeTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; const old = activeTrainingPlan(); if (old && old.id !== p.id) old.status = 'paused'; p.status = 'active'; DB.training.activePlanId = p.id; save(); renderTrainingHub(); };
+ACT.restartTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.currentWeek = 1; p.doneSessions = []; p.status = 'active'; const old = activeTrainingPlan(); if (old && old.id !== p.id) old.status = 'paused'; DB.training.activePlanId = p.id; save(); renderTrainingHub(); };
+ACT.deleteTrainingPlan = el => { if (!confirm('Schema en opgeslagen voortgang verwijderen?')) return; DB.training.plans = savedTrainingPlans().filter(p => p.id !== el.dataset.id); if (DB.training.activePlanId === el.dataset.id) DB.training.activePlanId = null; save(); renderTrainingHub(); };
+ACT.togglePlanSession = el => {
+  const p = activeTrainingPlan(); if (!p || p.id !== el.dataset.id || p.status !== 'active') return;
+  const week = p.weeks.find(w => w.number === Number(el.dataset.week)); if (!week || week.number !== p.currentWeek) return;
+  const key = week.number + ':' + Number(el.dataset.i), done = p.doneSessions || (p.doneSessions = []);
+  if (done.includes(key)) p.doneSessions = done.filter(x => x !== key); else done.push(key);
+  save(); renderTrainingHub();
+};
+ACT.advanceTrainingWeek = el => {
+  const p = activeTrainingPlan(); if (!p || p.id !== el.dataset.id) return;
+  const week = p.weeks.find(w => w.number === p.currentWeek);
+  if (!week || !week.sessions.every((_, i) => (p.doneSessions || []).includes(week.number + ':' + i))) return toast('Vink eerst alle trainingen van deze week af.');
+  if (p.currentWeek < p.weeks.length) { p.currentWeek++; toast('Volgende week staat klaar.'); }
+  else { p.status = 'completed'; DB.training.activePlanId = null; toast('Schema afgerond. Je voortgang is bewaard.'); }
+  save(); renderTrainingHub();
+};
 function renderGeneratedTraining(g) {
-  if (g.programType === 'progressive') return renderProgressiveProgram(g);
-  if (g.weeks) return renderEventProgram(g);
+  if (g.programType === 'progressive') return renderProgressiveProgram(g) + draftPlanActions();
+  if (g.weeks) return renderEventProgram(g) + draftPlanActions();
   const sessions = (g.sessions || []).map(s => '<div class="card"><h3>' + esc(s.day) + ' · ' + esc(s.title) + '</h3><p>' + esc(s.detail) + '</p><p class="muted small">' + g.minutes + ' min · ' + esc(s.effort) + '</p></div>').join('');
   const focus = { regularity: 'Kies een eetmoment dat vaak wegvalt en maak daar een haalbare routine van.', protein: 'Voeg bij een of meer maaltijden een eiwitbron toe die je graag eet.', fiber: 'Voeg geleidelijk een vezelrijke keuze toe, zoals fruit, groente, volkoren of peulvruchten.' }[g.nutritionFocus];
   const activityGoal = g.activityGoal === 'guideline' ? 'Voor volwassenen is een richtpunt 150–300 minuten matig intensieve beweging per week (of 75–150 minuten intensief), plus spierversterkende activiteit op minstens 2 dagen. Bouw hier rustig naartoe; wandelen en fietsen tellen ook mee.' : g.activityGoal === 'custom' ? 'Jouw gekozen beweegdoel: ' + g.weeklyActivityMinutes + ' minuten per week. Wandelen en fietsen tellen mee; pas het doel aan als herstel of omstandigheden daarom vragen.' : '';
   const levels = Object.fromEntries(TRAIN_LEVELS.map(([key, label]) => [key, label.toLowerCase()]));
   const place = g.access === 'yes' ? 'met toegang tot fitness' : 'zonder fitness';
   const timing = { any: 'geen tijdsvoorkeur', morning: 'bij voorkeur in de ochtend', afternoon: 'bij voorkeur in de middag', evening: 'bij voorkeur in de avond' }[g.timeOfDay] || 'geen tijdsvoorkeur';
-  return '<h2 class="sec">Jouw weekindeling</h2><div class="card"><p><b>' + esc((g.goal === 'race' && g.eventName) ? g.eventName : TRAIN_GOALS[g.goal] || TRAIN_GOALS.general) + '</b> · ' + esc(levels[g.level] || 'beginner') + ' · ' + g.sessions.length + ' trainingen</p><p class="muted small">' + g.sessions.length * g.minutes + ' minuten gepland deze week · ' + place + ' · ' + timing + '. Herhaal deze basisweek en verhoog de belasting pas geleidelijk wanneer het goed voelt. Pas dagen aan als je agenda verandert.</p></div>' + sessions + (focus ? '<div class="card"><h3>Optionele voedingsfocus</h3><p>' + focus + '</p></div>' : '') + (activityGoal ? '<div class="card"><h3>Optioneel beweegdoel</h3><p>' + activityGoal + '</p></div>' : '');
+  return '<h2 class="sec">Voorbeeld van je schema</h2><div class="card"><p><b>' + esc((g.goal === 'race' && g.eventName) ? g.eventName : TRAIN_GOALS[g.goal] || TRAIN_GOALS.general) + '</b> · ' + esc(levels[g.level] || 'beginner') + ' · ' + g.sessions.length + ' trainingen</p><p class="muted small">' + g.sessions.length * g.minutes + ' minuten gepland deze week · ' + place + ' · ' + timing + '. Bekijk het voorbeeld en start het daarna om het bij Schema’s te volgen.</p></div>' + sessions + (focus ? '<div class="card"><h3>Optionele voedingsfocus</h3><p>' + focus + '</p></div>' : '') + (activityGoal ? '<div class="card"><h3>Optioneel beweegdoel</h3><p>' + activityGoal + '</p></div>' : '') + draftPlanActions();
 }
+function draftPlanActions() { return '<div class="card plan-draft"><h3>Wil je dit schema volgen?</h3><p class="muted small">Start het om je trainingen af te vinken. Je kan het later pauzeren, hervatten of stopzetten.</p><button class="btn big" data-act="startTrainingPlan">Start dit schema</button><a class="link" href="#/schemas">Terug naar mijn schema’s</a></div>'; }
 function renderProgressiveProgram(g) {
   const cards = g.weeks.map(w => '<details class="card train-week"' + (w.number === 1 ? ' open' : '') + '><summary><b>Week ' + w.number + ' · ' + esc(w.phase) + '</b><span class="muted small">' + esc(w.focus) + '</span></summary>' + w.sessions.map(s => '<div class="train-session"><b>' + esc(s.day) + ' · ' + esc(s.title) + '</b><p>' + esc(s.detail) + '</p></div>').join('') + '</details>').join('');
   const caution = g.goal === 'rehab' ? '<div class="card note"><b>Revalidatie blijft onder regie van je behandelaar</b><p class="small">Dit is alleen een weekindeling om de door je behandelaar goedgekeurde activiteiten te plannen. De app verhoogt geen oefeningen, gewicht of intensiteit. Stop en vraag advies bij scherpe/toenemende pijn, terugkerende zwelling of verlies van beweging/kracht.</p><p class="muted small">Richtlijn: <a href="https://leedscommunityhealthcare.nhs.uk/our-services-a-z/musculoskeletal-msk/return-to-activity-or-sport-after-injury/" target="_blank" rel="noopener">Leeds Community Healthcare NHS · terugkeer na blessure</a></p></div>' : '<div class="card"><p class="muted small">Verhoog alleen als je goed herstelt; herhaal gerust een week. Rustdagen zijn onderdeel van het plan. Bij pijn of een medische aandoening: overleg met een zorgverlener.</p></div>';

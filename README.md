@@ -4,8 +4,8 @@ Offline web-app (PWA) voor een voedingsdagboek: check-ins op vaste tijden, mealp
 
 Live: https://pratikvlegel.github.io/lifestyle/
 
-- Het dagboek blijft standaard in de browser op het toestel (localStorage). Gebruik je AI, dan stuurt de app de gegevens die nodig zijn voor die actie naar Anthropic.
-- Producten, gedeelde mealprep-recepten en beoordelingen gaan naar Supabase wanneer je ze deelt. Receptfoto's staan in een openbare opslagbucket en zijn bereikbaar via hun afbeeldingslink.
+- Het dagboek, trainingsschema's en de optionele stemmingvergelijkingen blijven op het toestel (localStorage). De stemmingmodule gebruikt alleen ingevulde numerieke waarden en leest geen vrije notities. Als je zelf een AI-analyse start, verstuurt de app je profiel en maximaal 21 dagen relevante dagboekgegevens, inclusief notities, naar Anthropic.
+- Producten, gedeelde mealprep-recepten en beoordelingen gaan naar Supabase wanneer je ze deelt. Receptfoto's staan in een openbare opslagbucket en zijn bereikbaar via hun afbeeldingslink. De gedeelde bibliotheek is alleen toegankelijk voor accounts die een uitnodiging hebben aanvaard.
 - In deze repo staat alleen code. **Zet hier nooit een back-up of importbestand (.json) met persoonlijke gegevens.**
 
 ## Structuur
@@ -17,6 +17,7 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `js/store.js` | Datamodel, opslag, berekeningen |
 | `js/charts.js` | SVG-grafieken (zonder externe bibliotheken) |
 | `js/insights.js` | Offline advies, optionele AI-analyse |
+| `js/mood.js` | Opt-in, lokale vergelijkingen van stemming met geregistreerde gewoontes en bronnen voor onderbouwde adviezen |
 | `js/app.js` | Schermen, check-ins, mealprep, instellingen |
 | `js/training.js` | Offline trainingsplanner: afvallen/conditie, kracht/spiermassa, lopen, terugkeer na revalidatie, marathon en HYROX |
 | `js/library.js` | Productenbibliotheek, producteditor, eenheden, barcode |

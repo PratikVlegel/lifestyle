@@ -17,7 +17,7 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport'].includes(page)) || (el.dataset.tab === 'meer' && page === 'train') || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen'].includes(page)) || (el.dataset.tab === 'home' && (page === 'kpi' || page === 'checkin'))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -30,8 +30,10 @@ function render() {
       case 'preps': return renderPreps();
       case 'prep': return renderPrep(a);
       case 'inzicht': return renderInsights();
+      case 'stemming': return renderMoodModule();
       case 'meer': return renderMore(a);
       case 'train': return renderTrainingPlan();
+      case 'schemas': return renderTrainingHub();
       case 'intake': return renderIntake(a || '1');
       case 'bieb': return renderLibrary();
       case 'recepten': return renderRecipes();
@@ -90,6 +92,8 @@ function renderHome() {
   }
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(x.r.label) + '</button>').join('') + '</div>';
   h += weekCard();
+  h += activeTrainingHomeCard();
+  h += moodHomeCard();
   h += feedbackCard();
   h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">+ eten</button><button class="btn ghost" data-act="quickAct">+ activiteit</button><button class="btn ghost" data-act="quickWater">+ glas water</button><button class="btn ghost" data-act="quickCoffee">+ koffie</button></div>';
   h += '<h2 class="sec">Kerncijfers</h2><div class="kpis">' + KPI_ORDER.map(kpiTile).join('') + '</div>';
@@ -728,10 +732,13 @@ function insightCard(i) {
   return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + i.cat + '</span>' + (i.isNew ? '<span class="tag new">nieuw</span>' : '') + '<b>' + esc(i.title) + '</b></div><p>' + esc(i.text).replace(/\n/g, '<br>') + '</p><small class="muted">Op basis van ' + esc(i.evidence) + '</small></div>';
 }
 function renderInsights() {
-  const ins = buildInsights(30);
+  // Mood comparisons live in the explicit opt-in module; keep them out of general insights.
+  const ins = buildInsights(30).filter(i => i.cat !== 'stemming' && i.cat !== 'verbanden');
   let h = header('Inzicht en advies', 'Laatste 30 dagen · offline berekend');
   h += '<div class="inrow wrap"><a class="btn ghost" href="#/week">Weekrapport</a><a class="btn ghost" href="#/experimenten">Experimenten</a><a class="btn ghost" href="#/rapport">Rapport maken</a></div>';
+  h += '<a class="card fb" href="#/stemming"><b>Stemming en gewoontes</b><p class="small">Bekijk stemming naast slaap, beweging en leefstijl. Alleen met jouw keuze, lokaal berekend en zonder vrije notities.</p></a>';
   h += '<div class="card tip"><b>Tip van de dag</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
+  h += '<h2 class="sec">Onderbouwde acties</h2>' + renderEvidenceAdvice();
   h += '<p class="muted small">Dit zijn verbanden in je eigen cijfers, geen oorzaken en geen diagnose. Hoe meer dagen volledig ingevuld, hoe betrouwbaarder. <b>Nieuw</b> = sinds je laatste bezoek veranderd.</p>';
   const seen = new Set(DB.settings.seenIns || []);
   ins.forEach(i => { i.sig = (i.title + '|' + i.text).length + ':' + i.title; i.isNew = seen.size > 0 && !seen.has(i.sig); });
@@ -776,7 +783,8 @@ function renderMore(sub) {
   let h = header('Meer', '');
   if (DB.settings.admin) h += '<a class="card fb wk" href="#/uitnodigen"><b>Vrienden uitnodigen</b><p class="small">Maak een persoonlijke code en stuur de uitnodiging meteen door.</p></a>';
   const G = DB.goals, P = DB.profile, S = DB.settings;
-  h += '<a class="card fb" href="#/train"><b>Trainingsplan maken</b><p class="small">Kies een doel, niveau, materiaal en je beschikbare momenten.</p></a>';
+  h += '<a class="card fb" href="#/schemas"><b>Schema’s bekijken en beheren</b><p class="small">Volg je actieve plan, pauzeer het of stel een nieuw schema samen.</p></a>';
+  h += '<a class="card" href="#/inzicht"><b>Inzicht en advies</b><p class="small">Persoonlijke patronen, onderbouwde acties en weekrapport.</p></a>';
   h += '<div class="card"><h3>Herinneringen</h3><p class="muted small">Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.</p>';
   h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="aan"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(r.label) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="verwijder">✕</button></div>').join('');
   h += '<button class="btn ghost" data-act="remAdd">+ herinnering</button>';
@@ -1042,7 +1050,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

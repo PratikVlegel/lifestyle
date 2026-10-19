@@ -114,28 +114,26 @@ function buildInsights(n) {
       add('activiteit', 'Rustigste dag', 'Op ' + WD[low.i] + ' zet je gemiddeld het minst stappen (' + fmtNum(low.v) + '). Een vaste wandeling op die dag plannen is het makkelijkste winstpunt.', valid.length + ' weekdagen', 'info');
     }
   }
-  const stMood = pairs(n, d => d.steps, d => d.mood);
-  const rs = pearson(stMood);
-  if (rs !== null && rs > 0.35) add('stemming', 'Bewegen en stemming', 'Op dagen met meer stappen was je stemming meestal beter (samenhang r = ' + rs.toFixed(2) + '). Dat zegt niet wat oorzaak is, maar het is een bruikbaar signaal.', stMood.length + ' dagen', 'info');
+  if (DB.settings.moodInsights === true) {
+    const stMood = pairs(n, d => d.steps, d => d.mood);
+    const rs = pearson(stMood);
+    if (rs !== null && rs > 0.35 && stMood.length >= 14) add('stemming', 'Bewegen en stemming', 'Op dagen met meer stappen lag je stemming-score gemiddeld samen hoger. Dit beschrijft je registraties en zegt niet wat oorzaak is.', stMood.length + ' dagen', 'info');
+  }
 
   /* --- Slaap en stemming --- */
   const slEn = pairs(n, d => d.sleepH, d => d.energy);
   const se = splitCompare(slEn, G.sleepH - 0.5);
   if (se && Math.abs(se.hi - se.lo) >= 0.7) add('slaap', 'Slaap en energie',
     'Na nachten van ' + fmtNum(G.sleepH - 0.5, 1) + ' u of meer: energie ' + fmtNum(se.hi, 1) + '/10. Na kortere nachten: ' + fmtNum(se.lo, 1) + '/10.', se.nhi + ' + ' + se.nlo + ' dagen', se.hi > se.lo ? 'tip' : 'info');
-  const slMood = pairs(n, d => d.sleepH, d => d.mood);
-  const sm = pearson(slMood);
-  if (sm !== null && Math.abs(sm) > 0.3) add('stemming', 'Slaap en stemming', (sm > 0 ? 'Meer slaap ging samen met een betere stemming' : 'Opvallend: meer slaap ging hier niet samen met een betere stemming') + ' (r = ' + sm.toFixed(2) + '). Bekijk ook de notities bij je lage dagen hieronder.', slMood.length + ' dagen', 'info');
+  if (DB.settings.moodInsights === true) {
+    const slMood = pairs(n, d => d.sleepH, d => d.mood);
+    const sm = pearson(slMood);
+    if (sm !== null && Math.abs(sm) > 0.3 && slMood.length >= 14) add('stemming', 'Slaap en stemming', 'Slaapduur en je stemming-score bewogen in deze registraties samen. Dit is een beschrijving, geen aanwijzing voor oorzaak.', slMood.length + ' dagen', 'info');
+  }
   const cp = recent.filter(x => x.d.cpap && isNum(x.d.energy));
   const cpFull = cp.filter(x => /hele|ja/i.test(x.d.cpap) && !/deels|vanaf|nee/i.test(x.d.cpap)).map(x => x.d.energy);
   const cpNot = cp.filter(x => /nee|deels|vanaf/i.test(x.d.cpap)).map(x => x.d.energy);
   if (cpFull.length >= 2 && cpNot.length >= 2) add('slaap', 'CPAP', 'Met CPAP de hele nacht: energie gemiddeld ' + fmtNum(avg(cpFull), 1) + '/10. Zonder of maar een deel van de nacht: ' + fmtNum(avg(cpNot), 1) + '/10.', cpFull.length + ' + ' + cpNot.length + ' dagen', 'tip');
-
-  const lowMood = recent.filter(x => isNum(x.d.mood) && x.d.mood <= 5);
-  if (lowMood.length) {
-    const notes = lowMood.map(x => '• ' + fmtDay(x.k) + ' (' + x.d.mood + '/10)' + (x.d.moodNote || x.d.notes ? ': ' + (x.d.moodNote || x.d.notes) : '')).join('\n');
-    add('stemming', 'Je lagere dagen', 'Dagen met stemming 5 of lager, met wat je erbij noteerde:\n' + notes + '\nKijk of er een rode draad is (werk, slaap, eten overdag). Dat is goed materiaal voor een gesprek met je psycholoog.', lowMood.length + ' dagen', 'info');
-  }
 
   /* --- Gewicht --- */
   const w = recent.map(x => ({ k: x.k, v: x.d.weight })).filter(x => isNum(x.v));

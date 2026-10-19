@@ -199,6 +199,37 @@ a.card.wk{text-decoration:none;color:inherit}
 .ins.info{border-left:4px solid var(--line)}
 .ai p{margin:8px 0} .ai ul{padding-left:20px;margin:6px 0} .ai h3{margin-top:12px}
 details summary{cursor:pointer;font-weight:600}
+.train-week summary{display:grid;gap:5px;line-height:1.35;padding:2px 0 8px}
+.train-week summary b{display:block;font-size:1.05rem;overflow-wrap:anywhere}
+.train-week summary span{display:block;font-weight:400;line-height:1.45;overflow-wrap:anywhere}
+.train-session{border-top:1px solid var(--line);padding:12px 0 4px;margin-top:8px}
+.train-session>b{display:block;line-height:1.35}
+.train-session p{line-height:1.55;margin-top:7px}
+.plan-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.plan-active .plan-title{margin:12px 0 4px;font-size:1.3rem}
+.plan-session{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;border-top:1px solid var(--line);padding:12px 0}
+.plan-session p{line-height:1.5;margin-top:5px}
+.plan-session .chip{align-self:center}
+.plan-home,.plan-home-empty{border-left:4px solid var(--accent)}
+.plan-home .plan-head{align-items:flex-start}
+.plan-home .plan-head b{margin-left:auto;text-align:right}
+.plan-go{display:block;color:var(--accent);font-weight:700;margin-top:8px}
+.plan-draft .link{display:block;text-align:center;margin:6px auto 0}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 8px}
+.evidence-card{margin:6px 0;display:flex;flex-direction:column;align-items:flex-start}
+.evidence-card p{margin:10px 0;line-height:1.55}
+.evidence-card a{margin-top:auto;font-size:.82rem;font-weight:600}
+.mood-intro h2{font-size:1.2rem}
+.mood-factor{border-left:4px solid var(--accent)}
+.mood-factor-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mood-factor-head h3{margin:0}
+.mood-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.mood-groups>div{display:flex;flex-direction:column;gap:4px;background:var(--surface2);border-radius:10px;padding:10px;min-width:0}
+.mood-groups>div>span{font-size:.82rem;color:var(--muted)}
+.mood-groups b{font-size:1.45rem;font-variant-numeric:tabular-nums}
+.mood-groups b small{font-size:.8rem;color:var(--muted)}
+.mood-groups div>small{font-size:.76rem;color:var(--muted)}
+.mood-care{border-left:4px solid var(--lentil)}
 .rem{display:grid;grid-template-columns:24px 92px 1fr;gap:6px;align-items:center;margin:8px 0}
 .rem select{grid-column:2/3}
 .rem .iconbtn{justify-self:end}
@@ -206,9 +237,9 @@ details summary{cursor:pointer;font-weight:600}
 .toggle{display:flex;gap:10px;align-items:center;margin:12px 0;font-size:.92rem}
 .hero{padding:30px 4px 8px}
 .hero h1{font-size:2rem;color:var(--accent)}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
-nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 9px;color:var(--muted);text-decoration:none;font-size:.72rem;font-weight:600}
-nav.tabs a svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 1px 9px;color:var(--muted);text-decoration:none;font-size:.66rem;font-weight:600;white-space:nowrap}
+nav.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 nav.tabs a.on{color:var(--accent)}
 #sheet{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center}
 #sheet[hidden]{display:none}
@@ -220,6 +251,7 @@ nav.tabs a.on{color:var(--accent)}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;max-width:90vw;font-size:.92rem;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 #offline{background:var(--lentil);color:#fff;text-align:center;font-size:.8rem;padding:3px;position:sticky;top:0;z-index:6}
 @media (max-width:370px){ .grid5{grid-template-columns:repeat(3,1fr)} .hb{grid-template-columns:84px 1fr 48px} }
+@media (max-width:430px){.evidence-grid{grid-template-columns:1fr}.plan-session{grid-template-columns:minmax(0,1fr)}.plan-session .chip{justify-self:start}.plan-home .plan-head b{width:100%;margin-left:0;text-align:left}}
 </style>
 </head>
 <body>
@@ -230,6 +262,7 @@ nav.tabs a.on{color:var(--accent)}
   <a href="#/dagboek" data-tab="dagboek"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/></svg>Dagboek</a>
   <a href="#/preps" data-tab="preps"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M8 8V5h8v3"/></svg>Mealprep</a>
   <a href="#/inzicht" data-tab="inzicht"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Inzicht</a>
+  <a href="#/schemas" data-tab="schemas"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="18" cy="19" r="2"/></svg>Schema's</a>
   <a href="#/meer" data-tab="meer"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Meer</a>
 </nav>
 <div id="sheet" hidden><div class="sheet-in"></div></div>
@@ -246,6 +279,7 @@ nav.tabs a.on{color:var(--accent)}
 <script src="js/activity.js"></script>
 <script src="js/share.js"></script>
 <script src="js/insights2.js"></script>
+<script src="js/mood.js"></script>
 <script src="js/week.js"></script>
 <script src="js/extras.js"></script>
 <script src="js/invite.js"></script>

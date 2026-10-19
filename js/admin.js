@@ -10,7 +10,7 @@ function inviteText(code) {
   return 'Hoi! Ik gebruik een app voor mijn voedingsdagboek en mealpreps. Doe je mee?\n\n' +
     'Android:\n1. Open ' + APP_LINK + ' in Chrome\n2. Menu ⋮ → App installeren\n3. Open de app en vul de code in\n\n' +
     'iPhone:\n1. Open ' + APP_LINK + ' in Safari\n2. Deelknop (vierkant met pijl) → Zet op beginscherm → Voeg toe\n3. Open de app via het nieuwe icoon op je beginscherm (niet in Safari) en vul daar de code in\n\n' +
-    'Code: ' + code + '\n\nJe dagboek blijft lokaal in je browser. Gedeelde producten, recepten en beoordelingen staan in de gedeelde bibliotheek; receptfoto’s zijn via hun openbare afbeeldingslink bereikbaar. Alleen gegevens die je voor een AI-actie invoert, worden daarvoor naar Anthropic gestuurd.';
+    'Code: ' + code + '\n\nJe dagboek en trainingsschema’s blijven lokaal in je browser. Producten, gedeelde recepten en beoordelingen staan in de gedeelde bibliotheek; receptfoto’s zijn via hun openbare afbeeldingslink bereikbaar. Als je zelf een AI-analyse start, stuurt de app je profiel en maximaal 21 dagen relevante dagboekgegevens, inclusief notities, naar Anthropic. De stemmingmodule gebruikt alleen numerieke waarden en leest geen vrije notities.';
 }
 let INV_LAST = null;
 async function renderAdmin() {
