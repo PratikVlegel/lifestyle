@@ -100,12 +100,12 @@ function buildInsights(n) {
     const last7 = st.filter(x => x.k > addDays(todayKey(), -7)).map(x => x.v);
     const prev7 = st.filter(x => x.k <= addDays(todayKey(), -7) && x.k > addDays(todayKey(), -14)).map(x => x.v);
     const a7 = avg(last7.length ? last7 : st.map(x => x.v));
-    let t = 'Laatste 7 dagen gemiddeld ' + fmtNum(a7) + ' stappen (doel ' + fmtNum(G.stepsMin) + '–' + fmtNum(G.stepsMax) + ').';
-    if (prev7.length >= 3) t += ' De week ervoor: ' + fmtNum(avg(prev7)) + '.';
+    let t = tr('Laatste 7 dagen gemiddeld') + ' ' + fmtNum(a7) + ' ' + tr('stappen (doel') + ' ' + fmtNum(G.stepsMin) + '–' + fmtNum(G.stepsMax) + ').';
+    if (prev7.length >= 3) t += ' ' + tr('De week ervoor:') + ' ' + fmtNum(avg(prev7)) + '.';
     let tone = 'good';
-    if (a7 < G.stepsMin) { t += ' Een korte wandeling van 10 minuten na de lunch of het avondeten levert ≈ 1.000 stappen op en helpt ook je bloedsuiker na de maaltijd.'; tone = 'tip'; }
-    else if (a7 > G.stepsMax) t += ' Boven je doel. Fijn, en geen reden om op andere dagen te compenseren.';
-    else t += ' Mooi binnen je doel; geen extra compensatiestappen nodig.';
+    if (a7 < G.stepsMin) { t += ' ' + tr('Een korte wandeling van 10 minuten na de lunch of het avondeten levert ≈ 1.000 stappen op en helpt ook je bloedsuiker na de maaltijd.'); tone = 'tip'; }
+    else if (a7 > G.stepsMax) t += ' ' + tr('Boven je doel. Fijn, en geen reden om op andere dagen te compenseren.');
+    else t += ' ' + tr('Mooi binnen je doel; geen extra compensatiestappen nodig.');
     add('activiteit', 'Stappen', t, st.length + ' dagen', tone);
     const wk = [0, 1, 2, 3, 4, 5, 6].map(w => avg(st.filter(x => parseKey(x.k).getDay() === w).map(x => x.v)));
     const valid = wk.map((v, i) => ({ v, i })).filter(x => isNum(x.v));

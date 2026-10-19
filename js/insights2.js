@@ -115,9 +115,9 @@ function moreInsights(n, recent, add) {
   /* 12. Reeksen en records */
   let streak = 0;
   for (let k = completeKey(); DB.days[k] && dayComplete(DB.days[k]); k = addDays(k, -1)) streak++;
-  if (streak >= 3) add('registratie', 'Volle reeks', streak + ' dagen op rij volledig ingevuld. Hoe langer de reeks, hoe scherper de analyses.', streak + ' dagen', 'good');
+  if (streak >= 3) add('registratie', 'Volle reeks', streak + ' ' + tr('dagen op rij volledig ingevuld. Hoe langer de reeks, hoe scherper de analyses.'), streak + ' dagen', 'good');
   const st = keys.map(k => ({ k, v: dv('steps', k) })).filter(x => isNum(x.v));
-  if (st.length >= 7) { const best = st.reduce((a, b) => b.v > a.v ? b : a); add('activiteit', 'Je record', 'Meeste stappen in deze periode: ' + fmtNum(best.v) + ' op ' + fmtDay(best.k, true) + '.', st.length + ' dagen', 'good'); }
+  if (st.length >= 7) { const best = st.reduce((a, b) => b.v > a.v ? b : a); add('activiteit', 'Je record', tr('Meeste stappen in deze periode:') + ' ' + fmtNum(best.v) + tr(' op ') + fmtDay(best.k, true) + '.', st.length + ' dagen', 'good'); }
 
   /* 13. Activiteiten */
   const actDays = recent.filter(x => (x.d.activities || []).length);

@@ -138,7 +138,7 @@ ACT.quickEat = () => openPicker(items => {
   const d = getDay(todayKey(), true);
   const slot = slotForNow();
   items.forEach(it => { it.slot = slot; it.time = nowTime(); d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); });
-  save(); toast('Genoteerd bij ' + SLOTS[slot]); render();
+  save(); toast(tr('Genoteerd bij') + ' ' + tr(SLOTS[slot])); render();
 });
 function slotForNow() {
   const t = nowTime();
@@ -152,7 +152,7 @@ function mealsList(day, k, editable) {
   for (const s of SLOT_ORDER) {
     const ms = day.meals.filter(m => m.slot === s);
     if (!ms.length) continue;
-    h += '<div class="slot"><div class="slot-h">' + SLOTS[s] + '</div>';
+    h += '<div class="slot"><div class="slot-h">' + tr(SLOTS[s]) + '</div>';
     for (const m of ms) {
       h += '<div class="meal"><div class="mt">' + (m.time ? '<span class="tm">' + esc(m.time) + '</span>' : '') + (m.nothing ? '<em>' + tr('niets gegeten') + '</em>' : esc(m.desc)) + '</div>' +
         '<div class="mn">' + (m.nothing ? '' : nutrLine(m)) + '</div>' +
@@ -239,7 +239,7 @@ function slotAverages(rows) {
   return '<div class="hbars">' + SLOT_ORDER.map((s, si) => {
     const v = used.reduce((a, r) => a + (r.parts[s] || 0), 0);
     const pct = tot ? v / tot * 100 : 0;
-    return '<div class="hb"><span>' + SLOTS[s] + '</span><i class="s' + si + '" style="width:' + pct + '%"></i><b>' + Math.round(pct) + '%</b></div>';
+    return '<div class="hb"><span>' + tr(SLOTS[s]) + '</span><i class="s' + si + '" style="width:' + pct + '%"></i><b>' + Math.round(pct) + '%</b></div>';
   }).join('') + '</div>';
 }
 ACT.period = el => { PERIOD = Number(el.dataset.p); render(); };
@@ -287,7 +287,7 @@ function renderCheckin(rid, dateKey) {
     h += slotBlock('na', 'Iets gegeten of gedronken na het avondeten?');
     h += '<label class="fld card"><span>Notitie voor vandaag (optioneel)</span><textarea data-ci="notes" rows="2">' + esc(CI.f.notes || '') + '</textarea></label>';
   } else {
-    h += '<label class="fld card"><span>Moment</span><select data-ci="slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (CI.f.slot === s ? ' selected' : '') + '>' + SLOTS[s] + '</option>').join('') + '</select></label>';
+    h += '<label class="fld card"><span>' + tr('Moment') + '</span><select data-ci="slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (CI.f.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label>';
     h += slotBlock(CI.f.slot || slotForNow(), 'Wat at of dronk je?');
     h += drinks();
   }
@@ -561,7 +561,7 @@ function renderDay(k) {
   const d = getDay(k, true);
   let h = header(fmtDay(k, true), 'Alles van deze dag', true);
   h += mealsList(d, k, true);
-  h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + SLOTS[s].toLowerCase() + '</button>').join('') + '</div>';
+  h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + tr(SLOTS[s]).toLowerCase() + '</button>').join('') + '</div>';
   const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow"><input type="' + (step === 'text' ? 'text' : 'number') + '" inputmode="decimal" step="' + (step || 'any') + '" data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">' + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
   h += '<div class="card"><h3>' + tr('Beweging') + '</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">' + tr('+ activiteit') + '</button></div>';
   h += '<div class="card diary-wellbeing"><h3>' + tr('Welzijn') + '</h3><p class="muted small">' + tr('Optioneel: noteer hoe je je voelde. Je hoeft niet alles in te vullen.') + '</p><div class="grid2">' +
@@ -603,7 +603,7 @@ ACT.editMeal = el => {
   const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id);
   $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>Wijzigen</h2><button class="iconbtn" data-act="closeSheet">✕</button></div>' +
     '<label class="fld"><span>Omschrijving</span><input id="em_desc" value="' + esc(m.desc || '') + '"></label>' +
-    '<div class="grid2"><label class="fld"><span>Tijd</span><input id="em_time" type="time" value="' + esc(m.time || '') + '"></label><label class="fld"><span>Moment</span><select id="em_slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (m.slot === s ? ' selected' : '') + '>' + SLOTS[s] + '</option>').join('') + '</select></label>' +
+    '<div class="grid2"><label class="fld"><span>' + tr('Tijd') + '</span><input id="em_time" type="time" value="' + esc(m.time || '') + '"></label><label class="fld"><span>' + tr('Moment') + '</span><select id="em_slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (m.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label>' +
     '<label class="fld"><span>kcal</span><input id="em_kcal" type="number" inputmode="decimal" value="' + (isNum(m.kcal) ? m.kcal : '') + '"></label><label class="fld"><span>eiwit g</span><input id="em_protein" type="number" inputmode="decimal" value="' + (isNum(m.protein) ? m.protein : '') + '"></label>' +
     '<label class="fld"><span>vezels g</span><input id="em_fiber" type="number" inputmode="decimal" value="' + (isNum(m.fiber) ? m.fiber : '') + '"></label></div>' +
     '<button class="btn" data-act="saveMeal" data-k="' + el.dataset.k + '" data-id="' + m.id + '">Bewaren</button>';
@@ -624,13 +624,13 @@ ACT.saveMeal = el => {
 /* ================= mealprep ================= */
 function renderPreps() {
   let h = header('Mealprep', 'Bereken je preps uit etiketten en hoeveelheden');
-  h += '<div class="inrow wrap"><button class="btn" data-act="newPrep">+ Nieuwe mealprep</button><a class="btn ghost" href="#/recepten">Gedeelde recepten</a><a class="btn ghost" href="#/lijst">Boodschappenlijst</a></div>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="newPrep">+ ' + tr('Nieuwe mealprep') + '</button><a class="btn ghost" href="#/recepten">' + tr('Gedeelde recepten') + '</a><a class="btn ghost" href="#/lijst">' + tr('Boodschappenlijst') + '</a></div>';
   const list = DB.preps.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   h += list.map(p => {
     const { per } = prepTotals(p);
-    return '<a class="card prepc' + (p.left > 0 ? '' : ' empty') + '" href="#/prep/' + p.id + '">' + (prepPhotoSrc(p) ? '<img class="prepthumb" src="' + esc(prepPhotoSrc(p)) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(p.name) + '</b><span class="pill">' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' / ' + p.portions + ' over' : p.portions + ' porties') + '</span></div>' +
-      '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + (prepKnows(p, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
-      '<small class="muted">per portie · gemaakt ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + (p.feedback ? ' · ' + esc(feedbackSummary(p.feedback)) : '') + (p.sharedId ? ' · gedeeld' : '') + '</small></a>';
+    return '<a class="card prepc' + (p.left > 0 ? '' : ' empty') + '" href="#/prep/' + p.id + '">' + (prepPhotoSrc(p) ? '<img class="prepthumb" src="' + esc(prepPhotoSrc(p)) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(p.name) + '</b><span class="pill">' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' / ' + p.portions + ' ' + tr('over') : p.portions + ' ' + tr('porties')) + '</span></div>' +
+      '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + (prepKnows(p, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + tr(NUTR_LABEL[n])) + '</span>').join('') + '</div>' +
+      '<small class="muted">' + tr('per portie') + ' · ' + tr('gemaakt') + ' ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + (p.feedback ? ' · ' + esc(feedbackSummary(p.feedback)) : '') + (p.sharedId ? ' · ' + tr('gedeeld') : '') + '</small></a>';
   }).join('');
   h += '<a class="card prepc" href="#/bieb"><div class="pc-h"><b>Productenbibliotheek</b><span class="pill">' + DB.foods.length + '</span></div><small class="muted">Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.' + (cloudReady() && DB.settings.share !== false ? ' Gedeeld over je toestellen en met andere gebruikers.' : '') + '</small></a>';
   view().innerHTML = h;
@@ -878,8 +878,8 @@ function ensureManifestLink() {
 }
 ensureManifestLink();
 function installCard() {
-  return '<div class="card"><h3>App installeren</h3>' + (isStandalone() ? '<p class="muted small">De app draait geïnstalleerd.</p>' : (INSTALL_EVT ? '<p class="muted small">Chrome vindt de app installeerbaar.</p><button class="btn" data-act="installApp">Installeer de app</button>' : '<p class="muted small">Chrome heeft (nog) niet gemeld dat de app installeerbaar is. Hieronder zie je wat je toestel controleert.</p>')) +
-    '<div id="diag" class="table small"><p class="muted">Controleren…</p></div><button class="btn ghost" data-act="copyDiag">Kopieer controle</button></div>';
+  return '<div class="card"><h3>' + tr('App installeren') + '</h3>' + (isStandalone() ? '<p class="muted small">' + tr('De app draait geïnstalleerd.') + '</p>' : (INSTALL_EVT ? '<p class="muted small">' + tr('Chrome vindt de app installeerbaar.') + '</p><button class="btn" data-act="installApp">' + tr('Installeer de app') + '</button>' : '<p class="muted small">' + tr('Chrome heeft (nog) niet gemeld dat de app installeerbaar is. Hieronder zie je wat je toestel controleert.') + '</p>')) +
+    '<div id="diag" class="table small"><p class="muted">' + tr('Controleren…') + '</p></div><button class="btn ghost" data-act="copyDiag">' + tr('Kopieer controle') + '</button></div>';
 }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTALL_EVT = e; if (/^#\/(meer|intake)/.test(location.hash)) render(); });
 window.addEventListener('appinstalled', () => { INSTALL_EVT = null; toast('App geïnstalleerd'); });
@@ -888,13 +888,13 @@ ACT.installApp = async () => { if (!INSTALL_EVT) return; INSTALL_EVT.prompt(); c
 ACT.copyDiag = () => shareText(DIAG.map(d => (d[1] ? '✓ ' : '✗ ') + d[0] + (d[2] ? ': ' + d[2] : '')).join('\n'), 'Installatiecontrole');
 async function runDiag() {
   const out = [];
-  const add = (label, ok, info) => out.push([label, ok, info || '']);
+  const add = (label, ok, info) => out.push([tr(label), ok, tr(info || '')]);
   add('HTTPS', location.protocol === 'https:', location.origin);
   add('Geïnstalleerd (standalone)', isStandalone());
   add('Chrome meldt installeerbaar (beforeinstallprompt)', !!INSTALL_EVT);
   let link = document.querySelector('link[rel=manifest]');
-  add('Manifest-link in de pagina', !!link, link ? link.getAttribute('href') : 'ontbreekt; links: ' + [...document.querySelectorAll('link')].map(l => l.rel).join(',') + ' | head ' + document.head.children.length + ' elementen');
-  try { const src = await (await fetch(location.pathname, { cache: 'no-store' })).text(); add('Manifest-link in index.html van de server', src.includes('rel="manifest"'), src.length + ' tekens'); } catch (e) { add('index.html ophalen', false, e.message); }
+  add('Manifest-link in de pagina', !!link, link ? link.getAttribute('href') : tr('ontbreekt; links:') + ' ' + [...document.querySelectorAll('link')].map(l => l.rel).join(',') + ' | head ' + document.head.children.length + ' ' + tr('elementen'));
+  try { const src = await (await fetch(location.pathname, { cache: 'no-store' })).text(); add('Manifest-link in index.html van de server', src.includes('rel="manifest"'), src.length + ' ' + tr('tekens')); } catch (e) { add('index.html ophalen', false, e.message); }
   if (!link) link = ensureManifestLink();
   let man = null;
   try { const r = await fetch(link.href, { cache: 'no-store' }); man = await r.json(); add('Manifest geladen', r.ok, r.status + ' ' + (r.headers.get('content-type') || '')); }
@@ -904,7 +904,7 @@ async function runDiag() {
     for (const ic of man.icons || []) {
       const url = new URL(ic.src, link.href).href;
       const res = await new Promise(r => { const im = new Image(); im.onload = () => r(im.naturalWidth + 'x' + im.naturalHeight); im.onerror = () => r(null); im.src = url + '?d=' + Date.now(); });
-      add('Icoon ' + ic.sizes + ' ' + (ic.purpose || ''), !!res, res || 'laadt niet');
+      add(tr('Icoon') + ' ' + ic.sizes + ' ' + (ic.purpose || ''), !!res, res || tr('laadt niet'));
     }
   }
   if ('serviceWorker' in navigator) {
@@ -916,7 +916,7 @@ async function runDiag() {
   if (navigator.getInstalledRelatedApps) { try { const a = await navigator.getInstalledRelatedApps(); add('Gerelateerde apps', true, String(a.length)); } catch (e) { } }
   const uad = navigator.userAgentData;
   add('Browser', true, uad ? uad.brands.map(b => b.brand + ' ' + b.version).join(', ') + (uad.mobile ? ' (mobiel)' : '') : navigator.userAgent);
-  add('Manifest-link door app teruggezet', !window.__manifestInjected, window.__manifestInjected ? 'ja, ontbrak bij het laden' : 'niet nodig');
+  add('Manifest-link door app teruggezet', !window.__manifestInjected, window.__manifestInjected ? tr('ja, ontbrak bij het laden') : tr('niet nodig'));
   add('Versie app', true, APP_VERSION);
   DIAG = out;
   const el = $('#diag');
