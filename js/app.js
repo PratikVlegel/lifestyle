@@ -623,8 +623,20 @@ ACT.pickPhoto = el => { const f = el.files[0]; el.value = ''; if (f) openFoodEdi
 ACT.pickNewFood = () => openFoodEditor(null, food => backToPicker('Bewaard: ' + food.name + '. Kies de hoeveelheid.', food));
 
 /* ================= dagboek ================= */
+function dayHasDiaryContent(d) {
+  if (!d || typeof d !== 'object') return false;
+  if ((d.meals || []).length || (d.activities || []).length || Object.values(d.done || {}).some(Boolean)) return true;
+  if (d.supplementsLogged === true || Object.hasOwn(d, 'nicotineForms')) return true;
+  const defaults = new Set(['meals', 'activities', 'done', 'supplements', 'supplementsLogged']);
+  return Object.entries(d).some(([key, value]) => {
+    if (defaults.has(key) || value === null || value === undefined || value === '' || value === false) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'object') return Object.keys(value).length > 0;
+    return true;
+  });
+}
 function renderDays() {
-  const keys = Object.keys(DB.days).sort().reverse();
+  const keys = Object.keys(DB.days).filter(k => dayHasDiaryContent(DB.days[k])).sort().reverse();
   let h = header('Dagboek', keys.length + ' dagen geregistreerd');
   h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><div class="diary-date-control"><button class="btn ghost" data-act="chooseDiaryDate">' + tr('Andere dag') + '</button><input class="diary-date" type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" data-chg="openDate"></div></div>';
   const readiness = moodDiaryReadiness();
@@ -654,7 +666,7 @@ ACT.chooseDiaryDate = () => {
 ACT.openDate = el => { if (el.value) go('#/dag/' + el.value); };
 
 function renderDay(k) {
-  const d = getDay(k, true);
+  const d = getDay(k) || {};
   let h = header(fmtDay(k, true), 'Alles van deze dag', true);
   h += mealsList(d, k, true);
   h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + tr(SLOTS[s]).toLowerCase() + '</button>').join('') + '</div>';
@@ -700,7 +712,6 @@ ACT.supplementNone = el => { const d = getDay(el.dataset.k, true); d.supplements
 ACT.supplementClear = el => { const d = getDay(el.dataset.k, true); delete d.supplements; delete d.supplementsLogged; save(); renderDay(el.dataset.k); };
 ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }); save(); render(); });
 ACT.saveDay = el => {
-  const d = getDay(el.dataset.k, true);
   const fields = [...document.querySelectorAll('[data-dk]')];
   for (const i of fields) {
     if (i.type !== 'number') {
@@ -713,12 +724,14 @@ ACT.saveDay = el => {
     const err = numericError(i.dataset.dk, v, DB);
     if (err) { toast(err); i.focus(); return; }
   }
+  const d = getDay(el.dataset.k, true);
   fields.forEach(i => {
     const n = i.dataset.dk; let v = i.value.trim();
     if (i.type === 'number') { v = v === '' ? null : Number(v.replace(',', '.')); if (n === 'waterMl' && isNum(v)) v = Math.round(v * 1000); }
     else if (v === '') v = null;
     d[n] = v;
   });
+  if (!dayHasDiaryContent(d)) delete DB.days[el.dataset.k];
   save(); toast('Bewaard'); render();
 };
 function dayNicotineChoice(d, k) {
@@ -1297,7 +1310,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.46';
+const APP_VERSION = '1.10.48';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
