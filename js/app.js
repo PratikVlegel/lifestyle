@@ -798,22 +798,21 @@ ACT.delDay = el => { if (!confirm('Hele dag ' + fmtDay(el.dataset.k) + ' verwijd
 ACT.editMeal = el => {
   const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id);
   $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>' + tr('Wijzigen') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>' +
-    '<label class="fld"><span>Omschrijving</span><input id="em_desc" value="' + esc(m.desc || '') + '"></label>' +
-    '<div class="grid2"><label class="fld"><span>' + tr('Tijd') + '</span><input id="em_time" type="time" value="' + esc(m.time || '') + '"></label><label class="fld"><span>' + tr('Moment') + '</span><select id="em_slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (m.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label>' +
-    '<label class="fld"><span>kcal</span><input id="em_kcal" type="number" inputmode="decimal" value="' + (isNum(m.kcal) ? m.kcal : '') + '"></label><label class="fld"><span>eiwit g</span><input id="em_protein" type="number" inputmode="decimal" value="' + (isNum(m.protein) ? m.protein : '') + '"></label>' +
-    '<label class="fld"><span>vezels g</span><input id="em_fiber" type="number" inputmode="decimal" value="' + (isNum(m.fiber) ? m.fiber : '') + '"></label></div>' +
-    '<button class="btn" data-act="saveMeal" data-k="' + el.dataset.k + '" data-id="' + m.id + '">Bewaren</button>';
+    '<label class="fld"><span>' + tr('Omschrijving') + '</span><input id="em_desc" maxlength="2000" value="' + esc(m.desc || '') + '"></label>' +
+    '<div class="grid2"><label class="fld"><span>' + tr('Tijd') + '</span><input id="em_time" type="time" value="' + esc(m.time || '') + '"></label><label class="fld"><span>' + tr('Moment') + '</span><select id="em_slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (m.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label></div>' +
+    '<div class="grid5 meal-edit-macros">' + [['kcal', 'kcal'], ['protein', 'eiwit'], ['carbs', 'koolh.'], ['fat', 'vet'], ['fiber', 'vezels']].map(([key, label]) => '<label class="fld"><span>' + (key === 'kcal' ? 'kcal' : tr(label) + ' g') + '</span><input id="em_' + key + '" type="number" inputmode="decimal" min="0" step="0.1" value="' + (isNum(m[key]) ? m[key] : '') + '"></label>').join('') + '</div>' +
+    '<button class="btn" data-act="saveMeal" data-k="' + el.dataset.k + '" data-id="' + m.id + '">' + tr('Bewaren') + '</button>';
   $('#sheet').hidden = false;
 };
 ACT.saveMeal = el => {
   const m = getDay(el.dataset.k).meals.find(x => x.id === el.dataset.id);
   const num = id => { const v = $(id).value.replace(',', '.'); return v === '' ? null : Number(v); };
-  for (const [id, key] of [['#em_kcal', 'kcal'], ['#em_protein', 'protein'], ['#em_fiber', 'fiber']]) {
+  for (const [id, key] of [['#em_kcal', 'kcal'], ['#em_protein', 'protein'], ['#em_carbs', 'carbs'], ['#em_fat', 'fat'], ['#em_fiber', 'fiber']]) {
     const err = numericError(key, num(id), DB);
     if (err) { toast(err); $(id).focus(); return; }
   }
   m.desc = $('#em_desc').value; m.time = $('#em_time').value; m.slot = $('#em_slot').value; m.nothing = false;
-  m.kcal = num('#em_kcal'); m.protein = num('#em_protein'); m.fiber = num('#em_fiber'); delete m.lb;
+  m.kcal = num('#em_kcal'); m.protein = num('#em_protein'); m.carbs = num('#em_carbs'); m.fat = num('#em_fat'); m.fiber = num('#em_fiber'); delete m.lb;
   save(); closeSheet(); render();
 };
 
@@ -1138,7 +1137,7 @@ const NUM_LIMITS = {
   'settings.glassMl': [1, 10000],
   sleepH: [0, 24], waterL: [0, 30], waterMl: [0, 30000], steps: [0, 200000],
   caffeine: [0, 100], alcohol: [0, 50], softDrinkServings: [0, 100], sweetsServings: [0, 100], mood: [1, 10], energy: [1, 10], stress: [1, 10],
-  kcal: [0, 20000], protein: [0, 1000], fiber: [0, 1000]
+  kcal: [0, 20000], protein: [0, 1000], carbs: [0, 1000], fat: [0, 1000], fiber: [0, 1000]
 };
 const NUM_INTEGERS = new Set(['profile.age', 'goals.kcal', 'goals.waterMl', 'goals.stepsMin', 'goals.stepsMax', 'goals.caffeineMax', 'settings.glassMl', 'steps', 'caffeine', 'alcohol']);
 function numericValue(el) { return el.value === '' ? null : Number(String(el.value).replace(',', '.')); }
@@ -1354,7 +1353,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.55';
+const APP_VERSION = '1.10.56';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
