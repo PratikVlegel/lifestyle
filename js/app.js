@@ -583,12 +583,16 @@ function renderDays() {
   const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
     const wellbeing = [isNum(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isNum(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isNum(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
-    const context = [isNum(d.sleepH) ? d.sleepH + ' ' + tr('u slaap') : '', isNum(d.steps) ? fmtNum(d.steps) + ' ' + tr('stappen') : '', isNum(d.alcohol) && d.alcohol > 0 ? d.alcohol + ' ' + tr('glazen alcohol') : '', isNum(d.weight) ? d.weight + ' kg' : ''].filter(Boolean).join(' · ');
-    return '<a class="tr day" href="#/dag/' + k + '"><div class="day-line"><span>' + fmtDay(k, true) + '</span><span class="day-mood">' + (wellbeing || tr('Geen stemming ingevuld')) + '</span></div><small>' + (context || tr('Nog geen slaap- of beweeggegevens')) + '</small><span class="day-kcal">' + tr('Voeding:') + ' ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal ' + tr('(schatting)') : tr('geen dagtotaal')) + '</span></a>';
+    const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.map(v => tr(NICOTINE_LABELS[v] || v)).join(', ') : tr('Geen nicotine')) : d.nicotineForms === null ? '' : d.vape === 'niet' ? tr('Geen nicotine') : Object.hasOwn({ 'paar keer': 1, 'om de 3 u': 1, 'om de 2 u': 1, 'elk uur': 1 }, d.vape) ? tr('Vape') : '';
+    const context = [isNum(d.sleepH) ? d.sleepH + ' ' + tr('u slaap') : '', isNum(d.steps) ? fmtNum(d.steps) + ' ' + tr('stappen') : '', isNum(d.weight) ? d.weight + ' kg' : '', isNum(d.alcohol) ? d.alcohol + ' ' + tr('glazen alcohol') : '', isNum(d.caffeine) ? trf('{count} koffieporties', { count: fmtNum(d.caffeine) }) : '', isNum(d.softDrinkServings) ? trf('{count} frisdrankporties', { count: fmtNum(d.softDrinkServings) }) : '', isNum(d.sweetsServings) ? trf('{count} porties zoetigheid', { count: fmtNum(d.sweetsServings) }) : '', nicotine].filter(Boolean).join(' · ');
+    return '<a class="diary-day" href="#/dag/' + k + '"><div class="diary-day-head"><strong>' + fmtDay(k, true) + '</strong><span class="diary-day-kcal">' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('geen dagtotaal')) + '</span></div>' +
+      '<div class="diary-day-section"><span class="diary-day-label">' + tr('Welzijn') + '</span><span class="diary-day-value ' + (wellbeing ? '' : 'muted') + '">' + (wellbeing || tr('Nog geen welzijnsgegevens')) + '</span></div>' +
+      '<div class="diary-day-section"><span class="diary-day-label">' + tr('Gewoontes & lichaam') + '</span><span class="diary-day-value ' + (context ? '' : 'muted') + '">' + (context || tr('Nog geen slaap- of beweeggegevens')) + '</span></div>' +
+      '<span class="diary-day-link">' + tr('Dag bekijken ›') + '</span></a>';
   };
   const recent = keys.slice(0, 7), older = keys.slice(7);
-  h += recent.length ? '<div class="card table diary-days">' + recent.map(dayRow).join('') + '</div>' : '<div class="card muted">' + tr('Je hebt nog geen dagen genoteerd. Begin met één maaltijd, stemming of slaapmoment; je hoeft niet alles in te vullen.') + '</div>';
-  if (older.length) h += '<details class="card diary-older"><summary>' + tr('Eerdere dagen') + ' <span class="muted">(' + older.length + ')</span></summary><div class="table">' + older.map(dayRow).join('') + '</div></details>';
+  h += recent.length ? '<div class="diary-days">' + recent.map(dayRow).join('') + '</div>' : '<div class="card muted">' + tr('Je hebt nog geen dagen genoteerd. Begin met één maaltijd, stemming of slaapmoment; je hoeft niet alles in te vullen.') + '</div>';
+  if (older.length) h += '<details class="card diary-older"><summary>' + tr('Eerdere dagen') + ' <span class="muted">(' + older.length + ')</span></summary><div class="diary-days diary-days-older">' + older.map(dayRow).join('') + '</div></details>';
   view().innerHTML = h;
 }
 ACT.newEntry = () => go('#/checkin/vrij');
@@ -1193,7 +1197,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.3';
+const APP_VERSION = '1.10.4';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

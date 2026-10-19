@@ -279,10 +279,15 @@ details summary{cursor:pointer;font-weight:600}
 .diary-wellbeing p{margin:6px 0;line-height:1.5}
 .diary-older summary{cursor:pointer;font-weight:700;padding:4px}
 .diary-older .table{margin-top:8px}
-.day-line{display:flex;justify-content:space-between;align-items:flex-start;width:100%;gap:8px}
-.day-line>span:first-child{font-weight:700}
-.day-mood{text-align:right;color:var(--lentil);font-size:.83rem;font-weight:650}
-.table .tr .day-kcal{width:100%;font-size:.78rem;color:var(--muted)}
+.diary-days{display:grid;gap:8px;margin:8px 0}
+.diary-day{display:grid;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-decoration:none}
+.diary-day-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.diary-day-kcal{color:var(--accent);font-size:.88rem;font-weight:700;text-align:right}
+.diary-day-section{display:grid;grid-template-columns:94px minmax(0,1fr);gap:8px;align-items:baseline;border-top:1px solid var(--line);padding-top:7px}
+.diary-day-label{color:var(--muted);font-size:.68rem;font-weight:750;letter-spacing:.045em;text-transform:uppercase}
+.diary-day-value{min-width:0;font-size:.82rem;line-height:1.4;overflow-wrap:anywhere}
+.diary-day-link{justify-self:end;color:var(--accent);font-size:.75rem;font-weight:700}
+.diary-days-older{margin-top:12px}
 .evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 8px}
 .evidence-card{margin:6px 0;display:flex;flex-direction:column;align-items:flex-start}
 .evidence-card p{margin:10px 0;line-height:1.55}
