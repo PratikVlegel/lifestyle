@@ -2252,4 +2252,18 @@ for (const [locale, labels] of Object.entries({
     'item': 'Eintrag'
   }
 })) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+for (const [locale, labels] of Object.entries({
+  'nl-BE': {
+    'Deze vergelijkingen zijn verkennend. Je bekijkt meerdere factoren en kleine groepen; verschillen kunnen toevallig zijn. De app test geen statistische zekerheid.': 'Deze vergelijkingen zijn verkennend. Je bekijkt meerdere factoren en kleine groepen; verschillen kunnen toevallig zijn. De app test geen statistische zekerheid.'
+  },
+  'en-GB': {
+    'Deze vergelijkingen zijn verkennend. Je bekijkt meerdere factoren en kleine groepen; verschillen kunnen toevallig zijn. De app test geen statistische zekerheid.': 'These comparisons are exploratory. You are looking at several factors and small groups, so differences may be due to chance. The app does not test statistical significance.'
+  },
+  'fr-FR': {
+    'Deze vergelijkingen zijn verkennend. Je bekijkt meerdere factoren en kleine groepen; verschillen kunnen toevallig zijn. De app test geen statistische zekerheid.': 'Ces comparaisons sont exploratoires. Elles portent sur plusieurs facteurs et de petits groupes ; les différences peuvent être dues au hasard. L’application ne teste pas la significativité statistique.'
+  },
+  'de-DE': {
+    'Deze vergelijkingen zijn verkennend. Je bekijkt meerdere factoren en kleine groepen; verschillen kunnen toevallig zijn. De app test geen statistische zekerheid.': 'Diese Vergleiche sind explorativ. Es werden mehrere Faktoren und kleine Gruppen betrachtet; Unterschiede können zufällig sein. Die App prüft keine statistische Signifikanz.'
+  }
+})) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
 if (currentLocale() === 'nl-BE') applyLocale();
