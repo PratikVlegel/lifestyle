@@ -10,7 +10,7 @@ function moodMedian(values) {
 }
 function moodComparison(title, note, rows, groupA, groupB) {
   const a = rows.filter(x => groupA(x.x)).map(x => x.y), b = rows.filter(x => groupB(x.x)).map(x => x.y);
-  if (a.length < 5 || b.length < 5) return '';
+  if (a.length < 5 || b.length < 5) return '<article class="card mood-factor mood-factor-limited"><div class="mood-factor-head"><h3>' + esc(tr(title)) + '</h3><span class="pill">' + tr('Nog onvoldoende gegevens') + '</span></div><p class="muted small">' + tr('Voor deze vergelijking zijn minstens vijf dagen met een stemming per groep nodig. Geregistreerde dagen:') + ' ' + a.length + ' · ' + b.length + '.</p><p class="muted small">' + esc(tr(note)) + ' ' + tr('Ontbrekende waarden tellen niet als nul.') + '</p></article>';
   const delta = moodMedian(a) - moodMedian(b);
   const direction = Math.abs(delta) < 0.5 ? tr('De middelste stemmingsscore was in beide groepen vergelijkbaar.') : delta > 0 ? tr('De middelste stemmingsscore was hoger in de eerste groep.') : tr('De middelste stemmingsscore was lager in de eerste groep.');
   return '<article class="card mood-factor"><div class="mood-factor-head"><h3>' + esc(tr(title)) + '</h3><span class="pill">' + rows.length + ' ' + tr('dagen') + '</span></div>' +

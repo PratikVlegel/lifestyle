@@ -1146,6 +1146,27 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Alle gedeelde communitycijfers 
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { 'Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.': 'Choose a nickname that other members see with plans and community reviews. This does not share your diary, real name or other health data.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { 'Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.': 'Choisissez un pseudonyme visible avec vos programmes et avis. Cela ne partage pas votre journal, votre vrai nom ni vos autres données de santé.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.': 'Wähle einen Spitznamen, den Mitglieder bei Plänen und Bewertungen sehen. Tagebuch, echter Name und andere Gesundheitsdaten werden dadurch nicht geteilt.' });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  '{period}: {start} tot {end}. Alleen de geselecteerde totaalcijfers en je communitynaam worden gedeeld.': '{period}: {start} to {end}. Only the selected totals and your community name are shared.',
+  'Communitylid niet gevonden.': 'Community member not found.',
+  'Nog onvoldoende gegevens': 'Not enough data yet',
+  'Voor deze vergelijking zijn minstens vijf dagen met een stemming per groep nodig. Geregistreerde dagen:': 'This comparison needs at least five mood-scored days in each group. Logged days:',
+  'Ontbrekende waarden tellen niet als nul.': 'Missing values are not counted as zero.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  '{period}: {start} tot {end}. Alleen de geselecteerde totaalcijfers en je communitynaam worden gedeeld.': '{period} : du {start} au {end}. Seuls les totaux sélectionnés et votre nom de communauté sont partagés.',
+  'Communitylid niet gevonden.': 'Membre de la communauté introuvable.',
+  'Nog onvoldoende gegevens': 'Pas encore assez de données',
+  'Voor deze vergelijking zijn minstens vijf dagen met een stemming per groep nodig. Geregistreerde dagen:': 'Cette comparaison nécessite au moins cinq jours avec une humeur renseignée dans chaque groupe. Jours enregistrés :',
+  'Ontbrekende waarden tellen niet als nul.': 'Les valeurs manquantes ne sont pas comptées comme zéro.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  '{period}: {start} tot {end}. Alleen de geselecteerde totaalcijfers en je communitynaam worden gedeeld.': '{period}: {start} bis {end}. Nur die ausgewählten Summen und dein Community-Name werden geteilt.',
+  'Communitylid niet gevonden.': 'Community-Mitglied nicht gefunden.',
+  'Nog onvoldoende gegevens': 'Noch nicht genügend Daten',
+  'Voor deze vergelijking zijn minstens vijf dagen met een stemming per groep nodig. Geregistreerde dagen:': 'Für diesen Vergleich sind mindestens fünf Tage mit erfasster Stimmung pro Gruppe erforderlich. Erfasste Tage:',
+  'Ontbrekende waarden tellen niet als nul.': 'Fehlende Werte werden nicht als null gezählt.'
+});
 
 function tr(text) {
   const locale = currentLocale();
