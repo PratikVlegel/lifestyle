@@ -74,11 +74,15 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (el.dataset.ci) ciInput(el);
   if (el.dataset.pp) prepInput(el);
+  if (el.dataset.communityFilter === 'recipes') renderCommunityRecipes();
+  if (el.dataset.communityFilter === 'plans') renderTrainingCommunityList();
 });
 document.addEventListener('change', e => {
   const el = e.target;
   if (el.dataset.ci && (el.type === 'checkbox' || el.tagName === 'SELECT')) ciInput(el);
   if (el.dataset.pp && el.tagName === 'SELECT') prepInput(el);
+  if (el.dataset.communityFilter === 'recipes') renderCommunityRecipes();
+  if (el.dataset.communityFilter === 'plans') renderTrainingCommunityList();
   if (el.dataset.chg && ACT[el.dataset.chg]) ACT[el.dataset.chg](el, e);
 });
 
@@ -1197,7 +1201,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.8';
+const APP_VERSION = '1.10.9';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

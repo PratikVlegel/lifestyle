@@ -199,6 +199,7 @@ function renderTrainingHub() {
   view().innerHTML = h;
 }
 let TRAINING_COMMUNITY_CACHE = {};
+let TRAINING_COMMUNITY_ROWS = [];
 function publicTrainingPlan(p) {
   const weeks = (Array.isArray(p.weeks) ? p.weeks : []).slice(0, 24).map((w, i) => ({
     number: i + 1, phase: String(w.phase || '').slice(0, 80), focus: String(w.focus || '').slice(0, 300),
@@ -230,22 +231,40 @@ ACT.shareTrainingPlan = async el => {
 };
 async function renderTrainingCommunity() {
   let h = header('Communityschema’s', 'Ontdek schema’s die leden bewust hebben gedeeld', true);
-  view().innerHTML = h + '<p class="muted">Schema’s laden…</p>';
-  if (!cloudReady() || !DB.settings.member) { view().innerHTML = h + '<div class="card note">Log in als communitylid om gedeelde schema’s te bekijken.</div>'; return; }
-  if (!navigator.onLine) { view().innerHTML = h + '<div class="card note">Gedeelde schema’s laden kan alleen met internet.</div>'; return; }
+  view().innerHTML = h + '<p class="muted">' + tr('Schema’s laden…') + '</p>';
+  if (!cloudReady() || !DB.settings.member) { view().innerHTML = h + '<div class="card note">' + tr('Log in als communitylid om gedeelde schema’s te bekijken.') + '</div>'; return; }
+  if (!navigator.onLine) { view().innerHTML = h + '<div class="card note">' + tr('Gedeelde schema’s laden kan alleen met internet.') + '</div>'; return; }
   try {
     const rows = await sb('/rest/v1/shared_training_plans?select=*&order=created_at.desc&limit=100', {});
     const reviews = rows.length ? await sb('/rest/v1/shared_training_plan_reviews?select=plan_id,rating,comment,created_by,created_at&limit=1000', {}) : [];
     let names = {}; try { names = await fetchCommunityProfiles(rows.map(x => x.created_by).concat(reviews.map(x => x.created_by))); } catch (e) { }
     const current = (cloudUser() || {}).id;
-    const cards = rows.map(r => {
+    TRAINING_COMMUNITY_ROWS = rows.map(r => {
       const rs = reviews.filter(x => x.plan_id === r.id), stats = { n: rs.length, avg: rs.length ? rs.reduce((a, x) => a + x.rating, 0) / rs.length : null };
-      TRAINING_COMMUNITY_CACHE[r.id] = Object.assign({}, r, { authorName: names[r.created_by] || 'Communitylid', reviews: rs.map(x => Object.assign({}, x, { authorName: names[x.created_by] || 'Communitylid', mine: x.created_by === current })) });
-      const weeks = Array.isArray(r.weeks) ? r.weeks.length : 0, sessions = r.weeks?.[0]?.sessions?.length || 0;
-      return '<a class="card plan-community" href="#/train-shared/' + encodeURIComponent(r.id) + '"><div class="plan-head"><b>' + esc(r.title) + '</b><span class="pill">' + weeks + ' weken</span></div><p class="muted small">' + esc(names[r.created_by] || 'Communitylid') + ' · ' + esc(TRAIN_GOALS[r.goal] || r.goal) + ' · ' + esc((TRAIN_LEVELS.find(x => x[0] === r.level) || ['', 'Beginner'])[1]) + ' · ' + sessions + ' trainingsdagen/week</p><p class="small">' + (stats.avg === null ? 'Nog geen beoordelingen' : '★ ' + fmtNum(stats.avg, 1) + '/5 · ' + stats.n + ' beoordeling' + (stats.n === 1 ? '' : 'en')) + '</p><span class="plan-go">Schema bekijken ›</span></a>';
-    }).join('');
-    view().innerHTML = h + (cards || '<div class="card muted">Er zijn nog geen schema’s gedeeld. Deel je eigen schema om de community op gang te brengen.</div>');
-  } catch (e) { view().innerHTML = h + '<div class="card note">Gedeelde schema’s zijn nog niet beschikbaar. Controleer of de communitytabellen op Supabase zijn bijgewerkt. ' + esc(e.message) + '</div>'; }
+      const plan = Object.assign({}, r, { authorName: names[r.created_by] || 'Communitylid', stats, reviews: rs.map(x => Object.assign({}, x, { authorName: names[x.created_by] || 'Communitylid', mine: x.created_by === current })) });
+      TRAINING_COMMUNITY_CACHE[r.id] = plan; return plan;
+    });
+    h += '<div class="card"><label class="fld"><span>' + tr('Zoek op schemanaam of communitynaam') + '</span><input type="search" id="communityPlanSearch" data-community-filter="plans" placeholder="' + tr('Zoek in gedeelde schema’s') + '"></label><div class="grid2"><label class="fld"><span>' + tr('Doel of type') + '</span><select id="communityPlanGoal" data-community-filter="plans"><option value="all">' + tr('Alle doelen') + '</option>' + Object.entries(TRAIN_GOALS).map(([key, label]) => '<option value="' + esc(key) + '">' + esc(tr(label)) + '</option>').join('') + '</select></label><label class="fld"><span>' + tr('Niveau') + '</span><select id="communityPlanLevel" data-community-filter="plans"><option value="all">' + tr('Alle niveaus') + '</option>' + TRAIN_LEVELS.map(([key, label]) => '<option value="' + key + '">' + tr(label) + '</option>').join('') + '</select></label></div><small class="muted">' + tr('Zoekopdracht doorzoekt de nieuwste 100 gedeelde schema’s.') + '</small></div><div id="communityPlanResults"></div>';
+    view().innerHTML = h; renderTrainingCommunityList();
+  } catch (e) { view().innerHTML = h + '<div class="card note">' + tr('Gedeelde schema’s zijn nog niet beschikbaar. Controleer of de communitytabellen op Supabase zijn bijgewerkt.') + ' ' + esc(e.message) + '</div>'; }
+}
+function renderTrainingCommunityList() {
+  const target = document.getElementById('communityPlanResults'); if (!target) return;
+  const needle = ((document.getElementById('communityPlanSearch') || {}).value || '').toLocaleLowerCase().trim();
+  const goal = (document.getElementById('communityPlanGoal') || {}).value || 'all';
+  const level = (document.getElementById('communityPlanLevel') || {}).value || 'all';
+  const rows = TRAINING_COMMUNITY_ROWS.filter(r => {
+    if (needle && !(r.title + ' ' + r.authorName).toLocaleLowerCase().includes(needle)) return false;
+    if (goal !== 'all' && r.goal !== goal) return false;
+    if (level !== 'all' && r.level !== level) return false;
+    return true;
+  });
+  const cards = rows.map(r => {
+    const weeks = Array.isArray(r.weeks) ? r.weeks.length : 0, sessions = r.weeks?.[0]?.sessions?.length || 0, label = TRAIN_LEVELS.find(x => x[0] === r.level)?.[1] || 'Beginner';
+    const review = r.stats.avg === null ? tr('Nog geen beoordelingen') : '★ ' + fmtNum(r.stats.avg, 1) + '/5 · ' + r.stats.n + ' ' + tr(r.stats.n === 1 ? 'beoordeling' : 'beoordelingen');
+    return '<a class="card plan-community" href="#/train-shared/' + encodeURIComponent(r.id) + '"><div class="plan-head"><b>' + esc(r.title) + '</b><span class="pill">' + weeks + ' ' + tr('weken') + '</span></div><p class="muted small">' + esc(r.authorName) + ' · ' + esc(tr(TRAIN_GOALS[r.goal] || r.goal)) + ' · ' + esc(tr(label)) + ' · ' + sessions + ' ' + tr('trainingsdagen/week') + '</p><p class="small">' + review + '</p><span class="plan-go">' + tr('Schema bekijken ›') + '</span></a>';
+  }).join('');
+  target.innerHTML = cards || '<div class="card muted">' + (TRAINING_COMMUNITY_ROWS.length ? tr('Geen schema’s gevonden met deze filters.') : tr('Er zijn nog geen schema’s gedeeld. Deel je eigen schema om de community op gang te brengen.')) + '</div>';
 }
 async function renderSharedTraining(id) {
   let h = header('Communityschema', 'Gedeeld trainingsplan', true);

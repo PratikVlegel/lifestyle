@@ -86,6 +86,7 @@ function prepExtrasHtml(P) {
 
 /* ---------- gedeelde recepten bekijken ---------- */
 let RECIPE_CACHE = {};
+let RECIPE_ROWS = [];
 async function fetchRecipes() {
   const rows = await sb('/rest/v1/shared_preps?select=*&order=created_at.desc&limit=100', {});
   let revs = [];
@@ -142,12 +143,29 @@ async function renderRecipes() {
   view().innerHTML = h + '<p class="muted">' + tr('Laden…') + '</p>';
   if (!navigator.onLine) { view().innerHTML = h + '<p class="note">' + tr('Je bent offline. Gedeelde recepten laden kan alleen met internet.') + '</p>'; return; }
   try {
-    const rows = await fetchRecipes();
-    h += rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' ' + tr('porties') + '</span></div><small class="muted">' + tr('Gedeeld door') + ' ' + esc(r.authorName) + '</small>' +
-      '<div class="macro">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
-      '<small class="muted">' + tr('per portie') + ' · ' + starLine(r.stats) + '</small></a>').join('') : '<p class="card muted">' + tr('Nog geen gedeelde recepten. Deel er zelf een via een mealprep → Deel.') + '</p>';
+    RECIPE_ROWS = await fetchRecipes();
+    h += '<div class="card"><label class="fld"><span>' + tr('Zoek op recept, ingrediënt of communitynaam') + '</span><input type="search" id="communityRecipeSearch" data-community-filter="recipes" placeholder="' + tr('Zoek in gedeelde recepten') + '"></label><label class="fld"><span>' + tr('Energie per portie') + '</span><select id="communityRecipeKcal" data-community-filter="recipes"><option value="all">' + tr('Alle waarden') + '</option><option value="low">' + tr('Minder dan 400 kcal') + '</option><option value="mid">' + tr('400–700 kcal') + '</option><option value="high">' + tr('Meer dan 700 kcal') + '</option></select></label><small class="muted">' + tr('De zoekopdracht doorzoekt de nieuwste 100 gedeelde recepten. Dieetlabels zijn nog niet beschikbaar.') + '</small></div><div id="communityRecipeResults"></div>';
   } catch (e) { h += '<p class="note">' + tr('Laden mislukt: ') + esc(e.message) + '</p>'; }
   view().innerHTML = h;
+  if (RECIPE_ROWS.length) renderCommunityRecipes();
+}
+function renderCommunityRecipes() {
+  const target = document.getElementById('communityRecipeResults'); if (!target) return;
+  const needle = ((document.getElementById('communityRecipeSearch') || {}).value || '').toLocaleLowerCase().trim();
+  const kcalFilter = (document.getElementById('communityRecipeKcal') || {}).value || 'all';
+  const rows = RECIPE_ROWS.filter(r => {
+    const searchable = [r.name, r.authorName, r.note, ...(r.ingredients || []).map(x => x.name)].join(' ').toLocaleLowerCase();
+    if (needle && !searchable.includes(needle)) return false;
+    const rawKcal = r.per && r.per.kcal, kcal = Number(rawKcal);
+    if (kcalFilter !== 'all' && !isNum(rawKcal)) return false;
+    if (kcalFilter === 'low' && kcal >= 400) return false;
+    if (kcalFilter === 'mid' && (kcal < 400 || kcal > 700)) return false;
+    if (kcalFilter === 'high' && kcal <= 700) return false;
+    return true;
+  });
+  target.innerHTML = rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' ' + tr('porties') + '</span></div><small class="muted">' + tr('Gedeeld door') + ' ' + esc(r.authorName) + '</small>' +
+    '<div class="macro">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + tr(NUTR_LABEL[n])) + '</span>').join('') + '</div>' +
+    '<small class="muted">' + tr('per portie') + ' · ' + starLine(r.stats) + '</small></a>').join('') : '<p class="card muted">' + (RECIPE_ROWS.length ? tr('Geen recepten gevonden met deze filters.') : tr('Nog geen gedeelde recepten. Deel er zelf een via een mealprep → Deel.')) + '</p>';
 }
 async function renderRecipe(id) {
   let h = header('Recept', 'Gedeeld via de app', true);
