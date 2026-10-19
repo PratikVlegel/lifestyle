@@ -317,6 +317,10 @@ function validateImportData(obj) {
   };
   const profileRanges = { age: [0, 120], heightCm: [0, 300], startWeight: [0, 500] };
   const goalRanges = { kcal: [0, 15000], protein: [0, 1000], fiber: [0, 1000], waterMl: [0, 30000], stepsMin: [0, 200000], stepsMax: [0, 200000], sleepH: [0, 24], caffeineMax: [0, 100] };
+  for (const [field, limit] of Object.entries({ name: 80, notes: 4000 })) {
+    const value = obj.profile && obj.profile[field];
+    if (value !== undefined && value !== null && (typeof value !== 'string' || value.length > limit)) fail('profiel · ' + field + ' is ongeldig of te lang.');
+  }
   for (const [field, bounds] of Object.entries(profileRanges)) numeric(obj.profile && obj.profile[field], bounds, 'profiel · ' + field);
   for (const [field, bounds] of Object.entries(goalRanges)) numeric(obj.goals && obj.goals[field], bounds, 'doelen · ' + field);
   const integerFields = ['age', 'kcal', 'waterMl', 'stepsMin', 'stepsMax', 'caffeineMax'];

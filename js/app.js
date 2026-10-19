@@ -1240,7 +1240,7 @@ function renderIntake(step) {
       '<label class="fld"><span>' + tr('Geslacht') + '</span><select data-chg="intakeSet" data-p="profile.sex"><option value="m"' + (I.profile.sex === 'm' ? ' selected' : '') + '>' + tr('man') + '</option><option value="v"' + (I.profile.sex === 'v' ? ' selected' : '') + '>' + tr('vrouw') + '</option></select></label>' +
       ifield('profile.age', 'Leeftijd', I.profile.age) + ifield('profile.heightCm', 'Lengte (cm)', I.profile.heightCm) + ifield('weight', 'Gewicht nu (kg, optioneel)', I.weight) +
       '<label class="fld"><span>' + tr('Activiteit') + '</span><select data-chg="intakeSet" data-p="profile.activity">' + [['zittend', 'zittend werk'], ['licht', 'licht actief'], ['matig', 'matig actief'], ['actief', 'zeer actief']].map(([v, l]) => '<option value="' + v + '"' + (I.profile.activity === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label></div>' +
-      '<label class="fld"><span>' + tr('Wat moet de app weten? (medisch, werk, gewoontes, wat je wil bereiken)') + '</span><textarea rows="4" data-chg="intakeSet" data-p="profile.notes" placeholder="' + tr('bv. CPAP voor slaapapneu, bureauwerk, vaak honger \'s avonds') + '">' + esc(I.profile.notes || '') + '</textarea></label></div>' +
+      '<label class="fld"><span>' + tr('Wat moet de app weten? (medisch, werk, gewoontes, wat je wil bereiken)') + '</span><textarea rows="4" maxlength="4000" data-chg="intakeSet" data-p="profile.notes" placeholder="' + tr('bv. CPAP voor slaapapneu, bureauwerk, vaak honger \'s avonds') + '">' + esc(I.profile.notes || '') + '</textarea></label></div>' +
       '<button class="btn big" data-act="intakeGo" data-s="3">' + tr('Verder') + '</button>';
   } else if (step === '3') {
     const bmr = mifflin(I);
@@ -1263,7 +1263,7 @@ function renderIntake(step) {
   view().innerHTML = h;
   if (step === '1') runDiag();
 }
-function ifield(p, l, v, type) { return '<label class="fld"><span>' + tr(l) + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '" value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="intakeSet" data-p="' + p + '"></label>'; }
+function ifield(p, l, v, type) { const max = p === 'profile.name' ? 80 : null; return '<label class="fld"><span>' + tr(l) + '</span><input type="' + (type || 'number') + '" inputmode="' + (type ? 'text' : 'decimal') + '"' + (max ? ' maxlength="' + max + '"' : '') + ' value="' + (v === null || v === undefined ? '' : esc(v)) + '" data-chg="intakeSet" data-p="' + p + '"></label>'; }
 ACT.intakeSet = el => {
   const parts = el.dataset.p.split('.');
   let v = el.value;
@@ -1273,6 +1273,12 @@ ACT.intakeSet = el => {
     if (err) {
       const previous = parts.length === 1 ? INTAKE[parts[0]] : INTAKE[parts[0]][parts[1]];
       el.value = previous ?? ''; toast(err); return;
+    }
+  } else {
+    const limit = el.dataset.p === 'profile.name' ? 80 : el.dataset.p === 'profile.notes' ? 4000 : 0;
+    if (limit && v.length > limit) {
+      el.value = INTAKE[parts[0]][parts[1]] || '';
+      toast(trf('Tekst mag maximaal {count} tekens bevatten.', { count: limit })); return;
     }
   }
   if (parts.length === 1) INTAKE[parts[0]] = v; else INTAKE[parts[0]][parts[1]] = v;
@@ -1310,7 +1316,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.48';
+const APP_VERSION = '1.10.49';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
