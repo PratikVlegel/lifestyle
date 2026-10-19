@@ -1035,7 +1035,7 @@ function renderMore(sub) {
   h += '<div class="card"><h3>' + tr('Herinneringen') + '</h3><p class="muted small">' + tr('Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.') + '</p>';
   h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="' + tr('aan') + '"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" maxlength="80" value="' + esc(reminderDisplayLabel(r.label)) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="' + tr('verwijder') + '">✕</button></div>').join('');
   h += '<button class="btn ghost" data-act="remAdd">' + tr('+ herinnering') + '</button>';
-  h += '<h3>' + tr('Meldingen op je gsm') + '</h3><p class="muted small">' + tr('Als je push inschakelt, bewaart Supabase de pushverbinding van dit toestel, tijdzone, taal en herinneringstijden. Namen en dagboekgegevens blijven lokaal; pushberichten zijn algemeen.') + '</p>' +
+  h += '<h3>' + tr('Meldingen op je gsm') + '</h3><p class="muted small">' + tr('Push gebruikt technische gegevens om herinneringen af te leveren; je dagboek blijft lokaal.') + '</p><details class="push-privacy"><summary>' + tr('Welke pushgegevens bewaart Supabase?') + '</summary><p class="muted small">' + tr('Voor push bewaart Supabase voor dit toestel het browser-eindpunt en technische encryptiesleutels, je tijdzone en app-taal, en de ID’s en tijden van actieve herinneringen. Om dubbele meldingen te voorkomen registreert Supabase ook per herinnering de lokale datum en afleverstatus; statusregels ouder dan 14 dagen worden opgeruimd. Namen, dagboek- en gezondheidsgegevens blijven lokaal; meldingen zijn algemeen.') + '</p></details>' +
     (pushPublicKey() ? (S.pushEnabled ? '<p class="small">' + tr('Push staat aan op dit toestel.') + '</p><button class="btn ghost" data-act="webPushDisable">' + tr('Push uitschakelen') + '</button>' : '<button class="btn" data-act="webPushEnable">' + tr('Push instellen op dit toestel') + '</button>') : '<p class="muted small">' + tr('Webpush wordt nog geconfigureerd. De agenda-export blijft beschikbaar.') + '</p>') +
     '<p class="muted small">' + tr('Pushmeldingen bevatten geen eet-, gezondheids- of dagboekgegevens. De agenda-export is een alternatief wanneer push niet wordt ondersteund.') + '</p>' +
     (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches ? '<p class="muted small">' + tr('Voeg de app toe aan je beginscherm om push op iPhone of iPad te gebruiken.') + '</p>' : '') +
@@ -1353,7 +1353,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.56';
+const APP_VERSION = '1.10.57';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

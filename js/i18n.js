@@ -2200,4 +2200,26 @@ for (const [locale, labels] of Object.entries({
   'de-DE': { 'Log kcal-schatting': 'Geschätzten Aktivitätsverbrauch erfassen' },
   'nl-BE': { 'Log kcal-schatting': 'Kcal-schatting loggen' }
 })) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+for (const [locale, labels] of Object.entries({
+  'nl-BE': {
+    'Push gebruikt technische gegevens om herinneringen af te leveren; je dagboek blijft lokaal.': 'Push gebruikt technische gegevens om herinneringen af te leveren; je dagboek blijft lokaal.',
+    'Welke pushgegevens bewaart Supabase?': 'Welke pushgegevens bewaart Supabase?',
+    'Voor push bewaart Supabase voor dit toestel het browser-eindpunt en technische encryptiesleutels, je tijdzone en app-taal, en de ID’s en tijden van actieve herinneringen. Om dubbele meldingen te voorkomen registreert Supabase ook per herinnering de lokale datum en afleverstatus; statusregels ouder dan 14 dagen worden opgeruimd. Namen, dagboek- en gezondheidsgegevens blijven lokaal; meldingen zijn algemeen.': 'Voor push bewaart Supabase voor dit toestel het browser-eindpunt en technische encryptiesleutels, je tijdzone en app-taal, en de ID’s en tijden van actieve herinneringen. Om dubbele meldingen te voorkomen registreert Supabase ook per herinnering de lokale datum en afleverstatus; statusregels ouder dan 14 dagen worden opgeruimd. Namen, dagboek- en gezondheidsgegevens blijven lokaal; meldingen zijn algemeen.'
+  },
+  'en-GB': {
+    'Push gebruikt technische gegevens om herinneringen af te leveren; je dagboek blijft lokaal.': 'Push uses technical data to deliver reminders; your diary stays on this device.',
+    'Welke pushgegevens bewaart Supabase?': 'Which push data does Supabase store?',
+    'Voor push bewaart Supabase voor dit toestel het browser-eindpunt en technische encryptiesleutels, je tijdzone en app-taal, en de ID’s en tijden van actieve herinneringen. Om dubbele meldingen te voorkomen registreert Supabase ook per herinnering de lokale datum en afleverstatus; statusregels ouder dan 14 dagen worden opgeruimd. Namen, dagboek- en gezondheidsgegevens blijven lokaal; meldingen zijn algemeen.': 'For push, Supabase stores this device’s browser endpoint and technical encryption keys, time zone and app language, plus the IDs and times of active reminders. To prevent duplicate notifications, it also records each reminder’s local date and delivery status; status records older than 14 days are deleted. Names, diary and health data stay on this device; notifications are generic.'
+  },
+  'fr-FR': {
+    'Push gebruikt technische gegevens om herinneringen af te leveren; je dagboek blijft lokaal.': 'Les notifications push utilisent des données techniques pour être envoyées ; votre journal reste sur cet appareil.',
+    'Welke pushgegevens bewaart Supabase?': 'Quelles données de notification push Supabase conserve-t-il ?',
+    'Voor push bewaart Supabase voor dit toestel het browser-eindpunt en technische encryptiesleutels, je tijdzone en app-taal, en de ID’s en tijden van actieve herinneringen. Om dubbele meldingen te voorkomen registreert Supabase ook per herinnering de lokale datum en afleverstatus; statusregels ouder dan 14 dagen worden opgeruimd. Namen, dagboek- en gezondheidsgegevens blijven lokaal; meldingen zijn algemeen.': 'Pour les notifications push, Supabase conserve le point de terminaison du navigateur et les clés de chiffrement techniques de cet appareil, le fuseau horaire et la langue de l’application, ainsi que les identifiants et horaires des rappels actifs. Pour éviter les doublons, Supabase enregistre aussi la date locale et l’état de livraison de chaque rappel ; ces états sont supprimés après 14 jours. Les noms, le journal et les données de santé restent sur cet appareil ; les notifications sont générales.'
+  },
+  'de-DE': {
+    'Push gebruikt technische gegevens om herinneringen af te leveren; je dagboek blijft lokaal.': 'Push verwendet technische Daten zur Zustellung von Erinnerungen; dein Tagebuch bleibt auf diesem Gerät.',
+    'Welke pushgegevens bewaart Supabase?': 'Welche Push-Daten speichert Supabase?',
+    'Voor push bewaart Supabase voor dit toestel het browser-eindpunt en technische encryptiesleutels, je tijdzone en app-taal, en de ID’s en tijden van actieve herinneringen. Om dubbele meldingen te voorkomen registreert Supabase ook per herinnering de lokale datum en afleverstatus; statusregels ouder dan 14 dagen worden opgeruimd. Namen, dagboek- en gezondheidsgegevens blijven lokaal; meldingen zijn algemeen.': 'Für Push speichert Supabase den Browser-Endpunkt und technische Verschlüsselungsschlüssel dieses Geräts, Zeitzone und App-Sprache sowie IDs und Uhrzeiten aktiver Erinnerungen. Um doppelte Mitteilungen zu vermeiden, speichert Supabase außerdem das lokale Datum und den Zustellstatus je Erinnerung; Statusdatensätze älter als 14 Tage werden gelöscht. Namen, Tagebuch- und Gesundheitsdaten bleiben auf diesem Gerät; Mitteilungen sind allgemein gehalten.'
+  }
+})) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
 if (currentLocale() === 'nl-BE') applyLocale();
