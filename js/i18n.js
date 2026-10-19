@@ -1365,3 +1365,33 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Boven je ingestelde cafeïnegrens': 'Über deinem gewählten Koffeinlimit', 'Binnen je ingestelde cafeïnegrens': 'Innerhalb deines gewählten Koffeinlimits', 'Porties zijn zelf geregistreerd en meten geen cafeïnedosis of tijdstip. Deze vergelijking beschrijft alleen samen voorkomen en geen effect.': 'Portionen sind selbst erfasst und messen weder Koffeindosis noch Zeitpunkt. Dieser Vergleich beschreibt nur ein gemeinsames Auftreten, keine Wirkung.',
   'API-sleutel': 'API-Schlüssel', 'Model': 'Modell', 'man': 'Männlich'
 });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Pushherinnering bijwerken mislukt. Je agenda-export blijft beschikbaar.': 'Could not update the push reminder. Calendar export is still available.',
+  'Push is niet beschikbaar in deze browser. Gebruik de agenda-export als alternatief.': 'Push is not available in this browser. Use calendar export instead.',
+  'Push wordt nog geconfigureerd. De agenda-export blijft beschikbaar.': 'Push is still being configured. Calendar export is available.',
+  'Meldingen zijn geblokkeerd in je browserinstellingen.': 'Notifications are blocked in your browser settings.',
+  'Je hebt geen toestemming gegeven voor pushmeldingen.': 'You did not allow push notifications.',
+  'Pushherinneringen staan aan op dit toestel.': 'Push reminders are enabled on this device.',
+  'Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.': 'Could not set up push. Your existing calendar export is still available.',
+  'Pushherinneringen zijn uitgeschakeld.': 'Push reminders are disabled.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Pushherinnering bijwerken mislukt. Je agenda-export blijft beschikbaar.': 'Impossible de mettre à jour le rappel push. L’export du calendrier reste disponible.',
+  'Push is niet beschikbaar in deze browser. Gebruik de agenda-export als alternatief.': 'Les notifications push ne sont pas disponibles dans ce navigateur. Utilisez l’export du calendrier.',
+  'Push wordt nog geconfigureerd. De agenda-export blijft beschikbaar.': 'Les notifications push sont en cours de configuration. L’export du calendrier reste disponible.',
+  'Meldingen zijn geblokkeerd in je browserinstellingen.': 'Les notifications sont bloquées dans les paramètres de votre navigateur.',
+  'Je hebt geen toestemming gegeven voor pushmeldingen.': 'Vous n’avez pas autorisé les notifications push.',
+  'Pushherinneringen staan aan op dit toestel.': 'Les rappels push sont activés sur cet appareil.',
+  'Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.': 'Impossible de configurer les notifications push. Votre export du calendrier reste disponible.',
+  'Pushherinneringen zijn uitgeschakeld.': 'Les rappels push sont désactivés.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Pushherinnering bijwerken mislukt. Je agenda-export blijft beschikbaar.': 'Die Push-Erinnerung konnte nicht aktualisiert werden. Der Kalenderexport ist weiterhin verfügbar.',
+  'Push is niet beschikbaar in deze browser. Gebruik de agenda-export als alternatief.': 'Push ist in diesem Browser nicht verfügbar. Verwende stattdessen den Kalenderexport.',
+  'Push wordt nog geconfigureerd. De agenda-export blijft beschikbaar.': 'Push wird noch eingerichtet. Der Kalenderexport ist weiterhin verfügbar.',
+  'Meldingen zijn geblokkeerd in je browserinstellingen.': 'Benachrichtigungen sind in den Browsereinstellungen blockiert.',
+  'Je hebt geen toestemming gegeven voor pushmeldingen.': 'Du hast Push-Benachrichtigungen nicht erlaubt.',
+  'Pushherinneringen staan aan op dit toestel.': 'Push-Erinnerungen sind auf diesem Gerät aktiviert.',
+  'Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.': 'Push konnte nicht eingerichtet werden. Dein bisheriger Kalenderexport ist weiterhin verfügbar.',
+  'Pushherinneringen zijn uitgeschakeld.': 'Push-Erinnerungen sind deaktiviert.'
+});

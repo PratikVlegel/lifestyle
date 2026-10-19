@@ -38,25 +38,25 @@ async function refreshWebPushSchedule(quiet) {
     const subscription = await registration.pushManager.getSubscription();
     if (!subscription) { DB.settings.pushEnabled = false; save(); return; }
     await persistWebPushSubscription(subscription);
-  } catch (e) { if (!quiet) toast('Pushherinnering bijwerken mislukt. Je agenda-export blijft beschikbaar.'); console.warn('push schedule sync failed', e); }
+  } catch (e) { if (!quiet) toast(tr('Pushherinnering bijwerken mislukt. Je agenda-export blijft beschikbaar.')); console.warn('push schedule sync failed', e); }
 }
 ACT.webPushEnable = async () => {
-  if (!webPushSupported()) return toast('Push is niet beschikbaar in deze browser. Gebruik de agenda-export als alternatief.');
-  if (!pushPublicKey()) return toast('Push wordt nog geconfigureerd. De agenda-export blijft beschikbaar.');
-  if (Notification.permission === 'denied') return toast('Meldingen zijn geblokkeerd in je browserinstellingen.');
+  if (!webPushSupported()) return toast(tr('Push is niet beschikbaar in deze browser. Gebruik de agenda-export als alternatief.'));
+  if (!pushPublicKey()) return toast(tr('Push wordt nog geconfigureerd. De agenda-export blijft beschikbaar.'));
+  if (Notification.permission === 'denied') return toast(tr('Meldingen zijn geblokkeerd in je browserinstellingen.'));
   let subscription = null;
   try {
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return toast('Je hebt geen toestemming gegeven voor pushmeldingen.');
+    if (permission !== 'granted') return toast(tr('Je hebt geen toestemming gegeven voor pushmeldingen.'));
     const registration = await navigator.serviceWorker.ready;
     subscription = await registration.pushManager.getSubscription();
     if (!subscription) subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidBytes(pushPublicKey()) });
     await persistWebPushSubscription(subscription);
-    DB.settings.pushEnabled = true; save(); toast('Pushherinneringen staan aan op dit toestel.'); render();
+    DB.settings.pushEnabled = true; save(); toast(tr('Pushherinneringen staan aan op dit toestel.')); render();
   } catch (e) {
     if (subscription) { try { await subscription.unsubscribe(); } catch (_) { } }
     DB.settings.pushEnabled = false; save();
-    toast('Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.');
+    toast(tr('Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.'));
     console.warn('push opt-in failed', e);
   }
 };
@@ -69,5 +69,5 @@ ACT.webPushDisable = async () => {
     }
     if (subscription) await subscription.unsubscribe();
   } catch (e) { console.warn('push unsubscribe cleanup failed', e); }
-  DB.settings.pushEnabled = false; save(); toast('Pushherinneringen zijn uitgeschakeld.'); render();
+  DB.settings.pushEnabled = false; save(); toast(tr('Pushherinneringen zijn uitgeschakeld.')); render();
 };
