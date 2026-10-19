@@ -26,7 +26,7 @@ function defaultData() {
       { id: 'r3', label: 'Avondeten', time: '19:00', kind: 'avond', on: true },
       { id: 'r4', label: 'Dagopname', time: '21:00', kind: 'dag', on: true }
     ],
-    settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, glassMl: 250, theme: 'auto', moodInsights: false, communityName: '' },
+    settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, glassMl: 250, theme: 'auto', moodInsights: false, communityName: '', language: 'nl-BE' },
     training: { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, rehabCleared: false, generated: null, plans: [], activePlanId: null },
     days: {},
     preps: [],
@@ -77,8 +77,8 @@ const WD = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 
 const MO = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
 function fmtDay(k, long) {
   const d = parseKey(k);
-  const s = d.getDate() + ' ' + MO[d.getMonth()];
-  return long ? WD[d.getDay()] + ' ' + s : s;
+  const options = long ? { weekday: 'long', day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short' };
+  return d.toLocaleDateString(currentLocale(), options);
 }
 function nowTime() { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4); }
@@ -132,7 +132,7 @@ function metricSeries(key, endKey, n) {
 function avg(arr) { const a = arr.filter(isNum); return a.length ? a.reduce((s, x) => s + x, 0) / a.length : null; }
 function fmtNum(v, dec) {
   if (!isNum(v)) return '–';
-  return v.toLocaleString('nl-BE', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 });
+  return v.toLocaleString(currentLocale(), { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 });
 }
 
 /* Laatste volledige dag: vandaag pas na de dagopname, anders gisteren. */

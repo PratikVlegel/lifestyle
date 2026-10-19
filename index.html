@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl-BE">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -217,12 +217,15 @@ details summary{cursor:pointer;font-weight:600}
 .plan-home .plan-head b{margin-left:auto;text-align:right}
 .plan-go{display:block;color:var(--accent);font-weight:700;margin-top:8px}
 .plan-draft .link{display:block;text-align:center;margin:6px auto 0}
-.exercise-row{display:grid;grid-template-columns:minmax(0,1fr) 66px 76px 78px 40px;gap:6px;align-items:end;border-top:1px solid var(--line);padding:8px 0}
-.exercise-row .fld{margin:0;min-width:0}
-.exercise-row input{min-width:0;padding:8px 6px}
+.exercise-editor{display:grid;gap:8px;border-top:1px solid var(--line);padding:10px 0}
+.exercise-editor .fld{margin:0;min-width:0}
+.exercise-name-row{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:8px;align-items:end}
+.exercise-load-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end}
+.exercise-editor input{min-width:0;padding:9px 8px}
+.exercise-editor .fld>span{font-size:.76rem}
 .custom-days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .plan-community{border-left:4px solid var(--lentil)}
-@media(max-width:430px){.exercise-row{grid-template-columns:minmax(0,1fr) 58px 64px 68px 36px;gap:4px}.exercise-row input{font-size:.82rem;padding:7px 4px}.exercise-row .fld>span{font-size:.7rem}}
+@media(max-width:430px){.exercise-editor{gap:7px}.exercise-name-row{grid-template-columns:minmax(0,1fr) 36px;gap:6px}.exercise-load-row{gap:6px}.exercise-editor input{font-size:.9rem;padding:8px 6px}.exercise-editor .fld>span{font-size:.7rem}}
 .datepick{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;min-height:44px}
 .datepick input{position:absolute;inset:0;width:100%;height:100%;min-height:44px;opacity:0;padding:0;border:0;cursor:pointer}
 .diary-wellbeing{border-left:4px solid var(--lentil);text-decoration:none;color:inherit}
@@ -274,20 +277,21 @@ nav.tabs a.on{color:var(--accent)}
 </style>
 </head>
 <body>
-<div id="offline" hidden>Offline · alles werkt, behalve AI en barcode opzoeken</div>
+<div id="offline" hidden data-t="Offline · alles werkt, behalve AI en barcode opzoeken">Offline · alles werkt, behalve AI en barcode opzoeken</div>
 <main id="view"></main>
-<nav class="tabs" aria-label="Hoofdmenu">
-  <a href="#/" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Vandaag</a>
-  <a href="#/dagboek" data-tab="dagboek"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/></svg>Dagboek</a>
-  <a href="#/preps" data-tab="preps"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M8 8V5h8v3"/></svg>Mealprep</a>
-  <a href="#/inzicht" data-tab="inzicht"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Inzicht</a>
-  <a href="#/schemas" data-tab="schemas"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="18" cy="19" r="2"/></svg>Schema's</a>
-  <a href="#/meer" data-tab="meer"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Meer</a>
+<nav class="tabs" aria-label="Hoofdmenu" data-t-aria="Hoofdmenu">
+  <a href="#/" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span data-t="Vandaag">Vandaag</span></a>
+  <a href="#/dagboek" data-tab="dagboek"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/></svg><span data-t="Dagboek">Dagboek</span></a>
+  <a href="#/preps" data-tab="preps"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18M8 8V5h8v3"/></svg><span data-t="Mealprep">Mealprep</span></a>
+  <a href="#/inzicht" data-tab="inzicht"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span data-t="Inzicht">Inzicht</span></a>
+  <a href="#/schemas" data-tab="schemas"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="18" cy="19" r="2"/></svg><span data-t="Schema's">Schema's</span></a>
+  <a href="#/meer" data-tab="meer"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span data-t="Meer">Meer</span></a>
 </nav>
 <div id="sheet" hidden><div class="sheet-in"></div></div>
 <div id="toast" hidden role="status"></div>
 <script src="js/config.js"></script>
 <script src="js/store.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/migrate.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/insights.js"></script>

@@ -79,8 +79,8 @@ function toast(msg) {
   clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 2600);
 }
 function header(title, sub, back) {
-  return '<header class="top">' + (back ? '<button class="iconbtn" data-act="back" aria-label="Terug">‹</button>' : '') +
-    '<div><h1>' + esc(title) + '</h1>' + (sub ? '<p class="muted">' + esc(sub) + '</p>' : '') + '</div></header>';
+  return '<header class="top">' + (back ? '<button class="iconbtn" data-act="back" aria-label="' + esc(tr('Terug')) + '">‹</button>' : '') +
+    '<div><h1>' + esc(tr(title)) + '</h1>' + (sub ? '<p class="muted">' + esc(tr(sub)) + '</p>' : '') + '</div></header>';
 }
 
 /* ================= home ================= */
@@ -91,18 +91,18 @@ function renderHome() {
   const st = reminderStatus(k);
   let h = header('Vandaag', fmtDay(k, true));
   if (due) {
-    h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">Check-in klaar</span><span class="due-l">' + esc(due.label) + ' · ' + due.time + '</span><span class="due-go">Invullen ›</span></button>';
+    h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(due.label) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
   }
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(x.r.label) + '</button>').join('') + '</div>';
   h += weekCard();
   h += activeTrainingHomeCard();
   h += moodHomeCard();
   h += feedbackCard();
-  h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">+ eten</button><button class="btn ghost" data-act="quickAct">+ activiteit</button><button class="btn ghost" data-act="quickWater">+ glas water</button><button class="btn ghost" data-act="quickCoffee">+ koffie</button></div>';
-  h += '<h2 class="sec">Kerncijfers</h2><div class="kpis">' + KPI_ORDER.map(kpiTile).join('') + '</div>';
+  h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
+  h += '<h2 class="sec">' + tr('Kerncijfers') + '</h2><div class="kpis">' + KPI_ORDER.map(kpiTile).join('') + '</div>';
   const day = getDay(k);
-  h += '<h2 class="sec">Gegeten vandaag</h2>' + mealsList(day, k, false);
-  h += '<div class="card tip"><b>Tip van de dag</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
+  h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
+  h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
   view().innerHTML = h;
 }
 function kpiTile(key) {
@@ -110,10 +110,10 @@ function kpiTile(key) {
   const k = todayKey();
   const ser = metricSeries(key, k, 14);
   const evening = ['steps', 'burn', 'sleep', 'mood', 'energy'].includes(key);
-  let cur = ser[ser.length - 1], when = 'vandaag';
+  let cur = ser[ser.length - 1], when = tr('vandaag');
   if (!isNum(cur.v) && (evening || key === 'weight')) {
     const last = [...ser].reverse().find(x => isNum(x.v));
-    if (last) { cur = last; when = last.k === addDays(k, -1) ? 'gisteren' : fmtDay(last.k); }
+    if (last) { cur = last; when = last.k === addDays(k, -1) ? tr('gisteren') : fmtDay(last.k); }
   }
   const a7 = avg(statVals(key, metricSeries(key, completeKey(), 7)));
   const goal = M.goal ? M.goal() : null;
@@ -124,11 +124,11 @@ function kpiTile(key) {
   }
   const val = isNum(cur.v) ? (cur.lb ? '≥ ' : '') + fmtNum(cur.v, M.dec) : '–';
   return '<button class="kpi" data-act="openKpi" data-k="' + key + '">' +
-    '<span class="kl">' + M.label + '</span>' +
+    '<span class="kl">' + tr(M.label) + '</span>' +
     '<span class="kv">' + val + '<small> ' + M.unit + '</small></span>' +
-    '<span class="ks">' + (isNum(cur.v) ? when : 'nog niets') + (goal ? ' · doel ' + fmtNum(goal, M.dec) + (M.goal2 ? '–' + fmtNum(M.goal2(), 0) : '') : '') + '</span>' + bar +
+    '<span class="ks">' + (isNum(cur.v) ? when : tr('nog niets')) + (goal ? ' · ' + tr('doel') + ' ' + fmtNum(goal, M.dec) + (M.goal2 ? '–' + fmtNum(M.goal2(), 0) : '') : '') + '</span>' + bar +
     sparkline(ser, M.chart) +
-    '<span class="ks">7 d gem. ' + fmtNum(a7, M.dec) + '</span></button>';
+    '<span class="ks">' + tr('7 d gem.') + ' ' + fmtNum(a7, M.dec) + '</span></button>';
 }
 ACT.openKpi = el => go('#/kpi/' + el.dataset.k);
 ACT.openCheckin = el => go('#/checkin/' + el.dataset.id);
@@ -147,21 +147,21 @@ function slotForNow() {
 }
 
 function mealsList(day, k, editable) {
-  if (!day || !(day.meals || []).length) return '<p class="muted card">Nog niets genoteerd.</p>';
+  if (!day || !(day.meals || []).length) return '<p class="muted card">' + tr('Nog niets genoteerd.') + '</p>';
   let h = '<div class="card list">';
   for (const s of SLOT_ORDER) {
     const ms = day.meals.filter(m => m.slot === s);
     if (!ms.length) continue;
     h += '<div class="slot"><div class="slot-h">' + SLOTS[s] + '</div>';
     for (const m of ms) {
-      h += '<div class="meal"><div class="mt">' + (m.time ? '<span class="tm">' + esc(m.time) + '</span>' : '') + (m.nothing ? '<em>niets gegeten</em>' : esc(m.desc)) + '</div>' +
+      h += '<div class="meal"><div class="mt">' + (m.time ? '<span class="tm">' + esc(m.time) + '</span>' : '') + (m.nothing ? '<em>' + tr('niets gegeten') + '</em>' : esc(m.desc)) + '</div>' +
         '<div class="mn">' + (m.nothing ? '' : nutrLine(m)) + '</div>' +
-        (editable ? '<div class="ma"><button class="link" data-act="editMeal" data-k="' + k + '" data-id="' + m.id + '">Wijzig</button><button class="link danger" data-act="delMeal" data-k="' + k + '" data-id="' + m.id + '">Verwijder</button></div>' : '') + '</div>';
+        (editable ? '<div class="ma"><button class="link" data-act="editMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Wijzig') + '</button><button class="link danger" data-act="delMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Verwijder') + '</button></div>' : '') + '</div>';
     }
     h += '</div>';
   }
   const kc = dayNutr(day, 'kcal');
-  if (kc) h += '<div class="total">Totaal ' + (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' + (day.kcalOverride ? ' (dagschatting)' : '') + '</div>';
+  if (kc) h += '<div class="total">' + tr('Totaal') + ' ' + (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' + (day.kcalOverride ? ' ' + tr('(schatting)') : '') + '</div>';
   return h + '</div>';
 }
 function nutrLine(m) {
@@ -541,17 +541,17 @@ ACT.pickNewFood = () => openFoodEditor(null, food => backToPicker('Bewaard: ' + 
 function renderDays() {
   const keys = Object.keys(DB.days).sort().reverse();
   let h = header('Dagboek', keys.length + ' dagen geregistreerd');
-  h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">+ Iets noteren</button><label class="btn ghost datepick">Andere dag<input type="date" id="pdate" aria-label="Kies een dag" data-chg="openDate"></label></div>';
-  h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">Welzijn</span><h3>Hoe is het met je, los van de cijfers?</h3><p class="small">Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.</p><span class="plan-go">Stemming en gewoontes bekijken ›</span></a>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><label class="btn ghost datepick">' + tr('Andere dag') + '<input type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" data-chg="openDate"></label></div>';
+  h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">' + tr('Welzijn') + '</span><h3>' + tr('Hoe is het met je, los van de cijfers?') + '</h3><p class="small">' + tr('Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.') + '</p><span class="plan-go">' + tr('Stemming en gewoontes bekijken ›') + '</span></a>';
   const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
-    const wellbeing = [isNum(d.mood) ? 'Stemming ' + d.mood + '/10' : '', isNum(d.energy) ? 'energie ' + d.energy + '/10' : '', isNum(d.stress) ? 'spanning ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
-    const context = [isNum(d.sleepH) ? d.sleepH + ' u slaap' : '', isNum(d.steps) ? fmtNum(d.steps) + ' stappen' : '', isNum(d.alcohol) && d.alcohol > 0 ? d.alcohol + ' glazen alcohol' : '', isNum(d.weight) ? d.weight + ' kg' : ''].filter(Boolean).join(' · ');
-    return '<a class="tr day" href="#/dag/' + k + '"><div class="day-line"><span>' + fmtDay(k, true) + '</span><span class="day-mood">' + (wellbeing || 'Geen stemming ingevuld') + '</span></div><small>' + (context || 'Nog geen slaap- of beweeggegevens') + '</small><span class="day-kcal">Voeding: ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal (schatting)' : 'geen dagtotaal') + '</span></a>';
+    const wellbeing = [isNum(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isNum(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isNum(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
+    const context = [isNum(d.sleepH) ? d.sleepH + ' ' + tr('u slaap') : '', isNum(d.steps) ? fmtNum(d.steps) + ' ' + tr('stappen') : '', isNum(d.alcohol) && d.alcohol > 0 ? d.alcohol + ' ' + tr('glazen alcohol') : '', isNum(d.weight) ? d.weight + ' kg' : ''].filter(Boolean).join(' · ');
+    return '<a class="tr day" href="#/dag/' + k + '"><div class="day-line"><span>' + fmtDay(k, true) + '</span><span class="day-mood">' + (wellbeing || tr('Geen stemming ingevuld')) + '</span></div><small>' + (context || tr('Nog geen slaap- of beweeggegevens')) + '</small><span class="day-kcal">' + tr('Voeding:') + ' ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal ' + tr('(schatting)') : tr('geen dagtotaal')) + '</span></a>';
   };
   const recent = keys.slice(0, 7), older = keys.slice(7);
-  h += recent.length ? '<div class="card table diary-days">' + recent.map(dayRow).join('') + '</div>' : '<div class="card muted">Je hebt nog geen dagen genoteerd. Begin met één maaltijd, stemming of slaapmoment; je hoeft niet alles in te vullen.</div>';
-  if (older.length) h += '<details class="card diary-older"><summary>Eerdere dagen <span class="muted">(' + older.length + ')</span></summary><div class="table">' + older.map(dayRow).join('') + '</div></details>';
+  h += recent.length ? '<div class="card table diary-days">' + recent.map(dayRow).join('') + '</div>' : '<div class="card muted">' + tr('Je hebt nog geen dagen genoteerd. Begin met één maaltijd, stemming of slaapmoment; je hoeft niet alles in te vullen.') + '</div>';
+  if (older.length) h += '<details class="card diary-older"><summary>' + tr('Eerdere dagen') + ' <span class="muted">(' + older.length + ')</span></summary><div class="table">' + older.map(dayRow).join('') + '</div></details>';
   view().innerHTML = h;
 }
 ACT.newEntry = () => go('#/checkin/vrij');
@@ -563,15 +563,15 @@ function renderDay(k) {
   h += mealsList(d, k, true);
   h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + SLOTS[s].toLowerCase() + '</button>').join('') + '</div>';
   const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow"><input type="' + (step === 'text' ? 'text' : 'number') + '" inputmode="decimal" step="' + (step || 'any') + '" data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">' + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
-  h += '<div class="card"><h3>Beweging</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">+ activiteit</button></div>';
-  h += '<div class="card"><h3>Cijfers</h3><p class="muted small">"?" = onbekend. Slaap = de nacht ervóór.</p><div class="grid2">' +
-    f('weight', 'Gewicht', 'kg', '0.1') + f('sleepH', 'Slaap', 'u', '0.25') + f('energy', 'Energie', '/10', '1') + f('mood', 'Stemming', '/10', '1') + f('stress', 'Stress / spanning', '/10', '1') +
-    f('steps', 'Stappen', '', '1') + f('waterMl', 'Water', 'l', '0.25') + f('caffeine', 'Cafeïne', 'shots', '1') + f('alcohol', 'Alcohol', 'glazen', '1') + '</div>' +
+  h += '<div class="card"><h3>' + tr('Beweging') + '</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">' + tr('+ activiteit') + '</button></div>';
+  h += '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
+    f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('energy', tr('Energie'), '/10', '1') + f('mood', tr('Stemming'), '/10', '1') + f('stress', tr('Stress / spanning'), '/10', '1') +
+    f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
     f('cpap', 'CPAP', '', 'text') + f('vape', 'Vapen', '', 'text') + f('moodNote', 'Waarom zo (stemming)', '', 'text') + f('notes', 'Notitie', '', 'text') +
     (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
-    '<button class="btn" data-act="saveDay" data-k="' + k + '">Cijfers bewaren</button></div>';
+    '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">Check-ins gedaan: ' + DB.reminders.filter(r => d.done[r.id]).map(r => r.label).join(', ') + '</p>';
-  h += '<button class="link danger" data-act="delDay" data-k="' + k + '">Hele dag verwijderen</button>';
+  h += '<button class="link danger" data-act="delDay" data-k="' + k + '">' + tr('Hele dag verwijderen') + '</button>';
   view().innerHTML = h;
 }
 ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }); save(); render(); });
@@ -770,7 +770,7 @@ async function shareText(txt, title) {
 
 /* ================= inzicht ================= */
 function aiDataDisclosure() {
-  return 'Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.';
+  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.');
 }
 function insightCard(i) {
   return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + i.cat + '</span>' + (i.isNew ? '<span class="tag new">nieuw</span>' : '') + '<b>' + esc(i.title) + '</b></div><p>' + esc(i.text).replace(/\n/g, '<br>') + '</p><small class="muted">Op basis van ' + esc(i.evidence) + '</small></div>';
@@ -825,38 +825,40 @@ function mdLite(t) {
 /* ================= meer / instellingen ================= */
 function renderMore(sub) {
   let h = header('Meer', '');
-  if (DB.settings.admin) h += '<a class="card fb wk" href="#/uitnodigen"><b>Vrienden uitnodigen</b><p class="small">Maak een persoonlijke code en stuur de uitnodiging meteen door.</p></a>';
+  const lang = currentLocale();
+  h += '<div class="card"><h3>' + tr('Taal (vertaling in opbouw)') + '</h3><p class="muted small">' + tr('De taalkeuze wordt bewaard op dit toestel. Sommige schermen zijn nog niet vertaald.') + '</p><label class="fld"><span>' + tr('Taal') + '</span><select data-chg="language"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>';
+  if (DB.settings.admin) h += '<a class="card fb wk" href="#/uitnodigen"><b>' + tr('Vrienden uitnodigen') + '</b><p class="small">' + tr('Maak een persoonlijke code en stuur de uitnodiging meteen door.') + '</p></a>';
   const G = DB.goals, P = DB.profile, S = DB.settings;
-  h += '<a class="card" href="#/inzicht"><b>Inzicht en advies</b><p class="small">Persoonlijke patronen, onderbouwde acties en weekrapport.</p></a>';
-  h += '<div class="card"><h3>Herinneringen</h3><p class="muted small">Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.</p>';
+  h += '<a class="card" href="#/inzicht"><b>' + tr('Inzicht en advies') + '</b><p class="small">' + tr('Persoonlijke patronen, onderbouwde acties en weekrapport.') + '</p></a>';
+  h += '<div class="card"><h3>' + tr('Herinneringen') + '</h3><p class="muted small">' + tr('Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.') + '</p>';
   h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="aan"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(r.label) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="verwijder">✕</button></div>').join('');
-  h += '<button class="btn ghost" data-act="remAdd">+ herinnering</button>';
-  h += '<h3>Meldingen op je gsm</h3><p class="muted small">Een web-app kan geen meldingen inplannen terwijl hij dicht is. Daarom twee betrouwbare manieren die ook offline werken:</p>' +
-    '<ol class="small"><li><b>Agenda (aanbevolen):</b> download het agendabestand en importeer het in Google Agenda of Samsung Agenda. Elke herinnering geeft een melding met een link die meteen de juiste check-in opent.</li><li><b>Wekker:</b> zet per herinnering een terugkerende wekker in je Klok-app.</li></ol>' +
-    '<div class="inrow"><button class="btn" data-act="ics">Download agendabestand (.ics)</button></div>' +
-    (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '<p class="muted small">iPhone: open het gedownloade bestand en tik op "Voeg alles toe" om de herinneringen in Agenda te zetten.</p>' : '<div class="chips">' + DB.reminders.filter(r => r.on).map(r => '<a class="chip" href="' + alarmIntent(r) + '">⏰ ' + r.time + '</a>').join('') + '</div>') +
-    '<label class="fld"><span>Adres van deze app (voor de links in de agenda)</span><input type="url" value="' + esc(S.appUrl || appBase()) + '" data-chg="setAppUrl"></label>' +
-    '<label class="toggle"><input type="checkbox" ' + (S.notify ? 'checked' : '') + ' data-chg="setNotify"> Ook meldingen geven zolang de app open staat</label></div>';
+  h += '<button class="btn ghost" data-act="remAdd">' + tr('+ herinnering') + '</button>';
+  h += '<h3>' + tr('Meldingen op je gsm') + '</h3><p class="muted small">' + tr('Een web-app kan geen meldingen inplannen terwijl hij dicht is. Daarom twee betrouwbare manieren die ook offline werken:') + '</p>' +
+    '<ol class="small"><li><b>' + tr('Agenda (aanbevolen):') + '</b> ' + tr('download het agendabestand en importeer het in Google Agenda of Samsung Agenda. Elke herinnering geeft een melding met een link die meteen de juiste check-in opent.') + '</li><li><b>' + tr('Wekker:') + '</b> ' + tr('zet per herinnering een terugkerende wekker in je Klok-app.') + '</li></ol>' +
+    '<div class="inrow"><button class="btn" data-act="ics">' + tr('Download agendabestand (.ics)') + '</button></div>' +
+    (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '<p class="muted small">' + tr('iPhone: open het gedownloade bestand en tik op "Voeg alles toe" om de herinneringen in Agenda te zetten.') + '</p>' : '<div class="chips">' + DB.reminders.filter(r => r.on).map(r => '<a class="chip" href="' + alarmIntent(r) + '">⏰ ' + r.time + '</a>').join('') + '</div>') +
+    '<label class="fld"><span>' + tr('Adres van deze app (voor de links in de agenda)') + '</span><input type="url" value="' + esc(S.appUrl || appBase()) + '" data-chg="setAppUrl"></label>' +
+    '<label class="toggle"><input type="checkbox" ' + (S.notify ? 'checked' : '') + ' data-chg="setNotify"> ' + tr('Ook meldingen geven zolang de app open staat') + '</label></div>';
 
-  h += '<div class="card"><h3>Profiel en doelen</h3><div class="grid2">' +
-    gfield('profile.name', 'Naam', P.name, 'text') + gfield('profile.age', 'Leeftijd', P.age) + gfield('profile.heightCm', 'Lengte (cm)', P.heightCm) +
-    gfield('goals.kcal', 'Kcal per dag', G.kcal) + gfield('goals.protein', 'Eiwit (g)', G.protein) + gfield('goals.fiber', 'Vezels (g)', G.fiber) + gfield('goals.waterMl', 'Water (ml)', G.waterMl) +
-    gfield('goals.stepsMin', 'Stappen min.', G.stepsMin) + gfield('goals.stepsMax', 'Stappen max.', G.stepsMax) + gfield('goals.sleepH', 'Slaap (u)', G.sleepH) + gfield('goals.caffeineMax', 'Max. cafeïne (shots)', G.caffeineMax) +
-    gfield('settings.glassMl', 'Eén glas = ml', S.glassMl) + '</div>' +
-    '<label class="fld"><span>Context voor analyses (medisch, werk, gewoontes)</span><textarea rows="4" data-chg="setG" data-p="profile.notes">' + esc(P.notes || '') + '</textarea></label></div>';
+  h += '<div class="card"><h3>' + tr('Profiel en doelen') + '</h3><div class="grid2">' +
+    gfield('profile.name', tr('Naam'), P.name, 'text') + gfield('profile.age', tr('Leeftijd'), P.age) + gfield('profile.heightCm', tr('Lengte (cm)'), P.heightCm) +
+    gfield('goals.kcal', tr('Kcal per dag'), G.kcal) + gfield('goals.protein', tr('Eiwit (g)'), G.protein) + gfield('goals.fiber', tr('Vezels (g)'), G.fiber) + gfield('goals.waterMl', tr('Water (ml)'), G.waterMl) +
+    gfield('goals.stepsMin', tr('Stappen min.'), G.stepsMin) + gfield('goals.stepsMax', tr('Stappen max.'), G.stepsMax) + gfield('goals.sleepH', tr('Slaap (u)'), G.sleepH) + gfield('goals.caffeineMax', tr('Max. cafeïne (shots)'), G.caffeineMax) +
+    gfield('settings.glassMl', tr('Eén glas = ml'), S.glassMl) + '</div>' +
+    '<label class="fld"><span>' + tr('Context voor analyses (medisch, werk, gewoontes)') + '</span><textarea rows="4" data-chg="setG" data-p="profile.notes">' + esc(P.notes || '') + '</textarea></label></div>';
 
-  h += '<div class="card"><h3>Gedeelde bibliotheek</h3><p class="muted small">Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.</p>' +
-    (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> Mijn productbibliotheek synchroniseren (producten delen en ophalen)</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">Bibliotheek openen</a><button class="btn ghost" data-act="syncNow">Nu bijwerken</button></div>' : '<p class="note">Niet ingesteld.</p>') + '</div>';
-  h += '<div class="card"><h3>Communityprofiel</h3><p class="muted small">Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en gezondheidsgegevens worden hiermee niet gedeeld.</p><label class="fld"><span>Communitynaam</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">Communitynaam opslaan</button></div>';
+  h += '<div class="card"><h3>' + tr('Gedeelde bibliotheek') + '</h3><p class="muted small">' + tr('Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.') + '</p>' +
+    (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> ' + tr('Mijn productbibliotheek synchroniseren (producten delen en ophalen)') + '</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">' + tr('Bibliotheek openen') + '</a><button class="btn ghost" data-act="syncNow">' + tr('Nu bijwerken') + '</button></div>' : '<p class="note">' + tr('Niet ingesteld.') + '</p>') + '</div>';
+  h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(S.communityName || '') + '" placeholder="bv. BabuFit" data-chg="setG" data-p="settings.communityName"></label><button class="btn ghost" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
   h += '<div class="card"><h3>AI (optioneel)</h3><p class="muted small">Met een eigen Claude API-sleutel (console.anthropic.com) kan de app een diepere analyse maken, etiketten van een foto lezen en een markdown-dagboek inlezen. ' + esc(aiDataDisclosure()) + ' Je betaalt per gebruik. De sleutel wordt lokaal in je browser opgeslagen en zit niet in back-ups.</p>' +
     '<label class="fld"><span>API-sleutel</span><input type="password" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>Model</span><input type="text" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
 
-  h += '<div class="card"><h3>Back-up en import</h3><p class="muted small">Je dagboek staat lokaal in deze browser; een back-up maak je zelf. Wie toegang heeft tot dezelfde browseropslag kan de gegevens daar ook openen. Gedeelde bibliotheekgegevens en invoer die je bewust naar AI stuurt, staan buiten die lokale opslag.</p>' +
-    '<div class="inrow wrap"><button class="btn" data-act="exportData">Back-up maken</button><label class="btn ghost">Back-up of dagboek importeren<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
-    '<div class="inrow wrap"><label class="btn ghost">Markdown-dagboek inlezen (AI)<input type="file" accept=".md,.txt,text/plain,text/markdown" hidden data-chg="importMd"></label><button class="btn ghost" data-act="shareWeek">Weeksamenvatting delen</button></div>' +
-    '<div class="inrow wrap"><a class="btn ghost" href="#/rapport">Rapport voor diëtist, psycholoog, coach of arts</a></div>' +
-    '<button class="link" data-act="redoIntake">Intake opnieuw doen</button> · <button class="link danger" data-act="wipe">Alles wissen</button></div>';
+  h += '<div class="card"><h3>' + tr('Back-up en import') + '</h3><p class="muted small">' + tr('Je dagboek staat lokaal in deze browser; een back-up maak je zelf. Wie toegang heeft tot dezelfde browseropslag kan de gegevens daar ook openen. Gedeelde bibliotheekgegevens en invoer die je bewust naar AI stuurt, staan buiten die lokale opslag.') + '</p>' +
+    '<div class="inrow wrap"><button class="btn" data-act="exportData">' + tr('Back-up maken') + '</button><label class="btn ghost">' + tr('Back-up of dagboek importeren') + '<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
+    '<div class="inrow wrap"><label class="btn ghost">' + tr('Markdown-dagboek inlezen (AI)') + '<input type="file" accept=".md,.txt,text/plain,text/markdown" hidden data-chg="importMd"></label><button class="btn ghost" data-act="shareWeek">' + tr('Weeksamenvatting delen') + '</button></div>' +
+    '<div class="inrow wrap"><a class="btn ghost" href="#/rapport">' + tr('Rapport voor diëtist, psycholoog, coach of arts') + '</a></div>' +
+    '<button class="link" data-act="redoIntake">' + tr('Intake opnieuw doen') + '</button> · <button class="link danger" data-act="wipe">' + tr('Alles wissen') + '</button></div>';
   h += installCard();
   h += '<p class="muted small center">Voedingsdagboek · werkt offline · versie ' + APP_VERSION + '</p>';
   view().innerHTML = h;
@@ -953,6 +955,10 @@ ACT.remLabel = el => { DB.reminders[el.dataset.i].label = el.value; save(); };
 ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); };
 ACT.remDel = el => { if (!confirm('Herinnering verwijderen?')) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); render(); };
 ACT.remAdd = () => { DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); render(); };
+ACT.language = el => {
+  if (!UI_LOCALES.includes(el.value)) { el.value = currentLocale(); return; }
+  DB.settings.language = el.value; save(); applyLocale(); render();
+};
 ACT.setAppUrl = el => { DB.settings.appUrl = el.value.trim(); save(); };
 ACT.setShare = el => { DB.settings.share = el.checked; save(); if (el.checked) cloudSync(false); };
 ACT.setNotify = async el => {
@@ -1099,7 +1105,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.8.3';
+const APP_VERSION = '1.9.1';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
