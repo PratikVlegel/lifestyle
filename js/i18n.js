@@ -4,6 +4,24 @@
 const UI_LOCALES = ['nl-BE', 'en-GB', 'fr-FR', 'de-DE'];
 const UI_TRANSLATIONS = {
   'en-GB': {
+    'Gemiddeld onder je richtpunt': 'Average below your target',
+    'Gemiddeld boven je richtpunt': 'Average above your target',
+    'Rond je richtpunt': 'Around your target',
+    'Het grootste deel komt \'s avonds': 'Most of your intake is in the evening',
+    'Eten na het avondeten': 'Eating after dinner',
+    'Eiwit onder je doel': 'Protein below your goal',
+    'Eiwit op niveau': 'Protein on target',
+    'Vezels': 'Fibre', 'Water': 'Water',
+    'Cafeïne en de nacht erna': 'Caffeine and the following night',
+    'Alcohol en de dag erna': 'Alcohol and the following day',
+    'Stappen': 'Steps', 'Rustigste dag': 'Quietest day',
+    'Bewegen en stemming': 'Activity and mood', 'Slaap en energie': 'Sleep and energy', 'Slaap en stemming': 'Sleep and mood',
+    'CPAP': 'CPAP', 'Gewichtsverloop': 'Weight trend', 'Wat je van je mealpreps vond': 'Your meal-prep feedback',
+    'Beweging': 'Activity', 'Gaten in de registratie': 'Gaps in your logs',
+    'Week tegenover weekend': 'Weekdays and weekends', 'Je eetritme': 'Your eating rhythm', 'Als de lunch wegvalt': 'When lunch is missed',
+    'Eiwit per maaltijd': 'Protein by meal', 'Mealprep-porties': 'Meal-prep portions', 'Stappen na alcoholregistratie': 'Steps after alcohol was logged',
+    'Slaapregelmaat': 'Sleep regularity', 'Korte nacht en avondinname': 'Short sleep and evening intake', 'Je avondtrek': 'Evening appetite',
+    'Veel honger voor het avondeten': 'High hunger before dinner', 'Volle reeks': 'Logging streak', 'Je record': 'Your record', 'Sporten en bewegen': 'Exercise and activity',
     "Het bestand is groter dan 20 MB.": "The file is larger than 20 MB.",
     "Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.": "Import failed. The backup is invalid or contains values outside the allowed ranges.",
     "Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.": "This file is larger than 1 MB. Split the diary or use a .json backup.",
@@ -172,6 +190,24 @@ const UI_TRANSLATIONS = {
     'Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.': 'For an AI request, the app sends the following directly to Anthropic: your profile (name, sex, age, height, activity level, context and goals), your question and up to 21 days of logged data. This may include meals and nutrition values, weight, sleep/CPAP, mood, energy, stress, steps, water, caffeine, alcohol, vaping and free-text notes. A selected label photo is sent too; Markdown imports send up to 150,000 characters. Mood comparisons stay on your device and do not send notes.',
   },
   'fr-FR': {
+    'Gemiddeld onder je richtpunt': 'Moyenne sous votre repère',
+    'Gemiddeld boven je richtpunt': 'Moyenne au-dessus de votre repère',
+    'Rond je richtpunt': 'Près de votre repère',
+    'Het grootste deel komt \'s avonds': 'La majeure partie le soir',
+    'Eten na het avondeten': 'Manger après le dîner',
+    'Eiwit onder je doel': 'Protéines sous votre objectif',
+    'Eiwit op niveau': 'Objectif de protéines atteint',
+    'Vezels': 'Fibres', 'Water': 'Eau',
+    'Cafeïne en de nacht erna': 'Caféine et nuit suivante',
+    'Alcohol en de dag erna': 'Alcool et lendemain',
+    'Stappen': 'Pas', 'Rustigste dag': 'Jour le moins actif',
+    'Bewegen en stemming': 'Activité et humeur', 'Slaap en energie': 'Sommeil et énergie', 'Slaap en stemming': 'Sommeil et humeur',
+    'CPAP': 'CPAP', 'Gewichtsverloop': 'Évolution du poids', 'Wat je van je mealpreps vond': 'Votre avis sur les plats préparés',
+    'Beweging': 'Activité', 'Gaten in de registratie': 'Jours sans suivi',
+    'Week tegenover weekend': 'Semaine et week-end', 'Je eetritme': 'Votre rythme alimentaire', 'Als de lunch wegvalt': 'Quand le déjeuner est omis',
+    'Eiwit per maaltijd': 'Protéines par repas', 'Mealprep-porties': 'Portions de plats préparés', 'Stappen na alcoholregistratie': 'Pas après une consommation d’alcool notée',
+    'Slaapregelmaat': 'Régularité du sommeil', 'Korte nacht en avondinname': 'Nuit courte et apports du soir', 'Je avondtrek': 'Votre faim du soir',
+    'Veel honger voor het avondeten': 'Forte faim avant le dîner', 'Volle reeks': 'Série de suivis complets', 'Je record': 'Votre record', 'Sporten en bewegen': 'Sport et activité physique',
     "Het bestand is groter dan 20 MB.": "Le fichier dépasse 20 Mo.",
     "Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.": "Échec de l’importation. La sauvegarde est invalide ou contient des valeurs hors des limites autorisées.",
     "Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.": "Ce fichier dépasse 1 Mo. Divisez le journal ou utilisez une sauvegarde .json.",
@@ -340,6 +376,24 @@ const UI_TRANSLATIONS = {
     'Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.': 'Pour une demande d’IA, l’application envoie directement à Anthropic votre profil (nom, sexe, âge, taille, activité, contexte et objectifs), votre question et jusqu’à 21 jours de données enregistrées. Cela peut inclure repas et valeurs nutritionnelles, poids, sommeil/CPAP, humeur, énergie, stress, pas, eau, caféine, alcool, vapotage et notes libres. Une photo d’étiquette sélectionnée est également envoyée ; l’import Markdown transmet jusqu’à 150 000 caractères. Les comparaisons d’humeur restent sur votre appareil et n’envoient aucune note.',
   },
   'de-DE': {
+    'Gemiddeld onder je richtpunt': 'Durchschnitt unter deinem Richtwert',
+    'Gemiddeld boven je richtpunt': 'Durchschnitt über deinem Richtwert',
+    'Rond je richtpunt': 'In der Nähe deines Richtwerts',
+    'Het grootste deel komt \'s avonds': 'Der größte Teil am Abend',
+    'Eten na het avondeten': 'Essen nach dem Abendessen',
+    'Eiwit onder je doel': 'Eiweiß unter deinem Ziel',
+    'Eiwit op niveau': 'Eiweiß im Zielbereich',
+    'Vezels': 'Ballaststoffe', 'Water': 'Wasser',
+    'Cafeïne en de nacht erna': 'Koffein und die folgende Nacht',
+    'Alcohol en de dag erna': 'Alkohol und der Folgetag',
+    'Stappen': 'Schritte', 'Rustigste dag': 'Ruhigster Tag',
+    'Bewegen en stemming': 'Bewegung und Stimmung', 'Slaap en energie': 'Schlaf und Energie', 'Slaap en stemming': 'Schlaf und Stimmung',
+    'CPAP': 'CPAP', 'Gewichtsverloop': 'Gewichtsverlauf', 'Wat je van je mealpreps vond': 'Deine Rückmeldung zu Mealprep-Gerichten',
+    'Beweging': 'Bewegung', 'Gaten in de registratie': 'Lücken in deinen Einträgen',
+    'Week tegenover weekend': 'Woche und Wochenende', 'Je eetritme': 'Dein Essensrhythmus', 'Als de lunch wegvalt': 'Wenn das Mittagessen ausfällt',
+    'Eiwit per maaltijd': 'Eiweiß pro Mahlzeit', 'Mealprep-porties': 'Mealprep-Portionen', 'Stappen na alcoholregistratie': 'Schritte nach erfasstem Alkohol',
+    'Slaapregelmaat': 'Regelmäßiger Schlaf', 'Korte nacht en avondinname': 'Kurze Nacht und Essen am Abend', 'Je avondtrek': 'Appetit am Abend',
+    'Veel honger voor het avondeten': 'Starker Hunger vor dem Abendessen', 'Volle reeks': 'Lückenlose Eintragsserie', 'Je record': 'Dein Rekord', 'Sporten en bewegen': 'Sport und Bewegung',
     "Het bestand is groter dan 20 MB.": "Die Datei ist größer als 20 MB.",
     "Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.": "Import fehlgeschlagen. Die Sicherung ist ungültig oder enthält Werte außerhalb der erlaubten Bereiche.",
     "Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.": "Diese Datei ist größer als 1 MB. Teile das Tagebuch auf oder verwende eine .json-Sicherung.",
@@ -513,9 +567,17 @@ function currentLocale() { return UI_LOCALES.includes(DB && DB.settings && DB.se
 function tr(text) {
   const translations = UI_TRANSLATIONS[currentLocale()] || {};
   if (translations[text]) return translations[text];
-  const days = String(text).match(/^(\d+) dagen geregistreerd$/);
-  if (days) return ({ 'en-GB': days[1] + ' days logged', 'fr-FR': days[1] + ' jours enregistrés', 'de-DE': days[1] + ' Tage erfasst' })[currentLocale()] || text;
-  return text;
+  const value = String(text), locale = currentLocale();
+  const dynamic = value.match(/^(\d+)(?: \+ (\d+))? (volledige dagen?|dagen geregistreerd|dagen met tijden|weekdagen|dagen|nachten|avonden?|maaltijden|wegingen?|beoordeelde mealpreps?)$/);
+  if (!dynamic) return text;
+  const [, first, second, unit] = dynamic, count = second ? first + ' + ' + second : first;
+  const words = {
+    'en-GB': { 'volledige dag': 'complete day', 'volledige dagen': 'complete days', 'dagen geregistreerd': 'days logged', 'dagen met tijden': 'days with times', weekdagen: 'weekdays', dagen: 'days', nacht: 'night', nachten: 'nights', avond: 'evening', avonden: 'evenings', maaltijd: 'meal', maaltijden: 'meals', weging: 'weigh-in', wegingen: 'weigh-ins', 'beoordeelde mealprep': 'rated meal prep', 'beoordeelde mealpreps': 'rated meal preps' },
+    'fr-FR': { 'volledige dag': 'journée complète', 'volledige dagen': 'journées complètes', 'dagen geregistreerd': 'jours enregistrés', 'dagen met tijden': 'jours avec horaires', weekdagen: 'jours de semaine', dagen: 'jours', nacht: 'nuit', nachten: 'nuits', avond: 'soirée', avonden: 'soirées', maaltijd: 'repas', maaltijden: 'repas', weging: 'pesée', wegingen: 'pesées', 'beoordeelde mealprep': 'plat préparé évalué', 'beoordeelde mealpreps': 'plats préparés évalués' },
+    'de-DE': { 'volledige dag': 'vollständiger Tag', 'volledige dagen': 'vollständige Tage', 'dagen geregistreerd': 'Tage erfasst', 'dagen met tijden': 'Tage mit Uhrzeiten', weekdagen: 'Wochentage', dagen: 'Tage', nacht: 'Nacht', nachten: 'Nächte', avond: 'Abend', avonden: 'Abende', maaltijd: 'Mahlzeit', maaltijden: 'Mahlzeiten', weging: 'Wägung', wegingen: 'Wägungen', 'beoordeelde mealprep': 'bewertetes Mealprep-Gericht', 'beoordeelde mealpreps': 'bewertete Mealprep-Gerichte' }
+  };
+  const word = words[locale] && words[locale][unit];
+  return word ? count + ' ' + word : text;
 }
 function localeLanguageName(locale) {
   return ({ 'nl-BE': 'Nederlands', 'en-GB': 'Engels', 'fr-FR': 'Frans', 'de-DE': 'Duits' })[locale] || 'Nederlands';
