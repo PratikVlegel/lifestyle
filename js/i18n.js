@@ -2222,4 +2222,34 @@ for (const [locale, labels] of Object.entries({
     'Voor push bewaart Supabase voor dit toestel het browser-eindpunt en technische encryptiesleutels, je tijdzone en app-taal, en de ID’s en tijden van actieve herinneringen. Om dubbele meldingen te voorkomen registreert Supabase ook per herinnering de lokale datum en afleverstatus; statusregels ouder dan 14 dagen worden opgeruimd. Namen, dagboek- en gezondheidsgegevens blijven lokaal; meldingen zijn algemeen.': 'Für Push speichert Supabase den Browser-Endpunkt und technische Verschlüsselungsschlüssel dieses Geräts, Zeitzone und App-Sprache sowie IDs und Uhrzeiten aktiver Erinnerungen. Um doppelte Mitteilungen zu vermeiden, speichert Supabase außerdem das lokale Datum und den Zustellstatus je Erinnerung; Statusdatensätze älter als 14 Tage werden gelöscht. Namen, Tagebuch- und Gesundheitsdaten bleiben auf diesem Gerät; Mitteilungen sind allgemein gehalten.'
   }
 })) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+for (const [locale, labels] of Object.entries({
+  'nl-BE': {
+    'Kcal van deze dag komt uit een dagschatting': 'Kcal van deze dag komt uit een dagschatting',
+    'Gebruik de maaltijden': 'Gebruik de maaltijden',
+    'Verwijderen: {item}?': 'Verwijderen: {item}?',
+    'Hele dag {date} verwijderen?': 'Hele dag {date} verwijderen?',
+    'item': 'item'
+  },
+  'en-GB': {
+    'Kcal van deze dag komt uit een dagschatting': 'Calories for this day use an estimate',
+    'Gebruik de maaltijden': 'Use meal entries instead',
+    'Verwijderen: {item}?': 'Delete {item}?',
+    'Hele dag {date} verwijderen?': 'Delete the entire day of {date}?',
+    'item': 'item'
+  },
+  'fr-FR': {
+    'Kcal van deze dag komt uit een dagschatting': 'Les calories de cette journée sont estimées',
+    'Gebruik de maaltijden': 'Utiliser plutôt les repas enregistrés',
+    'Verwijderen: {item}?': 'Supprimer {item} ?',
+    'Hele dag {date} verwijderen?': 'Supprimer toute la journée du {date} ?',
+    'item': 'élément'
+  },
+  'de-DE': {
+    'Kcal van deze dag komt uit een dagschatting': 'Die Kalorien für diesen Tag sind geschätzt',
+    'Gebruik de maaltijden': 'Stattdessen die Mahlzeiten verwenden',
+    'Verwijderen: {item}?': '{item} löschen?',
+    'Hele dag {date} verwijderen?': 'Den ganzen Tag vom {date} löschen?',
+    'item': 'Eintrag'
+  }
+})) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
 if (currentLocale() === 'nl-BE') applyLocale();

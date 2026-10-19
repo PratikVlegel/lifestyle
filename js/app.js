@@ -719,7 +719,7 @@ function renderDay(k) {
     '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
     f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
     f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'textarea') +
-    (d.kcalOverride ? '<p class="muted small">Kcal van deze dag komt uit een dagschatting (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">Gebruik de maaltijden</button></p>' : '') +
+    (d.kcalOverride ? '<p class="muted small">' + tr('Kcal van deze dag komt uit een dagschatting') + ' (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">' + tr('Gebruik de maaltijden') + '</button></p>' : '') +
     '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">' + tr('Check-ins gedaan:') + ' ' + DB.reminders.filter(r => d.done[r.id]).map(r => reminderDisplayLabel(r.label)).join(', ') + '</p>';
   h += '<button class="link danger" data-act="delDay" data-k="' + k + '">' + tr('Hele dag verwijderen') + '</button>';
@@ -770,7 +770,7 @@ ACT.saveDay = el => {
     d[n] = v;
   });
   if (!dayHasDiaryContent(d)) delete DB.days[el.dataset.k];
-  save(); toast('Bewaard'); render();
+  save(); toast(tr('Bewaard')); render();
 };
 function dayNicotineChoice(d, k) {
   let selected = Array.isArray(d.nicotineForms) ? d.nicotineForms : [];
@@ -793,8 +793,8 @@ ACT.dayNicotine = el => {
   save(); renderDay(el.dataset.k);
 };
 ACT.dropOverride = el => { delete getDay(el.dataset.k).kcalOverride; save(); render(); };
-ACT.delMeal = el => { const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id); if (!confirm('Verwijderen: ' + (m.desc || 'item') + '?')) return; if (m.prepId) usePortion(m.prepId, -m.portion); d.meals = d.meals.filter(x => x !== m); save(); render(); };
-ACT.delDay = el => { if (!confirm('Hele dag ' + fmtDay(el.dataset.k) + ' verwijderen?')) return; delete DB.days[el.dataset.k]; save(); go('#/dagboek'); };
+ACT.delMeal = el => { const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id); if (!confirm(trf('Verwijderen: {item}?', { item: m.desc || tr('item') }))) return; if (m.prepId) usePortion(m.prepId, -m.portion); d.meals = d.meals.filter(x => x !== m); save(); render(); };
+ACT.delDay = el => { if (!confirm(trf('Hele dag {date} verwijderen?', { date: fmtDay(el.dataset.k) }))) return; delete DB.days[el.dataset.k]; save(); go('#/dagboek'); };
 ACT.editMeal = el => {
   const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id);
   $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>' + tr('Wijzigen') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>' +
@@ -1353,7 +1353,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.57';
+const APP_VERSION = '1.10.58';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
