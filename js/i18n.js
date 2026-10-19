@@ -2112,3 +2112,71 @@ const EXERCISE_PRESCRIPTION_TRANSLATIONS = {
   'de-DE': { 'Extra opties (optioneel)':'Zusatzoptionen (optional)', 'Vasthouden (sec per herhaling)':'Halten (Sek. pro Wiederholung)', 'Gewicht (kg)':'Gewicht (kg)', 'bv. 3':'z. B. 3', 'optioneel':'optional', 'sec vasthouden':'Sek. halten', 'Houdtijd: kies 0 tot 60 seconden.':'Haltezeit: Wähle 0 bis 60 Sekunden.', 'Gewicht: kies 0 tot 500 kg.':'Gewicht: Wähle 0 bis 500 kg.', 'Je trainingsgeschiedenis, schema en voortgang worden niet gedeeld. De naam, uitleg, sets, herhalingen of duur, houdtijd, gewicht en rust worden zichtbaar voor communityleden.':'Dein Trainingsverlauf, Plan und Fortschritt werden nicht geteilt. Name, Beschreibung, Sätze, Wiederholungen oder Dauer, Haltezeit, Gewicht und Pause sind für Mitglieder sichtbar.', 'De oefening wordt toegevoegd aan je eigen weeksjabloon. Je kunt sets, herhalingen of duur, houdtijd, gewicht, rust en uitleg nog aanpassen.':'Die Übung wird deinem Wochenplan hinzugefügt. Sätze, Wiederholungen oder Dauer, Haltezeit, Gewicht, Pausen und Beschreibung kannst du anpassen.' }
 };
 for (const locale of ['en-GB','fr-FR','de-DE']) Object.assign(UI_EXTRA_TRANSLATIONS[locale], EXERCISE_PRESCRIPTION_TRANSLATIONS[locale]);
+
+const TRANSLATION_AUDIT_PATCH = {
+  'en-GB': {
+    'Deze oefening kon niet worden gevonden.':'This exercise could not be found.',
+    'Oefening gedeeld met de community.':'Exercise shared with the community.',
+    'Kies een communitynaam. Die verschijnt bij je beoordeling.':'Choose a community name. It will appear with your review.',
+    'Sets: kies 1 tot 10.':'Sets: choose 1 to 10.',
+    'Rust: kies 0 tot 600 seconden.':'Rest: choose 0 to 600 seconds.'
+  },
+  'fr-FR': {
+    'Deze oefening kon niet worden gevonden.':'Cet exercice est introuvable.',
+    'Oefening gedeeld met de community.':'Exercice partagé avec la communauté.',
+    'Kies een communitynaam. Die verschijnt bij je beoordeling.':'Choisissez un pseudo qui apparaîtra avec votre avis.',
+    'Sets: kies 1 tot 10.':'Séries : choisissez une valeur de 1 à 10.',
+    'Rust: kies 0 tot 600 seconden.':'Repos : choisissez une valeur de 0 à 600 secondes.',
+    'Community':'Communauté'
+  },
+  'de-DE': {
+    'Deze oefening kon niet worden gevonden.':'Diese Übung wurde nicht gefunden.',
+    'Oefening gedeeld met de community.':'Übung mit der Community geteilt.',
+    'Kies een communitynaam. Die verschijnt bij je beoordeling.':'Wähle einen Community-Namen. Er erscheint bei deiner Bewertung.',
+    'Sets: kies 1 tot 10.':'Sätze: Wähle 1 bis 10.',
+    'Rust: kies 0 tot 600 seconden.':'Pause: Wähle 0 bis 600 Sekunden.',
+    'Laden…':'Wird geladen…', 'Energie':'Energie', 'Gewicht':'Gewicht', 'Datum':'Datum',
+    'Experiment starten':'Experiment starten', 'Experiment:':'Experiment:', 'ja':'Ja'
+  }
+};
+for (const locale of ['en-GB','fr-FR','de-DE']) Object.assign(UI_EXTRA_TRANSLATIONS[locale], TRANSLATION_AUDIT_PATCH[locale]);
+
+const DUTCH_SOURCE_TRANSLATIONS = {
+  'min':'min', 'extra':'extra', 'Codes':'Codes', 'Community':'Community', 'maximum':'maximaal', 'Scan barcode':'Barcode scannen', 'Water':'Water', 'Alcohol':'Alcohol', 'Water (ml)':'Water (ml)', 'Model':'Model', 'Check-in:':'Check-in:', 'sets':'sets', 'glasses':'glazen', 'servings':'porties', 'Nicotine':'Nicotine', 'Coffee servings':'Porties koffie', 'community':'community', 'Later':'Later', 'kg':'kg', 'Week':'Week', 'Experiment:':'Experiment:',
+  'With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.':'Met je eigen Claude API-sleutel (console.anthropic.com) kan de app een uitgebreidere analyse maken, een voedingsetiket van een foto lezen en een Markdown-dagboek importeren.',
+  'No alcohol entries were recorded in this period; missing entries are unknown.':'Er zijn in deze periode geen alcoholgegevens geregistreerd. Ontbrekende registraties zijn onbekend.',
+  '{total} glasses across {logged} logged days; average {average} glasses per logged day. {zero} logged days had zero; {unknown} days are unknown or unrecorded.':'{total} glazen over {logged} geregistreerde dagen; gemiddeld {average} glazen per geregistreerde dag. Op {zero} geregistreerde dagen was het aantal nul; {unknown} dagen zijn onbekend of niet geregistreerd.',
+  '{used} days with at least one nicotine form logged; {none} days explicitly logged as none; {unknown} of {total} days unknown or unrecorded.':'{used} dagen waarop minstens één nicotinevorm is geregistreerd; {none} dagen waarop expliciet geen nicotine is ingevuld; {unknown} van de {total} dagen zijn onbekend of niet geregistreerd.',
+  '{count} days':'{count} dagen', 'Recorded nicotine forms (a day can include more than one):':'Geregistreerde nicotinevormen (per dag kunnen meerdere vormen voorkomen):',
+  'Older vaping frequency entries (days):':'Oudere registraties van vape-frequentie (dagen):',
+  'These older options are rough frequency descriptions, not a count of puffs or a nicotine dose. Current nicotine entries record the form, not the amount used.':'Deze oudere opties geven de frequentie globaal weer; ze tellen geen trekjes en meten geen nicotinedosis. Nieuwe registraties leggen de vorm vast, niet de gebruikte hoeveelheid.',
+  'Mood comparisons are off. Enable them in Mood and habits if you want this report to compare substances with mood.':'Stemmingsvergelijkingen staan uit. Schakel ze in bij Stemming en gewoontes als je in dit rapport middelen naast je stemming wilt bekijken.',
+  '{label}: not enough mood-scored days for a comparison (at least 5 in each group are needed).':'{label}: te weinig dagen met een stemmingsscore om te vergelijken (minstens 5 per groep zijn nodig).',
+  'Median mood was {withMood}/10 on days with {label} logged ({withDays} days) and {withoutMood}/10 on days with none logged ({withoutDays} days). This describes co-occurrence, not cause.':'De middelste stemmingsscore was {withMood}/10 op dagen waarop {label} is geregistreerd ({withDays} dagen) en {withoutMood}/10 op dagen waarop dit niet is geregistreerd ({withoutDays} dagen). Dit toont samen voorkomen, geen oorzaak.',
+  'These optional comparisons use only days with both a mood score and a known substance entry. Missing entries are excluded; a pattern does not show cause or effect.':'Deze optionele vergelijkingen gebruiken alleen dagen waarop zowel stemming als een middel zijn geregistreerd. Ontbrekende registraties tellen niet mee; een patroon toont geen oorzaak of gevolg aan.',
+  '{count} logged days':'{count} geregistreerde dagen',
+  'Supplement use was explicitly logged on {logged} of {total} days; {none} days were marked as no use; {unknown} days are unknown or unrecorded.':'Supplementgebruik is expliciet ingevuld op {logged} van de {total} dagen; op {none} dagen is expliciet geen gebruik ingevuld; {unknown} dagen zijn onbekend of niet geregistreerd.',
+  'Report for {audience}':'Rapport voor {audience}',
+  '{count} days with data':'{count} dagen met gegevens',
+  'Self-reported. Calories and nutrition values are rough estimates; “–” means unknown. Sleep refers to the night before that day.':'Zelf gerapporteerd. Calorieën en voedingswaarden zijn schattingen; “–” betekent onbekend. Slaap verwijst naar de voorafgaande nacht.',
+  'Mood scores are daily self-reflections, not a validated psychological assessment.':'Stemmingsscores zijn dagelijkse zelfreflecties en geen gevalideerde psychologische beoordeling.',
+  '{count} years':'{count} jaar',
+  'Goals: {kcal} kcal, {protein} g protein, {fiber} g fibre, {water} l water, {stepsMin}–{stepsMax} steps.':'Doelen: {kcal} kcal, {protein} g eiwit, {fiber} g vezels, {water} l water, {stepsMin}–{stepsMax} stappen.',
+  'No meal entries were recorded in this period.':'Er zijn in deze periode geen maaltijden geregistreerd.',
+  '{count} days with meal entries':'{count} dagen met geregistreerde maaltijden',
+  'Food was logged after dinner on {late} of {days} days with meal entries; lunch was explicitly marked as skipped on {lunch} of those days.':'Op {late} van de {days} dagen met geregistreerde maaltijden is na het avondeten eten genoteerd; op {lunch} van die dagen is de lunch expliciet overgeslagen.',
+  'Feedback is linked to the meal prep; the date it was eaten is not recorded.':'De feedback hoort bij de mealprep; de datum waarop die is gegeten wordt niet geregistreerd.',
+  '{minutes} min recorded across {count} sessions':'{minutes} min geregistreerd over {count} sessies',
+  'duration missing for {count} sessions':'De duur ontbreekt bij {count} sessies',
+  '{count} sessions; duration not recorded':'{count} sessies; de duur is niet geregistreerd',
+  'Activity minutes are totals for this period, based on recorded sessions only.':'Bewegingsminuten zijn totalen voor deze periode en zijn alleen gebaseerd op geregistreerde sessies.',
+  '{count} of {total} recorded nights':'{count} van de {total} geregistreerde nachten',
+  '{full} full night, {partial} part night, {no} no use, {unknown} other ({count} recorded nights)':'{full} volledige nacht, {partial} gedeeltelijke nacht, {no} geen gebruik, {unknown} anders ({count} geregistreerde nachten)',
+  '{count} of {total} mood-scored days':'{count} van de {total} dagen met een stemmingsscore',
+  'Self-reported servings, not a measured caffeine dose in milligrams.':'Zelf ingeschatte porties; dit is geen gemeten cafeïnedosis in milligram.',
+  'Substances and mood':'Middelen en stemming',
+  'Average {weight} kg across {count} weigh-ins.':'Gemiddeld {weight} kg over {count} wegingen.',
+  'No weigh-ins recorded.':'Er zijn geen wegingen geregistreerd.'
+};
+Object.assign(UI_TRANSLATIONS['nl-BE'] || (UI_TRANSLATIONS['nl-BE'] = {}), DUTCH_SOURCE_TRANSLATIONS);
+if (currentLocale() === 'nl-BE') applyLocale();
