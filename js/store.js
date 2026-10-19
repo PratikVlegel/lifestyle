@@ -268,6 +268,11 @@ function validateImportData(obj) {
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== key) fail('een dag bevat een ongeldige datum.');
     if (day.meals !== undefined && !Array.isArray(day.meals)) fail('de maaltijden van ' + key + ' zijn geen lijst.');
     if ((day.meals || []).length > 100) fail('er staan meer dan 100 maaltijden op ' + key + '.');
+    if (day.activities !== undefined && !Array.isArray(day.activities)) fail('de activiteiten van ' + key + ' zijn geen lijst.');
+    if ((day.activities || []).length > 100) fail('er staan meer dan 100 activiteiten op ' + key + '.');
+    for (const activity of day.activities || []) {
+      if (!record(activity) || typeof activity.id !== 'string' || !activity.id || activity.id.length > 100 || !['wandelen', 'fietsen', 'lopen', 'zwemmen', 'kracht', 'cardio', 'padel', 'voetbal', 'dansen', 'yoga', 'huishouden', 'anders'].includes(activity.type) || !Number.isInteger(activity.min) || activity.min < 1 || activity.min > 1440 || !['licht', 'matig', 'zwaar'].includes(activity.int) || (activity.note !== undefined && (typeof activity.note !== 'string' || activity.note.length > 1000))) fail('een activiteit op ' + key + ' heeft een ongeldige structuur of waarde.');
+    }
     if (day.done !== undefined && day.done !== null && !record(day.done)) fail('de herinneringen van ' + key + ' hebben een ongeldig formaat.');
     for (const [field, bounds] of Object.entries(ranges)) numeric(day[field], bounds, key + ' · ' + field);
     if (day.nicotineForms !== undefined && day.nicotineForms !== null && (!Array.isArray(day.nicotineForms) || day.nicotineForms.length > 7 || day.nicotineForms.some(v => !['cigarette', 'vape', 'nicotineGum', 'nicotinePouch', 'nicotinePatch', 'heatedTobacco', 'otherNicotine'].includes(v)) || new Set(day.nicotineForms).size !== day.nicotineForms.length)) fail(key + ' · nicotineForms bevat een ongeldige keuze.');

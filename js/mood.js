@@ -60,7 +60,7 @@ function renderMoodModule() {
     const fiberRows = records.map(x => ({ x: dayNutr(x.d, 'fiber'), y: x.d.mood })).filter(x => x.x && !x.x.lb && isNum(x.x.v)).map(x => ({ x: x.x.v, y: x.y }));
     const belowFiber = v => v < Number(DB.goals.fiber || 30), meetsFiber = v => v >= Number(DB.goals.fiber || 30); belowFiber.label = 'Onder je vezelrichtpunt'; meetsFiber.label = 'Op/boven je vezelrichtpunt';
     cards += moodComparison('Geregistreerde vezels', 'Dit gaat over voedingsmiddelen met ingevulde voedingswaarden in je dagboek, niet over je volledige voedingskwaliteit.', fiberRows, meetsFiber, belowFiber);
-    h += cards || '<div class="card note"><b>Per factor nog te weinig gegevens</b><p class="small">Een vergelijking verschijnt pas bij minstens vijf dagen per groep. Ontbrekende waarden blijven buiten de berekening.</p></div>';
+    h += cards || '<div class="card note"><b>' + tr('Per factor nog te weinig gegevens') + '</b><p class="small">' + tr('Een vergelijking verschijnt pas bij minstens vijf dagen per groep. Ontbrekende waarden blijven buiten de berekening.') + '</p></div>';
   }
   h += '<div class="card mood-care"><h3>' + tr('Als je stemming je zorgen baart') + '</h3><p>' + tr('Een dagboek kan helpen om je eigen ervaringen te bespreken, maar vervangt geen gesprek met een huisarts of andere zorgverlener. Neem contact op als een sombere stemming langer aanhoudt of je dagelijks leven beïnvloedt.') + '</p><a href="https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/low-mood-sadness-depression/" target="_blank" rel="noopener">' + tr('NHS: omgaan met een lage stemming') + '</a></div>';
   view().innerHTML = h;

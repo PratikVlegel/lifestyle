@@ -14,11 +14,11 @@ function prepToShared(p) {
   };
 }
 async function sharePrepOnline(p) {
-  if (!cloudReady() || !navigator.onLine) throw new Error('Delen kan alleen met internet.');
+  if (!cloudReady() || !navigator.onLine) throw new Error(tr('Delen kan alleen met internet.'));
   await ensureSession();
   if (DB.settings.member) {
     let communityName = DB.settings.communityName;
-    if (!communityName) { communityName = prompt('Welke communitynaam mogen andere leden bij je recepten en beoordelingen zien?'); if (!communityName) throw new Error('Stel een communitynaam in om te delen.'); }
+    if (!communityName) { communityName = prompt(tr('Welke communitynaam mogen andere leden bij je recepten en beoordelingen zien?')); if (!communityName) throw new Error(tr('Stel een communitynaam in om te delen.')); }
     await saveCommunityProfile(communityName);
   }
   const body = prepToShared(p);
@@ -37,11 +37,11 @@ async function sharePrepOnline(p) {
 ACT.sharePrep = async () => {
   const p = prepById(PREP.id) || PREP;
   let link = null;
-  try { toast('Recept delen…'); link = await sharePrepOnline(p); } catch (e) { toast(e.message); }
+  try { toast(tr('Recept delen…')); link = await sharePrepOnline(p); } catch (e) { toast(e.message); }
   const { per } = prepTotals(p);
-  const txt = p.name + ' (' + p.portions + ' porties)\n' +
+  const txt = p.name + ' (' + p.portions + ' ' + tr('porties') + ')\n' +
     p.ingredients.map(g => '- ' + g.name + (isNum(g.grams) ? ': ' + g.grams + ' g' : '')).join('\n') +
-    '\nPer portie ≈ ' + fmtNum(per.kcal) + ' kcal, ' + fmtNum(per.protein) + ' g eiwit (ruwe schatting).' + (link ? '\n\nOpen in de app: ' + link : '');
+    '\n' + tr('Per portie') + ' ≈ ' + fmtNum(per.kcal) + ' kcal, ' + fmtNum(per.protein) + ' g ' + tr('eiwit') + ' (' + tr('ruwe schatting') + ').' + (link ? '\n\n' + tr('Open in de app:') + ' ' + link : '');
   shareText(txt, p.name);
 };
 
@@ -77,11 +77,11 @@ ACT.prepPhoto = async el => {
 ACT.prepPhotoDel = () => { delete PREP.photo; delete PREP.photoUrl; PREP.photoDirty = true; const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y); };
 function prepExtrasHtml(P) {
   const src = prepPhotoSrc(P);
-  return '<div class="card"><h3>Foto en bereiding</h3>' +
-    (src ? '<img class="prepimg" src="' + esc(src) + '" alt="Foto van ' + esc(P.name) + '"><div class="inrow"><label class="btn ghost">Andere foto<input type="file" accept="image/*" capture="environment" hidden data-chg="prepPhoto"></label><button class="link danger" data-act="prepPhotoDel">Foto verwijderen</button></div>'
-      : '<label class="btn ghost">+ Foto toevoegen<input type="file" accept="image/*" capture="environment" hidden data-chg="prepPhoto"></label>') +
-    '<label class="fld"><span>Bereiding (optioneel)</span><textarea rows="5" data-pp="recipeNote" placeholder="1. Kip marineren…&#10;2. Groenten roosteren op 200 °C…">' + esc(P.recipeNote || '') + '</textarea></label>' +
-    (P.feedback ? '<p class="small"><b>Jouw beoordeling:</b> ' + esc(feedbackSummary(P.feedback)) + (P.feedback.note ? ' · "' + esc(P.feedback.note) + '"' : '') + ' <button class="link" data-act="openFeedback" data-id="' + P.id + '">Aanpassen</button></p>' : '') + '</div>';
+  return '<div class="card"><h3>' + tr('Foto en bereiding') + '</h3>' +
+    (src ? '<img class="prepimg" src="' + esc(src) + '" alt="' + tr('Foto van') + ' ' + esc(P.name) + '"><div class="inrow"><label class="btn ghost">' + tr('Andere foto') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="prepPhoto"></label><button class="link danger" data-act="prepPhotoDel">' + tr('Foto verwijderen') + '</button></div>'
+      : '<label class="btn ghost">+ ' + tr('Foto toevoegen') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="prepPhoto"></label>') +
+    '<label class="fld"><span>' + tr('Bereiding (optioneel)') + '</span><textarea rows="5" data-pp="recipeNote" placeholder="' + tr('1. Kip marineren… 2. Groenten roosteren op 200 °C…') + '">' + esc(P.recipeNote || '') + '</textarea></label>' +
+    (P.feedback ? '<p class="small"><b>' + tr('Jouw beoordeling:') + '</b> ' + esc(feedbackSummary(P.feedback)) + (P.feedback.note ? ' · "' + esc(P.feedback.note) + '"' : '') + ' <button class="link" data-act="openFeedback" data-id="' + P.id + '">' + tr('Aanpassen') + '</button></p>' : '') + '</div>';
 }
 
 /* ---------- gedeelde recepten bekijken ---------- */
@@ -107,61 +107,61 @@ async function fetchRecipes() {
   return rows;
 }
 function starLine(s) {
-  if (!s || (!s.n && !s.ratingN)) return 'nog geen beoordelingen';
+  if (!s || (!s.n && !s.ratingN)) return tr('nog geen beoordelingen');
   const parts = [];
-  if (s.tasteN) parts.push('★ ' + fmtNum(s.taste / s.tasteN, 1) + ' smaak');
-  if (s.easeN) parts.push(fmtNum(s.ease / s.easeN, 1) + '/5 gemak');
-  if (s.n) parts.push(s.n + ' gebruikservaring' + (s.n === 1 ? '' : 'en'));
-  if (s.again) parts.push(Math.round(s.again / s.n * 100) + '% maakt opnieuw');
-  if (s.ratingN) parts.push('community ★ ' + fmtNum(s.rating / s.ratingN, 1) + '/5 · ' + s.ratingN);
+  if (s.tasteN) parts.push('★ ' + fmtNum(s.taste / s.tasteN, 1) + ' ' + tr('smaak'));
+  if (s.easeN) parts.push(fmtNum(s.ease / s.easeN, 1) + '/5 ' + tr('gemak'));
+  if (s.n) parts.push(s.n + ' ' + tr(s.n === 1 ? 'gebruikservaring' : 'gebruikservaringen'));
+  if (s.again) parts.push(trf('{percent}% maakt opnieuw', { percent: Math.round(s.again / s.n * 100) }));
+  if (s.ratingN) parts.push(tr('community') + ' ★ ' + fmtNum(s.rating / s.ratingN, 1) + '/5 · ' + s.ratingN);
   return parts.join(' · ');
 }
 function recipeCommunityReviews(r) {
   const mine = (r.stats && r.stats.reviews || []).find(x => x.userId && x.userId === (cloudUser() || {}).id);
   const list = (r.stats && r.stats.reviews || []).filter(x => x.comment || isNum(x.rating)).slice().reverse();
   const isAuthor = r.created_by && r.created_by === (cloudUser() || {}).id;
-  const form = isAuthor ? '<p class="muted small">Dit is jouw recept. Andere communityleden kunnen het beoordelen.</p>' : '<h3>Jouw beoordeling</h3><p class="muted small">Geef sterren voor je indruk of ervaring. Een reactie is optioneel en wordt zichtbaar voor andere leden.</p><label class="fld"><span>Beoordeling</span><select id="recipeRating"><option value="">Kies sterren</option>' + [1, 2, 3, 4, 5].map(n => '<option value="' + n + '"' + (mine && mine.rating === n ? ' selected' : '') + '>' + '★'.repeat(n) + ' · ' + n + '/5</option>').join('') + '</select></label><label class="fld"><span>Openbare reactie (optioneel)</span><textarea id="recipeCommunityComment" maxlength="600" rows="3" placeholder="Wat vond je van dit recept?">' + esc(mine && mine.comment || '') + '</textarea></label><button class="btn" data-act="saveRecipeCommunityReview" data-id="' + esc(r.id) + '">Beoordeling plaatsen</button>';
-  return '<div class="card">' + form + (list.length ? '<h3>Reacties van leden</h3>' + list.slice(0, 12).map(x => '<p class="community-review"><b>' + esc(x.author) + '</b>' + (isNum(x.rating) ? ' · ' + '★'.repeat(x.rating) + ' ' + x.rating + '/5' : '') + (x.comment ? '<br>' + esc(x.comment) : '') + '</p>').join('') : '<p class="muted small">Nog geen openbare beoordelingen.</p>') + '</div>';
+  const form = isAuthor ? '<p class="muted small">' + tr('Dit is jouw recept. Andere communityleden kunnen het beoordelen.') + '</p>' : '<h3>' + tr('Jouw beoordeling') + '</h3><p class="muted small">' + tr('Geef sterren voor je indruk of ervaring. Een reactie is optioneel en wordt zichtbaar voor andere leden.') + '</p><label class="fld"><span>' + tr('Beoordeling') + '</span><select id="recipeRating"><option value="">' + tr('Kies sterren') + '</option>' + [1, 2, 3, 4, 5].map(n => '<option value="' + n + '"' + (mine && mine.rating === n ? ' selected' : '') + '>' + '★'.repeat(n) + ' · ' + n + '/5</option>').join('') + '</select></label><label class="fld"><span>' + tr('Openbare reactie (optioneel)') + '</span><textarea id="recipeCommunityComment" maxlength="600" rows="3" placeholder="' + tr('Wat vond je van dit recept?') + '">' + esc(mine && mine.comment || '') + '</textarea></label><button class="btn" data-act="saveRecipeCommunityReview" data-id="' + esc(r.id) + '">' + tr('Beoordeling plaatsen') + '</button>';
+  return '<div class="card">' + form + (list.length ? '<h3>' + tr('Reacties van leden') + '</h3>' + list.slice(0, 12).map(x => '<p class="community-review"><b>' + esc(x.author) + '</b>' + (isNum(x.rating) ? ' · ' + '★'.repeat(x.rating) + ' ' + x.rating + '/5' : '') + (x.comment ? '<br>' + esc(x.comment) : '') + '</p>').join('') : '<p class="muted small">' + tr('Nog geen openbare beoordelingen.') + '</p>') + '</div>';
 }
 ACT.saveCommunityName = async () => {
-  try { const name = await saveCommunityProfile($('#communityName').value); $('#communityName').value = name; toast('Communitynaam opgeslagen.'); }
+  try { const name = await saveCommunityProfile($('#communityName').value); $('#communityName').value = name; toast(tr('Communitynaam opgeslagen.')); }
   catch (e) { toast(e.message); }
 };
 ACT.saveRecipeCommunityReview = async el => {
   const rating = Number($('#recipeRating').value), comment = $('#recipeCommunityComment').value.trim().slice(0, 600);
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return toast('Kies eerst een beoordeling van 1 tot 5 sterren.');
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return toast(tr('Kies eerst een beoordeling van 1 tot 5 sterren.'));
   try {
-    if (!DB.settings.communityName) { const name = prompt('Kies een communitynaam. Die is zichtbaar bij je beoordeling, niet je echte accountgegevens.'); if (!name) return; await saveCommunityProfile(name); }
+    if (!DB.settings.communityName) { const name = prompt(tr('Kies een communitynaam. Die is zichtbaar bij je beoordeling, niet je echte accountgegevens.')); if (!name) return; await saveCommunityProfile(name); }
     await ensureSession();
     await sb('/rest/v1/prep_reviews?on_conflict=shared_id,created_by', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { shared_id: el.dataset.id, rating, community_comment: comment || null, updated_at: new Date().toISOString() } });
-    delete RECIPE_CACHE[el.dataset.id]; toast('Je beoordeling staat bij het recept.'); await renderRecipe(el.dataset.id);
-  } catch (e) { toast('Beoordeling opslaan mislukt: ' + e.message); }
+    delete RECIPE_CACHE[el.dataset.id]; toast(tr('Je beoordeling staat bij het recept.')); await renderRecipe(el.dataset.id);
+  } catch (e) { toast(tr('Beoordeling opslaan mislukt: ') + e.message); }
 };
 async function renderRecipes() {
   let h = header('Gedeelde recepten', 'Mealpreps van andere gebruikers', true);
-  view().innerHTML = h + '<p class="muted">Laden…</p>';
-  if (!navigator.onLine) { view().innerHTML = h + '<p class="note">Je bent offline. Gedeelde recepten laden kan alleen met internet.</p>'; return; }
+  view().innerHTML = h + '<p class="muted">' + tr('Laden…') + '</p>';
+  if (!navigator.onLine) { view().innerHTML = h + '<p class="note">' + tr('Je bent offline. Gedeelde recepten laden kan alleen met internet.') + '</p>'; return; }
   try {
     const rows = await fetchRecipes();
-    h += rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' porties</span></div><small class="muted">Gedeeld door ' + esc(r.authorName) + '</small>' +
+    h += rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' ' + tr('porties') + '</span></div><small class="muted">' + tr('Gedeeld door') + ' ' + esc(r.authorName) + '</small>' +
       '<div class="macro">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>' +
-      '<small class="muted">per portie · ' + starLine(r.stats) + '</small></a>').join('') : '<p class="card muted">Nog geen gedeelde recepten. Deel er zelf een via een mealprep → Deel.</p>';
-  } catch (e) { h += '<p class="note">Laden mislukt: ' + esc(e.message) + '</p>'; }
+      '<small class="muted">' + tr('per portie') + ' · ' + starLine(r.stats) + '</small></a>').join('') : '<p class="card muted">' + tr('Nog geen gedeelde recepten. Deel er zelf een via een mealprep → Deel.') + '</p>';
+  } catch (e) { h += '<p class="note">' + tr('Laden mislukt: ') + esc(e.message) + '</p>'; }
   view().innerHTML = h;
 }
 async function renderRecipe(id) {
   let h = header('Recept', 'Gedeeld via de app', true);
-  view().innerHTML = h + '<p class="muted">Laden…</p>';
+  view().innerHTML = h + '<p class="muted">' + tr('Laden…') + '</p>';
   let r = RECIPE_CACHE[id];
   try { if (!r || !r.stats) { await fetchRecipes(); r = RECIPE_CACHE[id]; } } catch (e) { }
-  if (!r) { view().innerHTML = h + '<p class="note">Dit recept is niet gevonden' + (navigator.onLine ? '' : ' (je bent offline)') + '.</p>'; return; }
+  if (!r) { view().innerHTML = h + '<p class="note">' + tr('Dit recept is niet gevonden') + (navigator.onLine ? '' : ' (' + tr('je bent offline') + ')') + '.</p>'; return; }
   const mine = DB.preps.find(p => p.sharedId === id);
-  h += '<div class="card">' + (r.photo_url ? '<img class="prepimg" src="' + esc(r.photo_url) + '" alt="Foto van ' + esc(r.name) + '">' : '') + '<h2>' + esc(r.name) + '</h2><p class="muted small">Gedeeld door ' + esc(r.authorName || 'Communitylid') + ' · ' + r.portions + ' porties · ' + starLine(r.stats) + '</p>' +
-    '<div class="macro big">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div><small class="muted">per portie, ruwe schatting</small>' +
-    (r.stats && r.stats.big ? '<p class="note small">' + r.stats.big + ' van de ' + r.stats.n + ' vond de portie te groot of moeilijk op te eten.</p>' : '') +
-    '<h3>Ingrediënten (hele prep)</h3><ul>' + (r.ingredients || []).map(g => '<li>' + esc(g.name) + (isNum(g.grams) ? ' · ' + fmtNum(g.grams) + ' g' : '') + '</li>').join('') + '</ul>' +
-    (r.note ? '<h3>Bereiding</h3><p>' + esc(r.note).replace(/\n/g, '<br>') + '</p>' : '') + '</div>' + recipeCommunityReviews(r);
-  h += mine ? '<a class="btn" href="#/prep/' + mine.id + '">Staat al bij je mealpreps</a>' : '<button class="btn big" data-act="addRecipe" data-id="' + id + '">Toevoegen aan mijn mealpreps</button>';
+  h += '<div class="card">' + (r.photo_url ? '<img class="prepimg" src="' + esc(r.photo_url) + '" alt="' + tr('Foto van') + ' ' + esc(r.name) + '">' : '') + '<h2>' + esc(r.name) + '</h2><p class="muted small">' + tr('Gedeeld door') + ' ' + esc(r.authorName || 'Communitylid') + ' · ' + r.portions + ' ' + tr('porties') + ' · ' + starLine(r.stats) + '</p>' +
+    '<div class="macro big">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div><small class="muted">' + tr('per portie, ruwe schatting') + '</small>' +
+    (r.stats && r.stats.big ? '<p class="note small">' + trf('{count} van de {total} vonden de portie te groot of moeilijk op te eten.', { count: r.stats.big, total: r.stats.n }) + '</p>' : '') +
+    '<h3>' + tr('Ingrediënten (hele prep)') + '</h3><ul>' + (r.ingredients || []).map(g => '<li>' + esc(g.name) + (isNum(g.grams) ? ' · ' + fmtNum(g.grams) + ' g' : '') + '</li>').join('') + '</ul>' +
+    (r.note ? '<h3>' + tr('Bereiding') + '</h3><p>' + esc(r.note).replace(/\n/g, '<br>') + '</p>' : '') + '</div>' + recipeCommunityReviews(r);
+  h += mine ? '<a class="btn" href="#/prep/' + mine.id + '">' + tr('Staat al bij je mealpreps') + '</a>' : '<button class="btn big" data-act="addRecipe" data-id="' + id + '">' + tr('Toevoegen aan mijn mealpreps') + '</button>';
   view().innerHTML = h;
 }
 ACT.addRecipe = el => {
@@ -169,7 +169,7 @@ ACT.addRecipe = el => {
   const p = { id: uid(), name: r.name, date: todayKey(), portions: r.portions, left: r.portions, plan: '', cooked: null, recipeNote: r.note || '', photoUrl: r.photo_url || undefined, sharedId: r.id, sharedOwn: false,
     ingredients: (r.ingredients || []).map(g => ({ id: uid(), name: g.name, grams: g.grams, mode: g.mode || 'per100', per: Object.assign({ kcal: null, protein: null, carbs: null, fat: null, fiber: null }, g.per) })) };
   PREP = Object.assign(p, { isNew: true });
-  toast('Pas de hoeveelheden aan als je anders kookt, en bewaar.');
+  toast(tr('Pas de hoeveelheden aan als je anders kookt, en bewaar.'));
   go('#/prep/nieuw');
 };
 
@@ -194,10 +194,10 @@ function feedbackCard() {
   const list = prepsNeedingFeedback();
   if (!list.length) return '';
   const p = list[0];
-  const why = isNum(p.left) && p.left <= 0 ? 'is op' : 'heb je al een week niet meer gegeten (' + fmtNum(p.left, p.left % 1 ? 2 : 0) + ' over)';
-  return '<div class="card fb"><b>Hoe was je mealprep?</b><p class="small">' + esc(p.name) + ' ' + why + '. Een paar korte vragen, zo leer je wat voor jou werkt' + (p.sharedId ? ' en help je andere gebruikers' : '') + '.</p>' +
-    '<div class="inrow wrap"><button class="btn" data-act="openFeedback" data-id="' + p.id + '">Beantwoorden</button><button class="link" data-act="snoozeFeedback" data-id="' + p.id + '">Later</button><button class="link" data-act="skipFeedback" data-id="' + p.id + '">Niet vragen</button></div>' +
-    (list.length > 1 ? '<small class="muted">Nog ' + (list.length - 1) + ' andere mealprep' + (list.length > 2 ? 's' : '') + ' wacht' + (list.length > 2 ? 'en' : '') + ' op je mening.</small>' : '') + '</div>';
+  const why = isNum(p.left) && p.left <= 0 ? tr('is op') : trf('heb je al een week niet meer gegeten ({count} over)', { count: fmtNum(p.left, p.left % 1 ? 2 : 0) });
+  return '<div class="card fb"><b>' + tr('Hoe was je mealprep?') + '</b><p class="small">' + esc(p.name) + ' ' + why + '. ' + tr('Een paar korte vragen, zo leer je wat voor jou werkt') + (p.sharedId ? ' ' + tr('en help je andere gebruikers') : '') + '.</p>' +
+    '<div class="inrow wrap"><button class="btn" data-act="openFeedback" data-id="' + p.id + '">' + tr('Beantwoorden') + '</button><button class="link" data-act="snoozeFeedback" data-id="' + p.id + '">' + tr('Later') + '</button><button class="link" data-act="skipFeedback" data-id="' + p.id + '">' + tr('Niet vragen') + '</button></div>' +
+    (list.length > 1 ? '<small class="muted">' + trf('Nog {count} andere mealpreps wachten op je mening.', { count: list.length - 1 }) + '</small>' : '') + '</div>';
 }
 ACT.snoozeFeedback = el => { const p = prepById(el.dataset.id); p.snoozeUntil = addDays(todayKey(), 2); save(); render(); };
 ACT.skipFeedback = el => { const p = prepById(el.dataset.id); p.feedbackSkip = true; save(); render(); };
@@ -223,33 +223,33 @@ function renderFeedback() {
   const p = prepById(FB.id);
   let h = '<div class="sheet-h"><h2>' + esc(p.name) + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="Sluiten">✕</button></div>';
   for (const [k, q, opts] of FB_Q) {
-    h += '<div class="fld" data-fq="' + k + '"><span>' + q + '</span>' + (typeof opts[0] === 'number'
-      ? '<div class="stars">' + opts.map(v => '<button class="' + (FB[k] >= v ? 'on' : '') + '" data-act="fbSet" data-k="' + k + '" data-v="' + v + '" aria-label="' + v + ' van 5">★</button>').join('') + '</div>'
-      : '<div class="chips">' + opts.map(v => '<button class="chip ' + (FB[k] === v ? 'on' : '') + '" data-act="fbSet" data-k="' + k + '" data-v="' + v + '">' + v + '</button>').join('') + '</div>') + '</div>';
+    h += '<div class="fld" data-fq="' + k + '"><span>' + tr(q) + '</span>' + (typeof opts[0] === 'number'
+      ? '<div class="stars">' + opts.map(v => '<button class="' + (FB[k] >= v ? 'on' : '') + '" data-act="fbSet" data-k="' + k + '" data-v="' + v + '" aria-label="' + v + ' ' + tr('van 5') + '">★</button>').join('') + '</div>'
+      : '<div class="chips">' + opts.map(v => '<button class="chip ' + (FB[k] === v ? 'on' : '') + '" data-act="fbSet" data-k="' + k + '" data-v="' + v + '">' + tr(v) + '</button>').join('') + '</div>') + '</div>';
   }
-  h += '<label class="fld"><span>Nog iets? (optioneel)</span><textarea id="fbnote" rows="2" placeholder="bv. minder groenten, meer saus">' + esc(FB.note || '') + '</textarea></label>';
-  h += '<button class="btn big" data-act="fbSave">Bewaren</button>';
+  h += '<label class="fld"><span>' + tr('Nog iets? (optioneel)') + '</span><textarea id="fbnote" rows="2" placeholder="' + tr('bv. minder groenten, meer saus') + '">' + esc(FB.note || '') + '</textarea></label>';
+  h += '<button class="btn big" data-act="fbSave">' + tr('Bewaren') + '</button>';
   $('#sheet .sheet-in').innerHTML = h;
 }
 ACT.fbSet = el => { const k = el.dataset.k; FB[k] = /^\d$/.test(el.dataset.v) ? Number(el.dataset.v) : el.dataset.v; const n = $('#fbnote'); if (n) FB.note = n.value; const y = $('#sheet .sheet-in').scrollTop; renderFeedback(); $('#sheet .sheet-in').scrollTop = y; };
 ACT.fbSave = async () => {
   FB.note = ($('#fbnote') || {}).value || '';
   const miss = FB_Q.filter(([k]) => FB[k] === undefined);
-  if (miss.length > 3) return toast('Beantwoord minstens de meeste vragen.');
+  if (miss.length > 3) return toast(tr('Beantwoord minstens de meeste vragen.'));
   const p = prepById(FB.id);
   p.feedback = Object.assign({}, FB, { date: todayKey() }); delete p.feedback.id;
-  delete p.snoozeUntil; save(); closeSheet(); toast('Bedankt! Je vindt dit terug bij de mealprep.');
+  delete p.snoozeUntil; save(); closeSheet(); toast(tr('Bedankt! Je vindt dit terug bij de mealprep.'));
   if (p.sharedId && cloudReady() && navigator.onLine) {
     try {
       await ensureSession();
       const f = p.feedback;
       await sb('/rest/v1/prep_reviews?on_conflict=shared_id,created_by', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
-        body: { shared_id: p.sharedId, taste: f.taste || null, ease: f.ease || null, portion: f.portion || null, eat: f.eat || null, fullness: f.fullness || null, keep: f.keep || null, again: f.again || null, note: f.note ? f.note.slice(0, 1000) : null } });
+        body: { shared_id: p.sharedId, taste: f.taste || null, ease: f.ease || null, portion: f.portion || null, eat: f.eat || null, fullness: f.fullness || null, keep: f.keep || null, again: f.again || null } });
     } catch (e) { console.warn('review', e); }
   }
   render();
 };
 function feedbackSummary(f) {
   if (!f) return '';
-  return [f.taste ? '★ ' + f.taste + ' smaak' : '', f.ease ? f.ease + '/5 gemak' : '', f.portion ? 'portie ' + f.portion : '', f.eat ? 'opeten ' + f.eat : '', f.again ? 'opnieuw: ' + f.again : ''].filter(Boolean).join(' · ');
+  return [f.taste ? '★ ' + f.taste + ' ' + tr('smaak') : '', f.ease ? f.ease + '/5 ' + tr('gemak') : '', f.portion ? tr('portie') + ' ' + tr(f.portion) : '', f.eat ? tr('opeten') + ' ' + tr(f.eat) : '', f.again ? tr('opnieuw:') + ' ' + tr(f.again) : ''].filter(Boolean).join(' · ');
 }

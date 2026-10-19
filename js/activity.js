@@ -28,7 +28,9 @@ function currentWeight(k) {
 function activityKcal(a, k) {
   const A = ACTIVITIES[a.type] || ACTIVITIES.anders;
   const met = A.met[Math.max(0, INTENS.indexOf(a.int))] || A.met[1];
-  return Math.round(Math.max(0, met - 1) * currentWeight(k) * (a.min || 0) / 60);
+  const minutes = Number(a.min);
+  if (!Number.isFinite(minutes) || minutes < 0 || minutes > 1440) return 0;
+  return Math.round(Math.max(0, met - 1) * currentWeight(k) * minutes / 60);
 }
 function stepsKm(steps) { return steps * ((DB.profile.heightCm || 172) * 0.415 / 100) / 1000; }
 function stepsKcal(steps, k) { return isNum(steps) ? Math.round(0.5 * currentWeight(k) * stepsKm(steps)) : null; }
@@ -69,7 +71,7 @@ function renderActivitySheet() {
   let h = '<div class="sheet-h"><h2>' + tr('Activiteit') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + tr('Sluiten') + '">✕</button></div>';
   h += '<div class="chips">' + Object.entries(ACTIVITIES).map(([k, v]) => '<button class="chip ' + (A.type === k ? 'on' : '') + '" data-act="actType" data-t="' + k + '">' + tr(v.label) + '</button>').join('') + '</div>';
   if (A.type === 'anders') h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="actnote" value="' + esc(A.note || '') + '" placeholder="' + tr('bv. klimmen') + '"></label>';
-  h += '<div class="fld"><span>' + tr('Hoe lang?') + '</span><div class="amt-q"><button type="button" class="amt-b" data-act="actMin" data-d="-5">−</button><input type="number" inputmode="numeric" id="actmin" value="' + A.min + '"><button type="button" class="amt-b" data-act="actMin" data-d="5">+</button></div><small class="muted">' + tr('minuten') + '</small></div>';
+  h += '<div class="fld"><span>' + tr('Hoe lang?') + '</span><div class="amt-q"><button type="button" class="amt-b" data-act="actMin" data-d="-5">−</button><input type="number" inputmode="numeric" id="actmin" min="1" max="1440" step="1" value="' + A.min + '"><button type="button" class="amt-b" data-act="actMin" data-d="5">+</button></div><small class="muted">' + tr('minuten') + '</small></div>';
   h += '<div class="fld"><span>' + tr('Hoe zwaar?') + '</span><div class="seg">' + INTENS.map(i => '<button class="' + (A.int === i ? 'on' : '') + '" data-act="actInt" data-i="' + i + '">' + tr(i) + '</button>').join('') + '</div><small class="muted">' + tr('Licht: praten gaat makkelijk. Matig: praten gaat, zingen niet. Zwaar: praten lukt amper.') + '</small></div>';
   if (A.type === 'wandelen') h += '<p class="note small">' + tr('Heb je je stappen al ingevuld? Dan telt een wandeling niet dubbel: het verbruik komt dan uit je stappen.') + '</p>';
   h += '<p class="muted" id="actsum">' + trf('≈ {kcal} kcal extra bovenop rust (ruwe schatting, op basis van {weight} kg)', { kcal: fmtNum(activityKcal(A, A.k)), weight: fmtNum(currentWeight(A.k), 1) }) + '</p>';
@@ -78,14 +80,15 @@ function renderActivitySheet() {
 }
 ACT.actType = el => { ACT_DRAFT.type = el.dataset.t; renderActivitySheet(); };
 ACT.actInt = el => { ACT_DRAFT.int = el.dataset.i; renderActivitySheet(); };
-ACT.actMin = el => { ACT_DRAFT.min = Math.max(5, (Number($('#actmin').value) || 0) + Number(el.dataset.d)); renderActivitySheet(); };
+ACT.actMin = el => { ACT_DRAFT.min = Math.min(1440, Math.max(1, (Number($('#actmin').value) || 0) + Number(el.dataset.d))); renderActivitySheet(); };
 document.addEventListener('input', e => {
   if (e.target.id === 'actmin' && ACT_DRAFT) { ACT_DRAFT.min = Number(e.target.value) || 0; const s = $('#actsum'); if (s) s.textContent = trf('≈ {kcal} kcal extra bovenop rust (ruwe schatting, op basis van {weight} kg)', { kcal: fmtNum(activityKcal(ACT_DRAFT, ACT_DRAFT.k)), weight: fmtNum(currentWeight(ACT_DRAFT.k), 1) }); }
   if (e.target.id === 'actnote' && ACT_DRAFT) ACT_DRAFT.note = e.target.value;
 });
 ACT.actSave = () => {
-  const A = ACT_DRAFT; if (!(A.min > 0)) return toast(tr('Hoe lang duurde het?'));
-  const a = { id: A.id, type: A.type, min: A.min, int: A.int }; if (A.note) a.note = A.note.trim();
+  const A = ACT_DRAFT;
+  if (!Number.isInteger(Number(A.min)) || Number(A.min) < 1 || Number(A.min) > 1440) return toast(tr('Kies een duur tussen 1 minuut en 24 uur.'));
+  const a = { id: A.id, type: A.type, min: Number(A.min), int: A.int }; if (A.note) a.note = A.note.trim();
   const cb = ACT_CB; ACT_DRAFT = null; closeSheet();
   if (cb) cb(a); else { const d = getDay(A.k, true); d.activities = (d.activities || []).concat(a); save(); toast(tr('Activiteit bewaard')); render(); }
 };
