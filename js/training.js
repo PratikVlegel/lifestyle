@@ -138,6 +138,20 @@ function validExerciseTarget(value) {
 function exerciseTargetText(x) {
   return esc(x.reps) + (validRepRange(x.reps) ? ' ' + tr('herhalingen') : '');
 }
+const CUSTOM_EXERCISE_LIBRARY = [
+  { id: 'goblet-squat', name: 'Goblet squat', focus: 'Benen en heupen', target: '8–12' },
+  { id: 'chair-squat', name: 'Stoel squat', focus: 'Benen; stoel als steun', target: '8–12' },
+  { id: 'glute-bridge', name: 'Heupbrug', focus: 'Billen en heupen', target: '10–15' },
+  { id: 'push-up', name: 'Push-up', focus: 'Borst en armen', target: '6–12' },
+  { id: 'wall-push-up', name: 'Push-up tegen de muur', focus: 'Borst en armen; handen tegen de muur', target: '8–15' },
+  { id: 'dumbbell-row', name: 'Roeien met dumbbell', focus: 'Rug; trek gecontroleerd', target: '8–12' },
+  { id: 'band-row', name: 'Roeien met weerstandsband', focus: 'Rug; trek de band naar je toe', target: '8–12' },
+  { id: 'dead-bug', name: 'Dead bug', focus: 'Romp; houd je onderrug rustig', target: '8–12' },
+  { id: 'plank', name: 'Plank', focus: 'Romp; houd je lichaam in een rechte lijn', target: '30 sec' },
+  { id: 'side-plank', name: 'Zijwaartse plank', focus: 'Romp en heupen; houd je heupen gestapeld', target: '20 sec' },
+  { id: 'bird-dog', name: 'Bird dog', focus: 'Romp en coördinatie; beweeg rustig', target: '8–12' },
+  { id: 'calf-raise', name: 'Kuitheffen', focus: 'Kuiten en enkels', target: '10–15' }
+];
 function renderCustomTrainingBuilder() {
   const d = customTrainingDraft();
   let h = header('Zelf samenstellen', 'Maak een weekschema met je eigen oefeningen, sets en herhalingen', true);
@@ -146,11 +160,13 @@ function renderCustomTrainingBuilder() {
   h += '<div class="grid2"><label class="fld"><span>' + tr('Doel') + '</span><select data-chg="customTrainingField" data-f="goal">' + Object.entries(TRAIN_GOALS).filter(([k]) => !['rehab', 'marathon', 'hyrox', 'race', 'race5k', 'race10k', 'half'].includes(k)).map(([k, v]) => '<option value="' + k + '"' + (d.goal === k ? ' selected' : '') + '>' + esc(tr(v)) + '</option>').join('') + '</select></label><label class="fld"><span>' + tr('Niveau') + '</span><select data-chg="customTrainingField" data-f="level">' + TRAIN_LEVELS.map(([k, v]) => '<option value="' + k + '"' + (d.level === k ? ' selected' : '') + '>' + tr(v) + '</option>').join('') + '</select></label></div>';
   h += '<label class="fld"><span>' + tr('Hoeveel weken wil je dit schema volgen?') + '</span><input type="number" min="1" max="24" value="' + d.weeks + '" data-chg="customTrainingField" data-f="weeks"></label>';
   h += '<fieldset class="fld"><legend>' + tr('Trainingsdagen') + '</legend><div class="custom-days">' + TRAIN_DAYS.map(([k, label]) => '<label class="check"><input type="checkbox" data-chg="customTrainingDay" data-day="' + k + '"' + (d.days.includes(k) ? ' checked' : '') + '><span class="n">' + tr(label) + '</span></label>').join('') + '</div></fieldset></div>';
+  h += '<p class="muted small">' + tr('Typ je eigen oefening of kies een suggestie uit de oefenbibliotheek.') + '</p>';
   h += d.days.map(k => {
     const s = d.sessions[k];
-    const exercises = s.exercises.map((x, i) => '<div class="exercise-editor"><div class="exercise-name-row"><label class="fld"><span>' + tr('Oefening') + '</span><input maxlength="80" placeholder="' + tr('bv. goblet squat') + '" value="' + esc(x.name || '') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="name"></label><button class="iconbtn sm" data-act="customExerciseRemove" data-day="' + k + '" data-i="' + i + '" aria-label="' + tr('Oefening verwijderen') + '">×</button></div><label class="fld exercise-focus"><span>' + tr('Focus of uitleg (optioneel)') + '</span><input maxlength="160" placeholder="' + tr('bv. techniek, evenwicht of bovenrug') + '" value="' + esc(x.focus || '') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="focus"></label><div class="exercise-load-row"><label class="fld"><span>' + tr('Sets') + '</span><input type="number" min="1" max="10" value="' + esc(x.sets || 3) + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="sets"></label><label class="fld"><span>' + tr('Herhalingen of duur') + '</span><input maxlength="16" placeholder="' + tr('bv. 8–12 of 30 sec') + '" value="' + esc(x.reps || '8–12') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="reps"></label><label class="fld"><span>' + tr('Rust (sec)') + '</span><input type="number" min="0" max="600" value="' + esc(x.rest ?? 90) + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="rest"></label></div></div>').join('');
-    return '<section class="card"><h3>' + tr(s.day) + '</h3><label class="fld"><span>' + tr('Naam training') + '</span><input maxlength="60" value="' + esc(s.title) + '" data-chg="customSessionField" data-day="' + k + '" data-f="title"></label><label class="fld"><span>' + tr('Notitie of uitvoering') + '</span><textarea maxlength="500" rows="2" data-chg="customSessionField" data-day="' + k + '" data-f="detail" placeholder="' + tr('Tempo, techniek, alternatief…') + '">' + esc(s.detail || '') + '</textarea></label>' + exercises + '<button class="btn ghost" data-act="customExerciseAdd" data-day="' + k + '">+ ' + tr('Oefening toevoegen') + '</button></section>';
+    const exercises = s.exercises.map((x, i) => '<div class="exercise-editor"><div class="exercise-name-row"><label class="fld"><span>' + tr('Oefening') + '</span><input maxlength="80" list="customExerciseLibrary" placeholder="' + tr('bv. goblet squat') + '" value="' + esc(x.name || '') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="name"></label><button class="iconbtn sm" data-act="customExerciseRemove" data-day="' + k + '" data-i="' + i + '" aria-label="' + tr('Oefening verwijderen') + '">×</button></div><div class="exercise-focus-row"><label class="fld exercise-focus"><span>' + tr('Focus of uitleg (optioneel)') + '</span><input maxlength="160" placeholder="' + tr('bv. techniek, evenwicht of bovenrug') + '" value="' + esc(x.focus || '') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="focus"></label><button class="iconbtn sm" data-act="customExerciseCopy" data-day="' + k + '" data-i="' + i + '" aria-label="' + tr('Oefening kopiëren') + '" title="' + tr('Oefening kopiëren') + '">⧉</button></div><div class="exercise-load-row"><label class="fld"><span>' + tr('Sets') + '</span><input type="number" min="1" max="10" value="' + esc(x.sets || 3) + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="sets"></label><label class="fld"><span>' + tr('Herhalingen of duur') + '</span><input maxlength="16" placeholder="' + tr('bv. 8–12 of 30 sec') + '" value="' + esc(x.reps || '8–12') + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="reps"></label><label class="fld"><span>' + tr('Rust (sec)') + '</span><input type="number" min="0" max="600" value="' + esc(x.rest ?? 90) + '" data-chg="customExerciseField" data-day="' + k + '" data-i="' + i + '" data-f="rest"></label></div></div>').join('');
+    return '<section class="card"><div class="custom-session-head"><h3>' + tr(s.day) + '</h3><button class="chip sm" data-act="customSessionCopy" data-day="' + k + '">' + tr('Kopieer naar andere dagen') + '</button></div><label class="fld"><span>' + tr('Naam training') + '</span><input maxlength="60" value="' + esc(s.title) + '" data-chg="customSessionField" data-day="' + k + '" data-f="title"></label><label class="fld"><span>' + tr('Notitie of uitvoering') + '</span><textarea maxlength="500" rows="2" data-chg="customSessionField" data-day="' + k + '" data-f="detail" placeholder="' + tr('Tempo, techniek, alternatief…') + '">' + esc(s.detail || '') + '</textarea></label>' + exercises + '<button class="btn ghost" data-act="customExerciseAdd" data-day="' + k + '">+ ' + tr('Oefening toevoegen') + '</button></section>';
   }).join('');
+  h += '<datalist id="customExerciseLibrary">' + CUSTOM_EXERCISE_LIBRARY.map(x => '<option value="' + esc(tr(x.name)) + '"></option>').join('') + '</datalist>';
   h += '<button class="btn big" data-act="generateCustomTraining">' + tr('Voorbeeld bekijken') + '</button>';
   view().innerHTML = h;
 }
@@ -176,9 +192,30 @@ ACT.customExerciseField = el => {
   const f = el.dataset.f, value = ['sets', 'rest'].includes(f) ? Number(el.value) : el.value;
   if (['sets', 'rest'].includes(f) && (!Number.isInteger(value) || value < (f === 'sets' ? 1 : 0) || value > (f === 'sets' ? 10 : 600))) { el.value = x[f]; return toast(f === 'sets' ? 'Sets: kies 1 tot 10.' : 'Rust: kies 0 tot 600 seconden.'); }
   if (f === 'reps' && !validExerciseTarget(value)) { el.value = x.reps; return toast('Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).'); }
-  x[f] = f === 'name' ? value.slice(0, 80) : f === 'focus' ? value.slice(0, 160) : value; save();
+  x[f] = f === 'name' ? value.slice(0, 80) : f === 'focus' ? value.slice(0, 160) : value;
+  if (f === 'name') {
+    const suggestion = CUSTOM_EXERCISE_LIBRARY.find(item => tr(item.name) === value.trim());
+    if (suggestion) { x.focus = tr(suggestion.focus); x.reps = suggestion.target; renderCustomTrainingBuilder(); }
+  }
+  save();
 };
 ACT.customExerciseAdd = el => { const d = customTrainingDraft(); if (d.sessions[el.dataset.day].exercises.length >= 20) return toast('Maximaal 20 oefeningen per training.'); d.sessions[el.dataset.day].exercises.push({ name: '', sets: 3, reps: '8–12', rest: 90 }); save(); renderCustomTrainingBuilder(); };
+ACT.customExerciseCopy = el => {
+  const d = customTrainingDraft(), exercises = d.sessions[el.dataset.day]?.exercises, index = Number(el.dataset.i);
+  if (!exercises || !exercises[index]) return;
+  if (exercises.length >= 20) return toast('Maximaal 20 oefeningen per training.');
+  exercises.splice(index + 1, 0, JSON.parse(JSON.stringify(exercises[index]))); save(); renderCustomTrainingBuilder();
+};
+ACT.customSessionCopy = el => {
+  const d = customTrainingDraft(), sourceKey = el.dataset.day, source = d.sessions[sourceKey];
+  const targets = d.days.filter(key => key !== sourceKey);
+  if (!targets.length) return toast('Kies minstens één andere trainingsdag om naartoe te kopiëren.');
+  const hasContent = session => session && (session.title !== 'Krachttraining' || session.detail || session.exercises.some(x => x.name || x.focus));
+  if (targets.some(key => hasContent(d.sessions[key])) && !confirm(tr('Dit vervangt de inhoud van de andere gekozen trainingsdagen. Doorgaan?'))) return;
+  const labels = Object.fromEntries(TRAIN_DAYS);
+  for (const key of targets) d.sessions[key] = Object.assign({}, JSON.parse(JSON.stringify(source)), { day: labels[key] });
+  save(); renderCustomTrainingBuilder(); toast(tr('Training naar de andere gekozen dagen gekopieerd.'));
+};
 ACT.customExerciseRemove = el => { const d = customTrainingDraft(); d.sessions[el.dataset.day]?.exercises.splice(Number(el.dataset.i), 1); save(); renderCustomTrainingBuilder(); };
 ACT.generateCustomTraining = () => {
   const d = customTrainingDraft(); if (!d.name.trim()) return toast('Geef je schema een naam.'); if (!d.days.length) return toast('Kies minstens één trainingsdag.');

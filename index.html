@@ -287,12 +287,15 @@ details summary{cursor:pointer;font-weight:600}
 .exercise-editor{display:grid;gap:8px;border-top:1px solid var(--line);padding:10px 0}
 .exercise-editor .fld{margin:0;min-width:0}
 .exercise-name-row{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:8px;align-items:end}
+.exercise-focus-row{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:8px;align-items:end}
+.custom-session-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.custom-session-head h3{margin:0}
 .exercise-load-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end}
 .exercise-editor input{min-width:0;padding:9px 8px}
 .exercise-editor .fld>span{font-size:.76rem}
 .custom-days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .plan-community{border-left:4px solid var(--lentil)}
-@media(max-width:430px){.exercise-editor{gap:7px}.exercise-name-row{grid-template-columns:minmax(0,1fr) 36px;gap:6px}.exercise-load-row{gap:6px}.exercise-editor input{font-size:.9rem;padding:8px 6px}.exercise-editor .fld>span{font-size:.7rem}}
+@media(max-width:430px){.exercise-editor{gap:7px}.exercise-name-row{grid-template-columns:minmax(0,1fr) 36px;gap:6px}.exercise-focus-row{grid-template-columns:minmax(0,1fr) 34px;gap:6px}.exercise-load-row{gap:6px}.exercise-editor input{font-size:.9rem;padding:8px 6px}.exercise-editor .fld>span{font-size:.7rem}}
 .diary-date-control{display:flex;align-items:center;gap:8px}
 .diary-date{min-width:145px;max-width:42vw;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit}
 @media(max-width:370px){.diary-date-control{flex:1 1 100%}.diary-date{flex:1;max-width:none}}
