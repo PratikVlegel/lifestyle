@@ -11,6 +11,7 @@ const SLOTS = {
   na: 'Na het avondeten'
 };
 const SLOT_ORDER = ['ontbijt', 'tussen1', 'lunch', 'tussen2', 'avond', 'na'];
+const MAX_REMINDERS = 20;
 const NUTR = ['kcal', 'protein', 'carbs', 'fat', 'fiber'];
 const NUTR_LABEL = { kcal: 'kcal', protein: 'eiwit', carbs: 'koolh.', fat: 'vet', fiber: 'vezels' };
 
@@ -84,7 +85,15 @@ function migrate(d) {
   out.preps = d.preps || [];
   out.foods = d.foods || [];
   out.ai = d.ai || [];
-  out.reminders = (d.reminders && d.reminders.length) ? d.reminders : defaultData().reminders;
+  const reminderKinds = new Set(['ontbijt', 'lunch', 'avond', 'dag', 'vrij']);
+  const reminderIds = new Set();
+  const reminders = Array.isArray(d.reminders) ? d.reminders.slice(0, MAX_REMINDERS).filter(r => {
+    if (!r || typeof r !== 'object' || Array.isArray(r) || typeof r.id !== 'string' || !/^[A-Za-z0-9_-]{1,40}$/.test(r.id) || reminderIds.has(r.id) ||
+        typeof r.label !== 'string' || !r.label.trim() || r.label.length > 80 || typeof r.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) || !reminderKinds.has(r.kind)) return false;
+    reminderIds.add(r.id);
+    return true;
+  }).map(r => ({ id: r.id, label: r.label.trim(), time: r.time, kind: r.kind, on: r.on === true })) : [];
+  out.reminders = reminders.length ? reminders : defaultData().reminders;
   return out;
 }
 function save() {
@@ -278,6 +287,16 @@ function validateImportData(obj) {
     if (obj[field] !== undefined && obj[field] !== null && !Array.isArray(obj[field])) fail('het veld ' + field + ' moet een lijst zijn.');
     if (Array.isArray(obj[field]) && obj[field].length > 10000) fail('de lijst ' + field + ' is te groot.');
     if (Array.isArray(obj[field]) && field !== 'mealPatch' && obj[field].some(item => !record(item))) fail('de lijst ' + field + ' bevat een ongeldig item.');
+  }
+  if (Array.isArray(obj.reminders)) {
+    if (obj.reminders.length > MAX_REMINDERS) fail('herinneringen zijn ongeldig of bevatten meer dan 20 items.');
+    const ids = new Set(), kinds = new Set(['ontbijt', 'lunch', 'avond', 'dag', 'vrij']);
+    for (const r of obj.reminders) {
+      if (!record(r) || typeof r.id !== 'string' || !/^[A-Za-z0-9_-]{1,40}$/.test(r.id) || ids.has(r.id) ||
+          typeof r.label !== 'string' || !r.label.trim() || r.label.length > 80 || typeof r.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) ||
+          !kinds.has(r.kind) || typeof r.on !== 'boolean') fail('herinneringen zijn ongeldig of bevatten meer dan 20 items.');
+      ids.add(r.id);
+    }
   }
   const stack = [{ value: obj, depth: 0 }];
   while (stack.length) {

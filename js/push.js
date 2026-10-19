@@ -14,7 +14,7 @@ function vapidBytes(value) {
   return out;
 }
 function webPushSchedule() {
-  return DB.reminders.filter(r => r && r.on && /^\d{2}:\d{2}$/.test(r.time || '')).slice(0, 20).map(r => ({
+  return DB.reminders.filter(r => r && r.on && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time || '')).slice(0, MAX_REMINDERS).map(r => ({
     id: String(r.id || '').slice(0, 40), time: r.time
   })).filter(r => /^[a-zA-Z0-9_-]{1,40}$/.test(r.id));
 }

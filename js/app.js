@@ -977,7 +977,7 @@ function renderMore(sub) {
   const G = DB.goals, P = DB.profile, S = DB.settings;
   h += '<a class="card" href="#/inzicht"><b>' + tr('Inzicht en advies') + '</b><p class="small">' + tr('Persoonlijke patronen, onderbouwde acties en weekrapport.') + '</p></a>';
   h += '<div class="card"><h3>' + tr('Herinneringen') + '</h3><p class="muted small">' + tr('Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.') + '</p>';
-  h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="' + tr('aan') + '"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(reminderDisplayLabel(r.label)) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="' + tr('verwijder') + '">✕</button></div>').join('');
+  h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="' + tr('aan') + '"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" maxlength="80" value="' + esc(reminderDisplayLabel(r.label)) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="' + tr('verwijder') + '">✕</button></div>').join('');
   h += '<button class="btn ghost" data-act="remAdd">' + tr('+ herinnering') + '</button>';
   h += '<h3>' + tr('Meldingen op je gsm') + '</h3><p class="muted small">' + tr('Als je push inschakelt, bewaart Supabase de pushverbinding van dit toestel, tijdzone, taal en herinneringstijden. Namen en dagboekgegevens blijven lokaal; pushberichten zijn algemeen.') + '</p>' +
     (pushPublicKey() ? (S.pushEnabled ? '<p class="small">' + tr('Push staat aan op dit toestel.') + '</p><button class="btn ghost" data-act="webPushDisable">' + tr('Push uitschakelen') + '</button>' : '<button class="btn" data-act="webPushEnable">' + tr('Push instellen op dit toestel') + '</button>') : '<p class="muted small">' + tr('Webpush wordt nog geconfigureerd. De agenda-export blijft beschikbaar.') + '</p>') +
@@ -1109,11 +1109,11 @@ ACT.setG = el => {
   DB[a][b] = v; save(); toast('Bewaard');
 };
 ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); refreshWebPushSchedule(true); };
-ACT.remTime = el => { DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
-ACT.remLabel = el => { DB.reminders[el.dataset.i].label = el.value; save(); };
+ACT.remTime = el => { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = DB.reminders[el.dataset.i].time; return; } DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
+ACT.remLabel = el => { DB.reminders[el.dataset.i].label = el.value.trim().slice(0, 80); save(); };
 ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); refreshWebPushSchedule(true); };
 ACT.remDel = el => { if (!confirm('Herinnering verwijderen?')) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); refreshWebPushSchedule(true); render(); };
-ACT.remAdd = () => { DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
+ACT.remAdd = () => { if (DB.reminders.length >= MAX_REMINDERS) return toast(tr('Je kunt maximaal 20 herinneringen instellen.')); DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
 ACT.language = el => {
   if (!UI_LOCALES.includes(el.value)) { el.value = currentLocale(); return; }
   DB.settings.language = el.value; save(); applyLocale(); refreshWebPushSchedule(true); render();
@@ -1291,7 +1291,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.34';
+const APP_VERSION = '1.10.35';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

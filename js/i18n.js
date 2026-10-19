@@ -1945,3 +1945,22 @@ const MOOD_EVIDENCE_TRANSLATIONS = {
   'de-DE': { '{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.': '{metric}: {withCount} Tage mit dem Supplement und einem Wert, {withoutCount} Tage ohne das Supplement und mit einem Wert; mindestens fünf pro Gruppe erforderlich.' }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], MOOD_EVIDENCE_TRANSLATIONS[locale]);
+const REMINDER_LIMIT_TRANSLATIONS = {
+  'nl-BE': {
+    'Je kunt maximaal 20 herinneringen instellen.': 'Je kunt maximaal 20 herinneringen instellen.',
+    'Ongeldige back-up: herinneringen zijn ongeldig of bevatten meer dan 20 items.': 'Ongeldige back-up: herinneringen zijn ongeldig of bevatten meer dan 20 items.'
+  },
+  'en-GB': {
+    'Je kunt maximaal 20 herinneringen instellen.': 'You can set up to 20 reminders.',
+    'Ongeldige back-up: herinneringen zijn ongeldig of bevatten meer dan 20 items.': 'Invalid backup: reminders are malformed or contain more than 20 items.'
+  },
+  'fr-FR': {
+    'Je kunt maximaal 20 herinneringen instellen.': 'Vous pouvez définir jusqu’à 20 rappels.',
+    'Ongeldige back-up: herinneringen zijn ongeldig of bevatten meer dan 20 items.': 'Sauvegarde invalide : les rappels sont mal formés ou dépassent 20 éléments.'
+  },
+  'de-DE': {
+    'Je kunt maximaal 20 herinneringen instellen.': 'Du kannst bis zu 20 Erinnerungen einrichten.',
+    'Ongeldige back-up: herinneringen zijn ongeldig of bevatten meer dan 20 items.': 'Ungültige Sicherung: Erinnerungen sind fehlerhaft oder enthalten mehr als 20 Einträge.'
+  }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], REMINDER_LIMIT_TRANSLATIONS[locale]);
