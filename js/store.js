@@ -26,7 +26,7 @@ function defaultData() {
       { id: 'r3', label: 'Avondeten', time: '19:00', kind: 'avond', on: true },
       { id: 'r4', label: 'Dagopname', time: '21:00', kind: 'dag', on: true }
     ],
-    settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, glassMl: 250, theme: 'auto', moodInsights: false, communityName: '', language: 'nl-BE' },
+    settings: { apiKey: '', model: 'claude-sonnet-4-5', appUrl: '', notify: false, pushEnabled: false, glassMl: 250, theme: 'auto', moodInsights: false, communityName: '', language: 'nl-BE' },
     training: { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, rehabCleared: false, generated: null, plans: [], activePlanId: null },
     days: {},
     preps: [],
@@ -220,7 +220,7 @@ function dueReminder() {
 }
 
 /* ---------- import / export ---------- */
-function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: Object.assign({}, DB.settings, { apiKey: '' }) }), null, 1); }
+function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: Object.assign({}, DB.settings, { apiKey: '', pushEnabled: false }) }), null, 1); }
 function importJSON(obj, mode) {
   if (!obj || typeof obj !== 'object' || !(obj.days || obj.preps || obj.foods)) throw new Error('Dit lijkt geen back-up van deze app.');
   obj.days = obj.days || {};

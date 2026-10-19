@@ -1,0 +1,4 @@
+[functions.send-reminders]
+# The scheduled job authenticates with a dedicated secret header. Do not expose
+# this function to browsers; user subscriptions are written through RLS instead.
+verify_jwt = true

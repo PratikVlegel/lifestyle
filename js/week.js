@@ -26,15 +26,15 @@ function renderWeek(endArg) {
   const end = endArg || (parseKey(todayKey()).getDay() === 0 ? completeKey() : weekEnd());
   const cur = weekStats(end), prev = weekStats(addDays(end, -7));
   let h = header('Je week', fmtDay(addDays(end, -6)) + ' – ' + fmtDay(end), true);
-  h += '<div class="seg"><button data-act="weekNav" data-k="' + addDays(end, -7) + '">‹ vorige</button>' + (end < weekEnd() ? '<button data-act="weekNav" data-k="' + addDays(end, 7) + '">volgende ›</button>' : '') + '</div>';
-  h += '<div class="card table"><div class="tr"><span class="muted">Gemiddeld per dag</span><b class="muted">deze week</b><small class="muted" style="width:auto">vorige</small></div>' +
+  h += '<div class="seg"><button data-act="weekNav" data-k="' + addDays(end, -7) + '">' + tr('‹ vorige') + '</button>' + (end < weekEnd() ? '<button data-act="weekNav" data-k="' + addDays(end, 7) + '">' + tr('volgende ›') + '</button>' : '') + '</div>';
+  h += '<div class="card table week-compare"><div class="tr week-head"><span class="muted">' + tr('Gemiddeld per dag') + '</span><b class="muted">' + tr('Deze week') + '</b><small class="muted" style="width:auto">' + tr('Vorige week') + '</small></div>' +
     WEEK_ROWS.map(([name, label]) => {
       const a = cur[name], b = prev[name];
       if (!isNum(a) && !isNum(b)) return '';
       const D = DVARS[name];
       let arrow = '';
       if (isNum(a) && isNum(b) && Math.abs(a - b) > Math.max(Math.abs(b) * 0.05, D.d ? 0.2 : 1)) arrow = a > b ? ' ↑' : ' ↓';
-      return '<div class="tr"><span>' + label + '</span><b>' + (isNum(a) ? fmtV(name, a) : '–') + arrow + '</b><small class="muted" style="width:auto">' + (isNum(b) ? fmtV(name, b) : '–') + '</small></div>';
+      return '<div class="tr"><span>' + tr(label) + '</span><b>' + (isNum(a) ? fmtV(name, a) : '–') + arrow + '</b><small class="muted" style="width:auto">' + (isNum(b) ? fmtV(name, b) : '–') + '</small></div>';
     }).join('') + '</div>';
   const notes = [];
   if (isNum(cur.weight)) notes.push('Gewicht: weekgemiddelde ' + fmtNum(cur.weight, 1) + ' kg over ' + cur.weighings + ' weging' + (cur.weighings > 1 ? 'en' : '') + (isNum(prev.weight) ? ' (vorige week ' + fmtNum(prev.weight, 1) + ' kg)' : '') + '.');
@@ -42,10 +42,10 @@ function renderWeek(endArg) {
   if (cur.acts) notes.push(cur.acts + ' extra activiteit' + (cur.acts > 1 ? 'en' : '') + ' gelogd.');
   if (cur.alcoholTotal) notes.push(cur.alcoholTotal + ' glazen alcohol deze week.');
   if (cur.best) notes.push('Beste dag: ' + fmtDay(cur.best.k, true) + ' (stemming ' + cur.best.v + '/10).');
-  h += '<div class="card"><h3>In het kort</h3>' + notes.map(n => '<p class="small">' + esc(n) + '</p>').join('') + '</div>';
+  h += '<div class="card"><h3>' + tr('In het kort') + '</h3>' + notes.map(n => '<p class="small">' + esc(n) + '</p>').join('') + '</div>';
   const ins = buildInsights(14).filter(i => i.tone === 'tip').slice(0, 3);
-  if (ins.length) h += '<h2 class="sec">Om op te letten deze week</h2>' + ins.map(insightCard).join('');
-  h += '<div class="inrow wrap"><button class="btn ghost" data-act="shareWeek">Deel als tekst</button><a class="btn ghost" href="#/rapport">Rapport maken</a><a class="btn ghost" href="#/experimenten">Experiment starten</a></div>';
+  if (ins.length) h += '<h2 class="sec">' + tr('Om op te letten deze week') + '</h2>' + ins.map(insightCard).join('');
+  h += '<div class="inrow wrap"><button class="btn ghost" data-act="shareWeek">' + tr('Deel als tekst') + '</button><a class="btn ghost" href="#/rapport">' + tr('Rapport maken') + '</a><a class="btn ghost" href="#/experimenten">' + tr('Experiment starten') + '</a></div>';
   DB.settings.weekSeen = end; save();
   view().innerHTML = h;
 }

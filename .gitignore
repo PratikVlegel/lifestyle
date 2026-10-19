@@ -1,7 +1,10 @@
 # Nooit persoonlijke gegevens publiceren
 *.json
 !manifest.json
+!supabase/functions/deno.json
 *.ics
 .DS_Store
 Thumbs.db
 desktop.ini
+supabase/.temp/
+supabase/functions/node_modules/

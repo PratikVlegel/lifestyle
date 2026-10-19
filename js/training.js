@@ -30,7 +30,7 @@ function activeTrainingPlan() {
 }
 function moodHomeCard() {
   if (!DB.settings.moodInsights) return '';
-  return '<a class="card mood-home" href="#/stemming"><b>Stemming en gewoontes</b><span class="small">Je persoonlijke overzicht staat klaar. ›</span></a>';
+  return '<a class="card mood-home" href="#/stemming"><b>' + tr('Stemming en gewoontes') + '</b><span class="small">' + tr('Je persoonlijke overzicht staat klaar. ›') + '</span></a>';
 }
 function maxTrainingDays(p) {
   const levelMax = TRAIN_MAX_DAYS[p.level] || 3;
@@ -282,7 +282,7 @@ ACT.copySharedTrainingPlan = el => {
 };
 function activeTrainingHomeCard() {
   const p = activeTrainingPlan();
-  if (!p) return '<a class="card plan-home-empty" href="#/schemas"><b>Je trainingsschema</b><span class="muted small">Nog geen actief schema. Kies een plan en volg hier je voortgang.</span><span class="plan-go">Schema’s bekijken ›</span></a>';
+  if (!p) return '<a class="card plan-home-empty" href="#/schemas"><b>' + tr('Je trainingsschema') + '</b><span class="muted small">' + tr('Nog geen actief schema. Kies een plan en volg hier je voortgang.') + '</span><span class="plan-go">' + tr('Schema’s bekijken ›') + '</span></a>';
   const week = p.weeks[Math.min(Math.max(0, p.currentWeek - 1), p.weeks.length - 1)];
   const done = (p.doneSessions || []).filter(k => k.startsWith(week.number + ':')).length;
   return '<a class="card plan-home" href="#/schemas"><div class="plan-head"><span class="pill">ACTIEF · WEEK ' + week.number + '/' + p.weeks.length + '</span><b>' + esc(p.customPlan ? p.name : TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema') + '</b></div><p class="small">' + esc(week.phase || 'Opbouw') + ' · ' + done + '/' + week.sessions.length + ' trainingen afgerond</p><div class="prog"><i style="width:' + Math.round(done / Math.max(1, week.sessions.length) * 100) + '%"></i></div><span class="plan-go">Schema openen ›</span></a>';

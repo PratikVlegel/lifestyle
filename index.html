@@ -114,6 +114,16 @@ svg.chart .trend{stroke:var(--bean);stroke-width:2;stroke-dasharray:5 3;vector-e
 .table .tr:last-child{border-bottom:0}
 .table .tr small{width:100%;color:var(--muted);font-size:.8rem}
 .table .tr span.muted{width:100%;font-size:.82rem}
+.week-compare .tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(6.2rem,auto) minmax(4.5rem,auto);align-items:center;gap:8px;padding:11px 2px}
+.week-compare .tr>:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.week-compare .tr>:nth-child(2),.week-compare .tr>:nth-child(3){border-left:1px solid var(--line);padding-left:8px}
+.week-compare .tr small{width:auto;font-size:.78rem}
+.week-compare .week-head{margin:-2px -2px 2px;padding:4px 2px 10px}
+.week-compare .week-head span{font-size:.78rem}
+.week-compare .week-head b,.week-compare .week-head small{font-size:.73rem;line-height:1.2}
+.week-compare .week-head>:nth-child(2){color:var(--accent)}
+.mood-home b{display:block;line-height:1.35;margin-bottom:6px}
+.mood-home span{display:block;line-height:1.45}
 .fld{display:block;margin:10px 0}
 .fld>span{display:block;font-size:.86rem;font-weight:600;margin-bottom:4px}
 .fld.bad>span,.bad>h3,.bad>span{color:var(--warn)}
@@ -298,6 +308,7 @@ nav.tabs a.on{color:var(--accent)}
 <script src="js/ocr.js"></script>
 <script src="js/cloud.js"></script>
 <script src="js/app.js"></script>
+<script src="js/push.js"></script>
 <script src="js/library.js"></script>
 <script src="js/activity.js"></script>
 <script src="js/share.js"></script>

@@ -31,3 +31,9 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `supabase/007_community_schema_reviews.sql` | Communitynamen, gedeelde trainingsschema's en openbare beoordelingen/reacties |
 | `sw.js` | Service worker (offline). Verhoog `VERSION` bij elke update. |
 | `manifest.webmanifest` | Installatie als app |
+
+## Webpush-herinneringen
+
+Webpush gebruikt per toestel een browserabonnement. Supabase bewaart het endpoint, de encryptiesleutels, tijdzone, taal en alleen herinnerings-ID's en -tijden. Vrije herinneringsnamen, dagboek, stemming en gezondheidsgegevens blijven lokaal. De meldingstekst is algemeen. De gebruiker kan push per toestel uitschakelen; de agenda-export blijft beschikbaar.
+
+De databasebasis staat in `supabase/008_web_push.sql` en de Edge Function `send-reminders` is aangemaakt in het Supabase-project. Push staat nog niet actief: hiervoor zijn VAPID- en cron-geheimen nodig en moet een Supabase Cron-taak worden ingesteld. Zet geheimen alleen in Supabase Secrets/Vault, nooit in deze repository. De function controleert naast de Supabase JWT ook de eigen `PUSH_CRON_SECRET`-header. Voer de cron-taak pas in nadat deze geheimen zijn ingesteld en de endpoint-authenticatie is nagekeken.

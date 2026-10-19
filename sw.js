@@ -1,6 +1,6 @@
 /* Service worker: houdt de app offline beschikbaar. Verhoog VERSION bij elke update. */
-const VERSION = 'vd-1.9.3';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js', 'js/i18n.js', 'js/ocr.js', 'js/cloud.js', 'js/library.js', 'js/migrate.js', 'js/activity.js', 'js/share.js', 'js/insights2.js', 'js/mood.js', 'js/week.js', 'js/extras.js', 'js/invite.js', 'js/admin.js', 'js/training.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'icons/icon-192.png', 'icons/icon-512.png'];
+const VERSION = 'vd-1.10.0';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js', 'js/i18n.js', 'js/ocr.js', 'js/cloud.js', 'js/library.js', 'js/migrate.js', 'js/activity.js', 'js/share.js', 'js/insights2.js', 'js/mood.js', 'js/week.js', 'js/extras.js', 'js/invite.js', 'js/admin.js', 'js/training.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'js/push.js', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   // Elk bestand apart: één ontbrekend bestand mag de installatie van de worker niet laten mislukken.
@@ -21,6 +21,21 @@ self.addEventListener('fetch', e => {
       return res;
     }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('index.html')))
   );
+});
+self.addEventListener('push', e => {
+  let payload = {};
+  try { payload = e.data ? e.data.json() : {}; } catch (_) { }
+  const title = typeof payload.title === 'string' ? payload.title.slice(0, 80) : 'Tijd voor je check-in';
+  const body = typeof payload.body === 'string' ? payload.body.slice(0, 160) : 'Open je dagboek wanneer het jou past.';
+  const target = typeof payload.url === 'string' && payload.url.startsWith('https://pratikvlegel.github.io/lifestyle/')
+    ? payload.url : new URL('./', self.location).href;
+  e.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    tag: typeof payload.tag === 'string' ? payload.tag.slice(0, 80) : 'diary-check-in',
+    data: { url: target }
+  }));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();

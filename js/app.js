@@ -836,9 +836,11 @@ function renderMore(sub) {
   h += '<div class="card"><h3>' + tr('Herinneringen') + '</h3><p class="muted small">' + tr('Pas tijden aan of voeg er toe. Zo kan je ook op een andere dag andere tijden gebruiken.') + '</p>';
   h += DB.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="remOn" data-i="' + i + '" aria-label="aan"><input type="time" value="' + r.time + '" data-chg="remTime" data-i="' + i + '"><input type="text" value="' + esc(r.label) + '" data-chg="remLabel" data-i="' + i + '"><select data-chg="remKind" data-i="' + i + '">' + [['ontbijt', 'ontbijt + weging'], ['lunch', 'lunch'], ['avond', 'avondeten'], ['dag', 'dagopname'], ['vrij', 'vrij']].map(([v, l]) => '<option value="' + v + '"' + (r.kind === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select><button class="iconbtn sm" data-act="remDel" data-i="' + i + '" aria-label="verwijder">✕</button></div>').join('');
   h += '<button class="btn ghost" data-act="remAdd">' + tr('+ herinnering') + '</button>';
-  h += '<h3>' + tr('Meldingen op je gsm') + '</h3><p class="muted small">' + tr('Een web-app kan geen meldingen inplannen terwijl hij dicht is. Daarom twee betrouwbare manieren die ook offline werken:') + '</p>' +
-    '<ol class="small"><li><b>' + tr('Agenda (aanbevolen):') + '</b> ' + tr('download het agendabestand en importeer het in Google Agenda of Samsung Agenda. Elke herinnering geeft een melding met een link die meteen de juiste check-in opent.') + '</li><li><b>' + tr('Wekker:') + '</b> ' + tr('zet per herinnering een terugkerende wekker in je Klok-app.') + '</li></ol>' +
-    '<div class="inrow"><button class="btn" data-act="ics">' + tr('Download agendabestand (.ics)') + '</button></div>' +
+  h += '<h3>' + tr('Meldingen op je gsm') + '</h3><p class="muted small">' + tr('Als je push inschakelt, bewaart Supabase de pushverbinding van dit toestel, tijdzone, taal en herinneringstijden. Namen en dagboekgegevens blijven lokaal; pushberichten zijn algemeen.') + '</p>' +
+    (pushPublicKey() ? (S.pushEnabled ? '<p class="small">' + tr('Push staat aan op dit toestel.') + '</p><button class="btn ghost" data-act="webPushDisable">' + tr('Push uitschakelen') + '</button>' : '<button class="btn" data-act="webPushEnable">' + tr('Push instellen op dit toestel') + '</button>') : '<p class="muted small">' + tr('Webpush wordt nog geconfigureerd. De agenda-export blijft beschikbaar.') + '</p>') +
+    '<p class="muted small">' + tr('Pushmeldingen bevatten geen eet-, gezondheids- of dagboekgegevens. De agenda-export is een alternatief wanneer push niet wordt ondersteund.') + '</p>' +
+    (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches ? '<p class="muted small">' + tr('Voeg de app toe aan je beginscherm om push op iPhone of iPad te gebruiken.') + '</p>' : '') +
+    '<h4>' + tr('Agenda-export (alternatief)') + '</h4><div class="inrow"><button class="btn ghost" data-act="ics">' + tr('Download agendabestand (.ics)') + '</button></div>' +
     (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '<p class="muted small">' + tr('iPhone: open het gedownloade bestand en tik op "Voeg alles toe" om de herinneringen in Agenda te zetten.') + '</p>' : '<div class="chips">' + DB.reminders.filter(r => r.on).map(r => '<a class="chip" href="' + alarmIntent(r) + '">⏰ ' + r.time + '</a>').join('') + '</div>') +
     '<label class="fld"><span>' + tr('Adres van deze app (voor de links in de agenda)') + '</span><input type="url" value="' + esc(S.appUrl || appBase()) + '" data-chg="setAppUrl"></label>' +
     '<label class="toggle"><input type="checkbox" ' + (S.notify ? 'checked' : '') + ' data-chg="setNotify"> ' + tr('Ook meldingen geven zolang de app open staat') + '</label></div>';
@@ -952,15 +954,15 @@ ACT.setG = el => {
   }
   DB[a][b] = v; save(); toast('Bewaard');
 };
-ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); };
-ACT.remTime = el => { DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); render(); };
+ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); refreshWebPushSchedule(true); };
+ACT.remTime = el => { DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
 ACT.remLabel = el => { DB.reminders[el.dataset.i].label = el.value; save(); };
-ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); };
-ACT.remDel = el => { if (!confirm('Herinnering verwijderen?')) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); render(); };
-ACT.remAdd = () => { DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); render(); };
+ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); refreshWebPushSchedule(true); };
+ACT.remDel = el => { if (!confirm('Herinnering verwijderen?')) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); refreshWebPushSchedule(true); render(); };
+ACT.remAdd = () => { DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
 ACT.language = el => {
   if (!UI_LOCALES.includes(el.value)) { el.value = currentLocale(); return; }
-  DB.settings.language = el.value; save(); applyLocale(); render();
+  DB.settings.language = el.value; save(); applyLocale(); refreshWebPushSchedule(true); render();
 };
 ACT.setAppUrl = el => { DB.settings.appUrl = el.value.trim(); save(); };
 ACT.setShare = el => { DB.settings.share = el.checked; save(); if (el.checked) cloudSync(false); };
@@ -1029,7 +1031,7 @@ ACT.importMd = async el => {
   el.value = '';
 };
 ACT.redoIntake = () => go('#/intake/2');
-ACT.wipe = () => { if (!confirm('Alles op deze gsm wissen? Maak eerst een back-up.')) return; if (!confirm('Echt alles wissen?')) return; localStorage.removeItem(STORE_KEY); DB = defaultData(); go('#/intake'); };
+ACT.wipe = async () => { if (!confirm('Alles op deze gsm wissen? Maak eerst een back-up.')) return; if (!confirm('Echt alles wissen?')) return; if (DB.settings.pushEnabled && ACT.webPushDisable) await ACT.webPushDisable(); localStorage.removeItem(STORE_KEY); DB = defaultData(); go('#/intake'); };
 
 /* ================= intake ================= */
 let INTAKE = null;
@@ -1108,9 +1110,9 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.9.3';
+const APP_VERSION = '1.10.0';
 function boot() {
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
   const off = $('#offline');
   const upd = () => { off.hidden = navigator.onLine; };
