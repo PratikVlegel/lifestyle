@@ -94,7 +94,8 @@ const EXPERIMENTS = [
 function defaultExperimentFocus() {
   const explicit = DB.settings.experimentFocus;
   if (EXPERIMENT_FOCI.some(([key]) => key === explicit)) return explicit;
-  const goal = (DB.training || {}).goal || 'weight';
+  const goal = (DB.training || {}).goal;
+  if (!goal) return 'habits';
   if (goal === 'weight') return 'weight';
   if (['strength', 'muscle'].includes(goal)) return 'strength';
   if (['runStart', 'run5k', 'race5k', 'race10k', 'half', 'marathon', 'race', 'hyrox', 'interval'].includes(goal)) return 'endurance';
