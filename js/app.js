@@ -119,10 +119,7 @@ const KPI_ORDER = ['kcal', 'protein', 'water', 'steps', 'burn', 'sleep', 'mood',
 const HOME_KPI_CHOICES = [...KPI_ORDER, 'diary'];
 function homeKpiKeys() {
   const saved = DB.settings.homeKpis;
-  if (Array.isArray(saved)) {
-    const valid = [...new Set(saved.filter(k => HOME_KPI_CHOICES.includes(k)))].slice(0, 6);
-    if (valid.length) return valid;
-  }
+  if (Array.isArray(saved)) return [...new Set(saved.filter(k => HOME_KPI_CHOICES.includes(k)))];
   const defaults = {
     food: ['kcal', 'protein', 'fiber', 'water'],
     movement: ['steps', 'burn', 'sleep', 'diary'],
@@ -142,7 +139,8 @@ function renderHome() {
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
   const cards = [activeTrainingHomeCard(), weekCard(), feedbackCard()].filter(Boolean);
   if (cards.length) h += '<div class="home-focus-list">' + cards.join('') + '</div>';
-  h += '<h2 class="sec home-kpi-heading">' + tr('Kerncijfers') + '<a class="link" href="#/ontdek">' + tr('Aanpassen') + '</a></h2><div class="kpis">' + homeKpiKeys().map(k => k === 'diary' ? diaryKpiTile() : kpiTile(k)).join('') + '</div>';
+  const visibleKpis = homeKpiKeys();
+  h += '<h2 class="sec home-kpi-heading">' + tr('Kerncijfers') + '<a class="link" href="#/ontdek">' + tr('Aanpassen') + '</a></h2>' + (visibleKpis.length ? '<div class="kpis">' + visibleKpis.map(k => k === 'diary' ? diaryKpiTile() : kpiTile(k)).join('') + '</div>' : '<p class="small muted">' + tr('Er zijn geen kerncijfers gekozen.') + '</p>');
   h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
   const day = getDay(k);
   h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
@@ -178,7 +176,7 @@ function diaryLoggedSections(d) {
 function homeKpiSettingsCard() {
   const selected = homeKpiKeys();
   const labels = { diary: 'Dagboek' };
-  let h = '<section class="card guide-card home-kpi-settings"><span class="pill">' + tr('Startscherm') + '</span><h2>' + tr('Kies je kerncijfers') + '</h2><p>' + tr('Open deze instelling via het vraagteken rechtsboven op Vandaag. Vink aan wat je wilt zien; je kunt maximaal zes tegels kiezen.') + '</p><div class="home-kpi-options">';
+  let h = '<section class="card guide-card home-kpi-settings"><span class="pill">' + tr('Startscherm') + '</span><h2>' + tr('Kies je kerncijfers') + '</h2><p>' + tr('Open deze instelling via het vraagteken rechtsboven op Vandaag. Kies zelf welke tegels je wilt tonen; je kunt er zoveel of zo weinig kiezen als je wilt.') + '</p><div class="home-kpi-options">';
   for (const key of HOME_KPI_CHOICES) {
     const label = key === 'diary' ? labels.diary : METRICS[key].label;
     h += '<label class="toggle"><input type="checkbox" data-chg="homeKpiToggle" data-k="' + key + '" ' + (selected.includes(key) ? 'checked' : '') + '> ' + esc(tr(label)) + '</label>';
@@ -188,8 +186,6 @@ function homeKpiSettingsCard() {
 ACT.homeKpiToggle = el => {
   const selected = homeKpiKeys();
   const next = el.checked ? [...selected, el.dataset.k] : selected.filter(k => k !== el.dataset.k);
-  if (!el.checked && !next.length) { el.checked = true; return toast(tr('Kies minimaal één kerncijfer.')); }
-  if (next.length > 6) { el.checked = false; return toast(tr('Je kunt maximaal zes kerncijfers kiezen.')); }
   DB.settings.homeKpis = next; save(); renderDiscoveryGuide();
 };
 function renderCommunityProfile() {
@@ -1356,7 +1352,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.50';
+const APP_VERSION = '1.10.51';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
