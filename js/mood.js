@@ -69,5 +69,5 @@ function renderEvidenceAdvice() {
     ['Alcohol en welzijn', 'Alcoholgebruik kan samengaan met veranderingen in slaap en mentaal welzijn. Een dagboek laat alleen persoonlijke patronen zien en kan niet bepalen wat bij jou de oorzaak is.', 'Trimbos · alcohol en mentale gezondheid', 'https://www.trimbos.nl/kennis/alcohol/alcohol-en-mentale-gezondheid/'],
     ['Lage stemming', 'Kleine, regelmatige activiteiten, contact met iemand die je vertrouwt en routine kunnen steun geven. Als een lage stemming langer aanhoudt of je dagelijks leven raakt, bespreek dit met je huisarts.', 'NHS · low mood', 'https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/low-mood-sadness-depression/']
   ];
-  return '<div class="evidence-grid">' + items.map(([title, body, source, url]) => '<article class="card evidence-card"><span class="pill">' + title + '</span><p>' + body + '</p><a href="' + url + '" target="_blank" rel="noopener">' + source + ' ↗</a></article>').join('') + '</div>';
+  return '<div class="evidence-grid">' + items.map(([title, body, source, url]) => '<article class="card evidence-card"><span class="pill">' + esc(tr(title)) + '</span><p>' + esc(tr(body)) + '</p><a href="' + url + '" target="_blank" rel="noopener">' + esc(tr(source)) + ' ↗</a></article>').join('') + '</div>';
 }

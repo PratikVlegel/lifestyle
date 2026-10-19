@@ -776,30 +776,30 @@ function aiDataDisclosure() {
   return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, vapen en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.');
 }
 function insightCard(i) {
-  return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + i.cat + '</span>' + (i.isNew ? '<span class="tag new">nieuw</span>' : '') + '<b>' + esc(i.title) + '</b></div><p>' + esc(i.text).replace(/\n/g, '<br>') + '</p><small class="muted">Op basis van ' + esc(i.evidence) + '</small></div>';
+  return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + tr(i.cat) + '</span>' + (i.isNew ? '<span class="tag new">' + tr('nieuw') + '</span>' : '') + '<b>' + esc(tr(i.title)) + '</b></div><p>' + esc(tr(i.text)).replace(/\n/g, '<br>') + '</p><small class="muted">' + tr('Op basis van {evidence}').replace('{evidence}', tr(i.evidence)) + '</small></div>';
 }
 function renderInsights() {
   // Mood comparisons live in the explicit opt-in module; keep them out of general insights.
   const ins = buildInsights(30).filter(i => i.cat !== 'stemming' && i.cat !== 'verbanden');
   let h = header('Inzicht en advies', 'Laatste 30 dagen · offline berekend');
-  h += '<div class="inrow wrap"><a class="btn ghost" href="#/week">Weekrapport</a><a class="btn ghost" href="#/experimenten">Experimenten</a><a class="btn ghost" href="#/rapport">Rapport maken</a></div>';
-  h += '<a class="card fb" href="#/stemming"><b>Stemming en gewoontes</b><p class="small">Bekijk stemming naast slaap, beweging en leefstijl. Alleen met jouw keuze, lokaal berekend en zonder vrije notities.</p></a>';
-  h += '<div class="card tip"><b>Tip van de dag</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
-  h += '<h2 class="sec">Onderbouwde acties</h2>' + renderEvidenceAdvice();
-  h += '<p class="muted small">Dit zijn verbanden in je eigen cijfers, geen oorzaken en geen diagnose. Hoe meer dagen volledig ingevuld, hoe betrouwbaarder. <b>Nieuw</b> = sinds je laatste bezoek veranderd.</p>';
+  h += '<div class="inrow wrap"><a class="btn ghost" href="#/week">' + tr('Weekrapport') + '</a><a class="btn ghost" href="#/experimenten">' + tr('Experimenten') + '</a><a class="btn ghost" href="#/rapport">' + tr('Rapport maken') + '</a></div>';
+  h += '<a class="card fb" href="#/stemming"><b>' + tr('Stemming en gewoontes') + '</b><p class="small">' + tr('Bekijk stemming naast slaap, beweging en leefstijl. Alleen met jouw keuze, lokaal berekend en zonder vrije notities.') + '</p></a>';
+  h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tr(tipOfDay())) + '</p></div>';
+  h += '<h2 class="sec">' + tr('Onderbouwde acties') + '</h2>' + renderEvidenceAdvice();
+  h += '<p class="muted small">' + tr('Dit zijn verbanden in je eigen cijfers, geen oorzaken en geen diagnose. Hoe meer dagen volledig ingevuld, hoe betrouwbaarder. Nieuw = sinds je laatste bezoek veranderd.') + '</p>';
   const seen = new Set(DB.settings.seenIns || []);
   ins.forEach(i => { i.sig = (i.title + '|' + i.text).length + ':' + i.title; i.isNew = seen.size > 0 && !seen.has(i.sig); });
   ins.sort((a, b) => (b.isNew - a.isNew) || ({ tip: 0, info: 1, good: 2 }[a.tone] - { tip: 0, info: 1, good: 2 }[b.tone]));
   DB.settings.seenIns = ins.map(i => i.sig); save();
-  h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.</p>';
-  h += '<h2 class="sec">Diepere analyse met AI</h2>';
+  h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">' + tr('Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.') + '</p>';
+  h += '<h2 class="sec">' + tr('Diepere analyse met AI') + '</h2>';
   if (DB.settings.apiKey) {
-    h += '<div class="card"><p class="muted small">' + esc(aiDataDisclosure()) + '</p><label class="fld"><span>Vraag (optioneel)</span><textarea id="aiq" rows="2" placeholder="bv. Waarom voel ik me op woensdag zo moe?"></textarea></label><button class="btn" data-act="runAI">Analyseer mijn laatste 3 weken</button><div id="aiout"></div></div>';
+    h += '<div class="card"><p class="muted small">' + esc(aiDataDisclosure()) + '</p><label class="fld"><span>' + tr('Vraag (optioneel)') + '</span><textarea id="aiq" rows="2" placeholder="' + tr('bv. Waarom voel ik me op woensdag zo moe?') + '"></textarea></label><button class="btn" data-act="runAI">' + tr('Analyseer mijn laatste 3 weken') + '</button><div id="aiout"></div></div>';
   } else {
-    h += '<p class="card muted small">Stel een eigen Claude API-sleutel in bij Meer → AI om hier op knop een diepere analyse te vragen. Zonder sleutel kan je de samenvatting delen en in een chat plakken.</p>';
+    h += '<p class="card muted small">' + tr('Stel een eigen Claude API-sleutel in bij Meer → AI om hier op knop een diepere analyse te vragen. Zonder sleutel kan je de samenvatting delen en in een chat plakken.') + '</p>';
   }
-  h += '<div class="inrow"><button class="btn ghost" data-act="shareWeek">Deel weeksamenvatting</button></div>';
-  if (DB.ai.length) h += '<h2 class="sec">Eerdere analyses</h2>' + DB.ai.slice().reverse().slice(0, 5).map(a => '<details class="card"><summary>' + fmtDay(a.k, true) + (a.q ? ' · ' + esc(a.q) : '') + '</summary>' + mdLite(a.text) + '</details>').join('');
+  h += '<div class="inrow"><button class="btn ghost" data-act="shareWeek">' + tr('Deel weeksamenvatting') + '</button></div>';
+  if (DB.ai.length) h += '<h2 class="sec">' + tr('Eerdere analyses') + '</h2>' + DB.ai.slice().reverse().slice(0, 5).map(a => '<details class="card"><summary>' + fmtDay(a.k, true) + (a.q ? ' · ' + esc(a.q) : '') + '</summary>' + mdLite(a.text) + '</details>').join('');
   view().innerHTML = h;
 }
 ACT.runAI = async el => {
