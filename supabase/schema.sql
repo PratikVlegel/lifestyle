@@ -11,7 +11,11 @@ create table if not exists public.foods (
   carbs       numeric check (carbs >= 0 and carbs <= 100),
   fat         numeric check (fat >= 0 and fat <= 100),
   fiber       numeric check (fiber >= 0 and fiber <= 100),
-  units       jsonb not null default '[]'::jsonb,
+  units       jsonb not null default '[]'::jsonb constraint foods_units_size_check check (
+    jsonb_typeof(units) = 'array'
+    and jsonb_array_length(units) <= 100
+    and octet_length(units::text) <= 32768
+  ),
   source      text,
   created_by  uuid default auth.uid() references auth.users(id) on delete set null,
   created_at  timestamptz not null default now(),

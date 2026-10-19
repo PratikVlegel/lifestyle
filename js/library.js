@@ -56,13 +56,13 @@ function renderFoodEditor(note) {
   if (note) h += '<p class="note">' + esc(tr(note)) + '</p>';
   if (locked) h += '<p class="muted small">Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.</p>';
   h += '<div class="chips"><button class="chip" data-act="pedScan">Scan barcode</button><label class="chip">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="pedPhoto"></label></div><div id="ocrstat"></div>';
-  h += '<label class="fld"><span>Naam</span><input data-pf="name" value="' + esc(P.name) + '" placeholder="bv. Kipfilet"></label>';
-  h += '<div class="grid2"><label class="fld"><span>Merk (optioneel)</span><input data-pf="brand" value="' + esc(P.brand || '') + '"></label><label class="fld"><span>Barcode</span><input data-pf="barcode" inputmode="numeric" value="' + esc(P.barcode || '') + '"></label></div>';
+  h += '<label class="fld"><span>Naam</span><input maxlength="200" data-pf="name" value="' + esc(P.name) + '" placeholder="bv. Kipfilet"></label>';
+  h += '<div class="grid2"><label class="fld"><span>Merk (optioneel)</span><input maxlength="120" data-pf="brand" value="' + esc(P.brand || '') + '"></label><label class="fld"><span>Barcode</span><input maxlength="14" data-pf="barcode" inputmode="numeric" value="' + esc(P.barcode || '') + '"></label></div>';
   h += '<p class="muted small">Waarden per 100 g (of 100 ml), zoals op het etiket.</p><div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + NUTR_LABEL[n] + '</span><input type="number" inputmode="decimal" data-pf="per.' + n + '" value="' + (isNum(P.per[n]) ? P.per[n] : '') + '"' + (P.uncertain && P.uncertain.includes(n) ? ' class="check"' : '') + '></label>').join('') + '</div>';
   if (P.uncertain && P.uncertain.length) h += '<p class="muted small">Oranje velden: de tekstherkenning twijfelde. Kijk ze na op het etiket.</p>';
   const chk = energyCheck(P.per);
   if (chk) h += '<p class="muted small">' + chk + '</p>';
-  h += '<h3>Eenheden</h3><p class="muted small">Handig voor dingen die je per stuk of per lepel gebruikt, bv. 1 wafel = 12,5 g of 1 el = 15 g.</p><div id="units">' + P.units.map((u, i) => '<div class="inrow"><span>1</span><input data-pu="' + i + '.n" value="' + esc(u.n) + '" placeholder="stuk"><span>=</span><input type="number" inputmode="decimal" data-pu="' + i + '.g" value="' + (isNum(u.g) ? u.g : '') + '" style="max-width:90px"><em>g</em><button class="iconbtn sm" data-act="pedDelUnit" data-i="' + i + '">✕</button></div>').join('') + '</div>' +
+  h += '<h3>Eenheden</h3><p class="muted small">Handig voor dingen die je per stuk of per lepel gebruikt, bv. 1 wafel = 12,5 g of 1 el = 15 g.</p><div id="units">' + P.units.map((u, i) => '<div class="inrow"><span>1</span><input maxlength="100" data-pu="' + i + '.n" value="' + esc(u.n) + '" placeholder="stuk"><span>=</span><input type="number" inputmode="decimal" min="0.01" max="100000" data-pu="' + i + '.g" value="' + (isNum(u.g) ? u.g : '') + '" style="max-width:90px"><em>g</em><button class="iconbtn sm" data-act="pedDelUnit" data-i="' + i + '">✕</button></div>').join('') + '</div>' +
     '<div class="chips"><button class="chip add" data-act="pedAddUnit">+ eenheid</button>' + ['stuk', 'portie', 'el', 'tl', 'snee', 'kopje'].filter(n => !P.units.some(u => u.n === n)).map(n => '<button class="chip sm" data-act="pedAddUnit" data-n="' + n + '">' + n + '</button>').join('') + '</div>';
   h += '<button class="btn big" data-act="pedSave">Bewaren</button>';
   if (!P.isNew) h += '<button class="link danger" data-act="pedDelete">Product verwijderen</button>';
@@ -89,7 +89,7 @@ document.addEventListener('input', e => {
     PED.units[i][k] = k === 'g' ? (el.value === '' ? null : Number(el.value.replace(',', '.'))) : el.value;
   }
 });
-ACT.pedAddUnit = el => { PED.units.push({ n: el.dataset.n || '', g: el.dataset.n === 'el' ? 15 : el.dataset.n === 'tl' ? 5 : null }); renderFoodEditor(); };
+ACT.pedAddUnit = el => { if (PED.units.length >= 100) return toast(tr('Maximaal 100 eenheden per product.')); PED.units.push({ n: el.dataset.n || '', g: el.dataset.n === 'el' ? 15 : el.dataset.n === 'tl' ? 5 : null }); renderFoodEditor(); };
 ACT.pedDelUnit = el => { PED.units.splice(Number(el.dataset.i), 1); renderFoodEditor(); };
 ACT.pedScan = () => {
   const keep = PED, cb = PED_CB;
@@ -131,12 +131,16 @@ function ocrStatus(m) {
 ACT.pedSave = () => {
   const P = PED;
   if (!String(P.name || '').trim()) return toast('Geef het product een naam.');
+  if (String(P.name).length > 200) return toast(tr('De productnaam mag maximaal 200 tekens bevatten.'));
+  if (String(P.brand || '').length > 120) return toast(tr('De merknaam mag maximaal 120 tekens bevatten.'));
   if (!isNum(P.per.kcal)) return toast('Vul minstens de kcal per 100 g in.');
   for (const n of NUTR) {
     const value = P.per[n];
     if (value !== null && value !== undefined && (!isNum(value) || value < 0 || value > (n === 'kcal' ? 1000 : 100))) return toast('Controleer de ' + NUTR_LABEL[n] + '-waarde per 100 g; die moet binnen een realistische positieve grens vallen.');
   }
   if (P.barcode && !/^[0-9]{6,14}$/.test(P.barcode)) return toast('De barcode bestaat alleen uit cijfers.');
+  if ((P.units || []).length > 100) return toast(tr('Maximaal 100 eenheden per product.'));
+  if ((P.units || []).some(u => !u || typeof u.n !== 'string' || u.n.length > 100 || u.g !== null && u.g !== undefined && (!isNum(u.g) || u.g <= 0 || u.g > 100000))) return toast(tr('Controleer de naam en het gewicht van elke eenheid.'));
   P.units = (P.units || []).filter(u => u.n && isNum(u.g) && u.g > 0);
   const isNew = P.isNew; delete P.isNew; delete P.uncertain;
   P.name = P.name.trim();

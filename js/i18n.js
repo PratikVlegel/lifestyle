@@ -2287,4 +2287,22 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'De bereidingsnotitie mag maximaal 2000 tekens bevatten.': 'Die Zubereitungshinweise dürfen höchstens 2.000 Zeichen enthalten.',
   'Een ingrediëntnaam mag maximaal 200 tekens bevatten.': 'Ein Zutatenname darf höchstens 200 Zeichen enthalten.'
 });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Maximaal 100 eenheden per product.': 'A product can have up to 100 units.',
+  'De productnaam mag maximaal 200 tekens bevatten.': 'The product name can contain up to 200 characters.',
+  'De merknaam mag maximaal 120 tekens bevatten.': 'The brand name can contain up to 120 characters.',
+  'Controleer de naam en het gewicht van elke eenheid.': 'Check the name and weight for each unit.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Maximaal 100 eenheden per product.': 'Un produit peut avoir au maximum 100 unités.',
+  'De productnaam mag maximaal 200 tekens bevatten.': 'Le nom du produit peut contenir au maximum 200 caractères.',
+  'De merknaam mag maximaal 120 tekens bevatten.': 'Le nom de la marque peut contenir au maximum 120 caractères.',
+  'Controleer de naam en het gewicht van elke eenheid.': 'Vérifiez le nom et le poids de chaque unité.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Maximaal 100 eenheden per product.': 'Ein Produkt kann höchstens 100 Einheiten haben.',
+  'De productnaam mag maximaal 200 tekens bevatten.': 'Der Produktname darf höchstens 200 Zeichen enthalten.',
+  'De merknaam mag maximaal 120 tekens bevatten.': 'Der Markenname darf höchstens 120 Zeichen enthalten.',
+  'Controleer de naam en het gewicht van elke eenheid.': 'Prüfe Name und Gewicht jeder Einheit.'
+});
 if (currentLocale() === 'nl-BE') applyLocale();
