@@ -1845,3 +1845,96 @@ Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Mealpreps': 'Mahlzeiten', 'Lijst': 'Liste', 'favoriet': 'Favorit', 'Kies hierboven een of meer mealpreps.': 'Wähle oben eine oder mehrere Mahlzeiten aus.', 'Iets anders toevoegen (bv. skyr)': 'Etwas anderes hinzufügen (z. B. Skyr)', 'Toevoegen': 'Hinzufügen', 'Deel lijst': 'Liste teilen', 'Alles uitvinken': 'Alle Häkchen entfernen', 'Lijst leegmaken': 'Liste leeren', 'Lijst leegmaken?': 'Liste leeren?', 'Boodschappen': 'Einkaufsliste', 'Nog niets. Wat je vaak eet, verschijnt hier vanzelf.': 'Noch nichts. Lebensmittel, die du häufig isst, erscheinen hier automatisch.', 'In 45 dagen: {count} keer': '{count}-mal in den letzten 45 Tagen'
 });
+
+const LATE_UI_TRANSLATIONS = {
+  'nl-BE': {
+    'Taal van de uitnodiging': 'Taal van de uitnodiging', 'Deel de uitnodiging in de taal van je vriend(in).': 'Deel de uitnodiging in de taal van je vriend(in).',
+    'Er liep iets mis': 'Er liep iets mis', 'Probeer dit scherm opnieuw te openen.': 'Probeer dit scherm opnieuw te openen.',
+    'Nog {count} verplichte vragen open. Vul ze in of kies “onbekend” / “weet ik niet”.': 'Nog {count} verplichte vragen open. Vul ze in of kies “onbekend” / “weet ik niet”.',
+    'Wijzigen': 'Wijzigen', 'Sluiten': 'Sluiten', 'Uit bibliotheek': 'Uit bibliotheek', 'Bezig met analyseren…': 'Bezig met analyseren…',
+    'De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.': 'De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.',
+    'Schema laden…': 'Schema laden…', 'Bekijk een gedeeld schema als communitylid met internetverbinding.': 'Bekijk een gedeeld schema als communitylid met internetverbinding.',
+    'Dit schema is niet gevonden.': 'Dit schema is niet gevonden.', 'sets': 'sets', 'herhalingen': 'herhalingen', 'sec rust': 'sec rust',
+    'Dit is jouw schema. Andere communityleden kunnen het beoordelen.': 'Dit is jouw schema. Andere communityleden kunnen het beoordelen.',
+    'Beoordeel dit schema': 'Beoordeel dit schema', 'Deel je indruk met andere leden. Je beoordeling is zichtbaar onder je communitynaam.': 'Deel je indruk met andere leden. Je beoordeling is zichtbaar onder je communitynaam.',
+    'Beoordeling': 'Beoordeling', 'Kies sterren': 'Kies sterren', 'Reactie (optioneel)': 'Reactie (optioneel)',
+    'Wat werkte goed of wat moet iemand weten?': 'Wat werkte goed of wat moet iemand weten?', 'Beoordeling plaatsen': 'Beoordeling plaatsen', 'Beoordelingen': 'Beoordelingen',
+    'Nog geen beoordelingen.': 'Nog geen beoordelingen.', 'Gedeeld door': 'Gedeeld door', 'Bewaar bij mijn schema’s': 'Bewaar bij mijn schema’s',
+    'Schema of beoordelingen laden mislukt. Probeer het opnieuw.': 'Schema of beoordelingen laden mislukt. Probeer het opnieuw.'
+  },
+  'en-GB': {
+    'Taal van de uitnodiging': 'Invitation language', 'Deel de uitnodiging in de taal van je vriend(in).': 'Share the invitation in your friend’s language.',
+    'Er liep iets mis': 'Something went wrong', 'Probeer dit scherm opnieuw te openen.': 'Please reopen this screen and try again.',
+    'Nog {count} verplichte vragen open. Vul ze in of kies “onbekend” / “weet ik niet”.': '{count} required questions remain. Complete them or choose “unknown” / “I don’t know”.',
+    'Wijzigen': 'Edit', 'Sluiten': 'Close', 'Uit bibliotheek': 'From library', 'Bezig met analyseren…': 'Analysing…',
+    'De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.': 'The analysis failed. Check your connection and settings, then try again.',
+    'Schema laden…': 'Loading plan…', 'Bekijk een gedeeld schema als communitylid met internetverbinding.': 'Sign in as a community member and connect to the internet to view a shared plan.',
+    'Dit schema is niet gevonden.': 'This plan could not be found.', 'sets': 'sets', 'herhalingen': 'reps', 'sec rust': 'sec rest',
+    'Dit is jouw schema. Andere communityleden kunnen het beoordelen.': 'This is your plan. Other community members can review it.',
+    'Beoordeel dit schema': 'Review this plan', 'Deel je indruk met andere leden. Je beoordeling is zichtbaar onder je communitynaam.': 'Share your thoughts with other members. Your review appears under your community name.',
+    'Beoordeling': 'Rating', 'Kies sterren': 'Choose a rating', 'Reactie (optioneel)': 'Comment (optional)',
+    'Wat werkte goed of wat moet iemand weten?': 'What worked well, or what should someone know?', 'Beoordeling plaatsen': 'Post review', 'Beoordelingen': 'Reviews',
+    'Nog geen beoordelingen.': 'No reviews yet.', 'Gedeeld door': 'Shared by', 'Bewaar bij mijn schema’s': 'Save to my plans',
+    'Schema of beoordelingen laden mislukt. Probeer het opnieuw.': 'Could not load the plan or reviews. Please try again.'
+  },
+  'fr-FR': {
+    'Taal van de uitnodiging': 'Langue de l’invitation', 'Deel de uitnodiging in de taal van je vriend(in).': 'Partagez l’invitation dans la langue de votre ami(e).',
+    'Er liep iets mis': 'Une erreur est survenue', 'Probeer dit scherm opnieuw te openen.': 'Rouvrez cet écran et réessayez.',
+    'Nog {count} verplichte vragen open. Vul ze in of kies “onbekend” / “weet ik niet”.': 'Il reste {count} questions obligatoires. Répondez-y ou choisissez « inconnu » / « je ne sais pas ».',
+    'Wijzigen': 'Modifier', 'Sluiten': 'Fermer', 'Uit bibliotheek': 'Depuis la bibliothèque', 'Bezig met analyseren…': 'Analyse en cours…',
+    'De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.': 'L’analyse a échoué. Vérifiez votre connexion et vos paramètres, puis réessayez.',
+    'Schema laden…': 'Chargement du programme…', 'Bekijk een gedeeld schema als communitylid met internetverbinding.': 'Connectez-vous comme membre de la communauté et à Internet pour voir un programme partagé.',
+    'Dit schema is niet gevonden.': 'Ce programme est introuvable.', 'sets': 'séries', 'herhalingen': 'répétitions', 'sec rust': 's de repos',
+    'Dit is jouw schema. Andere communityleden kunnen het beoordelen.': 'C’est votre programme. Les autres membres de la communauté peuvent le noter.',
+    'Beoordeel dit schema': 'Évaluer ce programme', 'Deel je indruk met andere leden. Je beoordeling is zichtbaar onder je communitynaam.': 'Partagez votre avis avec les autres membres. Votre évaluation apparaît sous votre nom de communauté.',
+    'Beoordeling': 'Évaluation', 'Kies sterren': 'Choisissez une note', 'Reactie (optioneel)': 'Commentaire (facultatif)',
+    'Wat werkte goed of wat moet iemand weten?': 'Qu’est-ce qui a bien fonctionné ou que faut-il savoir ?', 'Beoordeling plaatsen': 'Publier l’évaluation', 'Beoordelingen': 'Évaluations',
+    'Nog geen beoordelingen.': 'Aucune évaluation pour le moment.', 'Gedeeld door': 'Partagé par', 'Bewaar bij mijn schema’s': 'Enregistrer dans mes programmes',
+    'Schema of beoordelingen laden mislukt. Probeer het opnieuw.': 'Impossible de charger le programme ou les évaluations. Réessayez.'
+  },
+  'de-DE': {
+    'Taal van de uitnodiging': 'Sprache der Einladung', 'Deel de uitnodiging in de taal van je vriend(in).': 'Teile die Einladung in der Sprache deines Freundes oder deiner Freundin.',
+    'Er liep iets mis': 'Etwas ist schiefgelaufen', 'Probeer dit scherm opnieuw te openen.': 'Öffne diesen Bildschirm erneut und versuche es noch einmal.',
+    'Nog {count} verplichte vragen open. Vul ze in of kies “onbekend” / “weet ik niet”.': 'Noch {count} Pflichtfragen offen. Beantworte sie oder wähle „unbekannt“ / „weiß ich nicht“.',
+    'Wijzigen': 'Bearbeiten', 'Sluiten': 'Schließen', 'Uit bibliotheek': 'Aus der Bibliothek', 'Bezig met analyseren…': 'Analyse läuft…',
+    'De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.': 'Die Analyse ist fehlgeschlagen. Prüfe deine Verbindung und Einstellungen und versuche es erneut.',
+    'Schema laden…': 'Trainingsplan wird geladen…', 'Bekijk een gedeeld schema als communitylid met internetverbinding.': 'Melde dich als Community-Mitglied an und verbinde dich mit dem Internet, um einen geteilten Trainingsplan anzusehen.',
+    'Dit schema is niet gevonden.': 'Dieser Trainingsplan wurde nicht gefunden.', 'sets': 'Sätze', 'herhalingen': 'Wiederholungen', 'sec rust': 'Sek. Pause',
+    'Dit is jouw schema. Andere communityleden kunnen het beoordelen.': 'Das ist dein Trainingsplan. Andere Community-Mitglieder können ihn bewerten.',
+    'Beoordeel dit schema': 'Diesen Trainingsplan bewerten', 'Deel je indruk met andere leden. Je beoordeling is zichtbaar onder je communitynaam.': 'Teile deinen Eindruck mit anderen Mitgliedern. Deine Bewertung erscheint unter deinem Community-Namen.',
+    'Beoordeling': 'Bewertung', 'Kies sterren': 'Sterne auswählen', 'Reactie (optioneel)': 'Kommentar (optional)',
+    'Wat werkte goed of wat moet iemand weten?': 'Was hat gut funktioniert oder was sollte man wissen?', 'Beoordeling plaatsen': 'Bewertung veröffentlichen', 'Beoordelingen': 'Bewertungen',
+    'Nog geen beoordelingen.': 'Noch keine Bewertungen.', 'Gedeeld door': 'Geteilt von', 'Bewaar bij mijn schema’s': 'In meinen Trainingsplänen speichern',
+    'Schema of beoordelingen laden mislukt. Probeer het opnieuw.': 'Trainingsplan oder Bewertungen konnten nicht geladen werden. Bitte versuche es erneut.'
+  }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], LATE_UI_TRANSLATIONS[locale]);
+const ADMIN_UI_TRANSLATIONS = {
+  'nl-BE': {
+    'Alleen beheerders kunnen uitnodigen.': 'Alleen beheerders kunnen uitnodigen.', 'Voor wie?': 'Voor wie?', 'bv. Jan': 'bv. Jan', 'Hoe vaak mag de code gebruikt worden?': 'Hoe vaak mag de code gebruikt worden?', '1× is het veiligst: één code per persoon.': '1× is het veiligst: één code per persoon.', 'Code maken': 'Code maken', 'Nieuwe code:': 'Nieuwe code:', 'Uitnodiging sturen': 'Uitnodiging sturen', 'Kopieer code': 'Kopieer code', 'Codes': 'Codes', 'Offline: codes laden kan alleen met internet.': 'Offline: codes laden kan alleen met internet.', '{count} leden': '{count} leden', 'actief': 'actief', 'ingetrokken': 'ingetrokken', 'Intrekken': 'Intrekken', 'Opnieuw activeren': 'Opnieuw activeren', 'Sturen': 'Sturen', 'Intrekken blokkeert alleen nieuwe gebruikers van die code. Wie al lid is, blijft lid.': 'Intrekken blokkeert alleen nieuwe gebruikers van die code. Wie al lid is, blijft lid.', 'Uitnodigingscodes laden is mislukt. Probeer het opnieuw.': 'Uitnodigingscodes laden is mislukt. Probeer het opnieuw.', 'Uitnodigingscode maken is mislukt. Probeer het opnieuw.': 'Uitnodigingscode maken is mislukt. Probeer het opnieuw.', 'Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.': 'Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.', 'Voor wie is de code?': 'Voor wie is de code?', 'Uitnodiging voedingsdagboek': 'Uitnodiging voedingsdagboek', 'Kopieer:': 'Kopieer:', 'Vape': 'Vape', 'Scan barcode': 'Scan barcode', 'Water (ml)': 'Water (ml)', 'Check-in:': 'Check-in:', 'maximum': 'maximum'
+  },
+  'en-GB': {
+    'Alleen beheerders kunnen uitnodigen.': 'Only administrators can send invitations.', 'Voor wie?': 'Who is this for?', 'bv. Jan': 'e.g. Alex', 'Hoe vaak mag de code gebruikt worden?': 'How many times can this code be used?', '1× is het veiligst: één code per persoon.': 'One use is safest: one code per person.', 'Code maken': 'Create code', 'Nieuwe code:': 'New code:', 'Uitnodiging sturen': 'Send invitation', 'Kopieer code': 'Copy code', 'Codes': 'Codes', 'Offline: codes laden kan alleen met internet.': 'You’re offline. Invitation codes need an internet connection.', '{count} leden': '{count} members', 'actief': 'active', 'ingetrokken': 'revoked', 'Intrekken': 'Revoke', 'Opnieuw activeren': 'Reactivate', 'Sturen': 'Send', 'Intrekken blokkeert alleen nieuwe gebruikers van die code. Wie al lid is, blijft lid.': 'Revoking a code only blocks new users. Existing members keep their membership.', 'Uitnodigingscodes laden is mislukt. Probeer het opnieuw.': 'Could not load invitation codes. Please try again.', 'Uitnodigingscode maken is mislukt. Probeer het opnieuw.': 'Could not create the invitation code. Please try again.', 'Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.': 'Could not update the invitation code. Please try again.', 'Voor wie is de code?': 'Who is the code for?', 'Uitnodiging voedingsdagboek': 'Food diary invitation', 'Kopieer:': 'Copy:', 'Vape': 'Vaping', 'Scan barcode': 'Scan barcode', 'Water (ml)': 'Water (ml)', 'Check-in:': 'Check-in:', 'maximum': 'maximum'
+  },
+  'fr-FR': {
+    'Alleen beheerders kunnen uitnodigen.': 'Seuls les administrateurs peuvent envoyer des invitations.', 'Voor wie?': 'Pour qui ?', 'bv. Jan': 'ex. Alex', 'Hoe vaak mag de code gebruikt worden?': 'Combien de fois ce code peut-il être utilisé ?', '1× is het veiligst: één code per persoon.': 'Une seule utilisation est plus sûre : un code par personne.', 'Code maken': 'Créer un code', 'Nieuwe code:': 'Nouveau code :', 'Uitnodiging sturen': 'Envoyer l’invitation', 'Kopieer code': 'Copier le code', 'Codes': 'Codes', 'Offline: codes laden kan alleen met internet.': 'Vous êtes hors ligne. Une connexion Internet est nécessaire pour charger les codes.', '{count} leden': '{count} membres', 'actief': 'actif', 'ingetrokken': 'révoqué', 'Intrekken': 'Révoquer', 'Opnieuw activeren': 'Réactiver', 'Sturen': 'Envoyer', 'Intrekken blokkeert alleen nieuwe gebruikers van die code. Wie al lid is, blijft lid.': 'La révocation bloque uniquement les nouveaux utilisateurs. Les membres existants conservent leur accès.', 'Uitnodigingscodes laden is mislukt. Probeer het opnieuw.': 'Impossible de charger les codes d’invitation. Réessayez.', 'Uitnodigingscode maken is mislukt. Probeer het opnieuw.': 'Impossible de créer le code d’invitation. Réessayez.', 'Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.': 'Impossible de modifier le code d’invitation. Réessayez.', 'Voor wie is de code?': 'À qui est destiné le code ?', 'Uitnodiging voedingsdagboek': 'Invitation au journal alimentaire', 'Kopieer:': 'Copier :', 'Vape': 'Vapotage', 'Scan barcode': 'Scanner un code-barres', 'Water (ml)': 'Eau (ml)', 'Check-in:': 'Bilan :', 'maximum': 'maximum'
+  },
+  'de-DE': {
+    'Alleen beheerders kunnen uitnodigen.': 'Nur Administratoren können Einladungen versenden.', 'Voor wie?': 'Für wen?', 'bv. Jan': 'z. B. Alex', 'Hoe vaak mag de code gebruikt worden?': 'Wie oft kann dieser Code verwendet werden?', '1× is het veiligst: één code per persoon.': 'Eine Nutzung ist am sichersten: ein Code pro Person.', 'Code maken': 'Code erstellen', 'Nieuwe code:': 'Neuer Code:', 'Uitnodiging sturen': 'Einladung senden', 'Kopieer code': 'Code kopieren', 'Codes': 'Codes', 'Offline: codes laden kan alleen met internet.': 'Du bist offline. Zum Laden der Einladungscodes ist eine Internetverbindung nötig.', '{count} leden': '{count} Mitglieder', 'actief': 'aktiv', 'ingetrokken': 'widerrufen', 'Intrekken': 'Widerrufen', 'Opnieuw activeren': 'Reaktivieren', 'Sturen': 'Senden', 'Intrekken blokkeert alleen nieuwe gebruikers van die code. Wie al lid is, blijft lid.': 'Ein Widerruf blockiert nur neue Nutzer. Bestehende Mitglieder behalten ihren Zugang.', 'Uitnodigingscodes laden is mislukt. Probeer het opnieuw.': 'Einladungscodes konnten nicht geladen werden. Bitte versuche es erneut.', 'Uitnodigingscode maken is mislukt. Probeer het opnieuw.': 'Der Einladungscode konnte nicht erstellt werden. Bitte versuche es erneut.', 'Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.': 'Der Einladungscode konnte nicht geändert werden. Bitte versuche es erneut.', 'Voor wie is de code?': 'Für wen ist der Code?', 'Uitnodiging voedingsdagboek': 'Einladung zum Ernährungstagebuch', 'Kopieer:': 'Kopieren:', 'Vape': 'Vaping', 'Scan barcode': 'Barcode scannen', 'Water (ml)': 'Wasser (ml)', 'Check-in:': 'Eintrag:', 'maximum': 'Maximum'
+  }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], ADMIN_UI_TRANSLATIONS[locale]);
+const CAMERA_UI_TRANSLATIONS = {
+  'nl-BE': { 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.': 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.', 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.': 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.' },
+  'en-GB': { 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.': 'Camera access is blocked. Allow camera access in your browser settings.', 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.': 'The camera could not start. You can enter the numbers manually.' },
+  'fr-FR': { 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.': 'L’accès à la caméra est bloqué. Autorisez-le dans les paramètres de votre navigateur.', 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.': 'La caméra n’a pas pu démarrer. Vous pouvez saisir les chiffres manuellement.' },
+  'de-DE': { 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.': 'Der Kamerazugriff ist gesperrt. Erlaube ihn in den Browsereinstellungen.', 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.': 'Die Kamera konnte nicht gestartet werden. Du kannst die Zahlen auch manuell eingeben.' }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], CAMERA_UI_TRANSLATIONS[locale]);
+const TRAINING_DEFAULT_TRANSLATIONS = {
+  'nl-BE': { 'Krachttraining': 'Krachttraining' },
+  'en-GB': { 'Krachttraining': 'Strength training' },
+  'fr-FR': { 'Krachttraining': 'Musculation' },
+  'de-DE': { 'Krachttraining': 'Krafttraining' }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], TRAINING_DEFAULT_TRANSLATIONS[locale]);

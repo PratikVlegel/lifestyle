@@ -62,7 +62,7 @@ function render() {
     }
   } catch (e) {
     console.error(e);
-    view().innerHTML = '<div class="card"><h2>Er liep iets mis</h2><p class="muted">' + esc(e.message) + '</p><button class="btn" data-act="home">Terug</button></div>';
+    view().innerHTML = '<div class="card"><h2>' + tr('Er liep iets mis') + '</h2><p class="muted">' + tr('Probeer dit scherm opnieuw te openen.') + '</p><button class="btn" data-act="home">' + tr('Terug') + '</button></div>';
   }
 }
 ACT.home = () => go('#/');
@@ -450,7 +450,7 @@ ACT.ciSave = () => {
     if (!ok) { n.classList.add('bad'); errs.push(n); }
   });
   if (errs.length) {
-    const e = $('#cierr'); e.hidden = false; e.textContent = 'Nog ' + errs.length + (errs.length > 1 ? ' vragen' : ' vraag') + ' open. Vul in of kies "onbekend" / "weet ik niet".';
+    const e = $('#cierr'); e.hidden = false; e.textContent = trf('Nog {count} verplichte vragen open. Vul ze in of kies “onbekend” / “weet ik niet”.', { count: errs.length });
     errs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
@@ -595,7 +595,7 @@ async function scanBarcode(onCode) {
       };
       loop();
     }
-  } catch (e) { const m = $('#scanmsg'); if (m) m.innerHTML = '<p class="note">Camera niet beschikbaar' + (/NotAllowed|Permission/i.test(e.name + e.message) ? ': geef de app toestemming voor de camera in je instellingen' : ': ' + esc(e.message)) + '. Je kan de cijfers ook intypen.</p>'; }
+  } catch (e) { const m = $('#scanmsg'); if (m) { const denied = /NotAllowed|Permission/i.test(e.name + e.message); m.innerHTML = '<p class="note">' + tr(denied ? 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.' : 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.') + '</p>'; } }
 }
 function stopScan(keep) { if (SCAN && SCAN.stream) { SCAN.stream.getTracks().forEach(t => t.stop()); SCAN.stream = null; clearTimeout(SCAN.t); } if (!keep) SCAN = null; }
 ACT.lookupCode = () => { const c = $('#bcode').value.trim(); if (!/^[0-9]{6,14}$/.test(c)) return toast('Een barcode bestaat uit 6 tot 14 cijfers.'); stopScan(true); SCAN.onCode(c); };
@@ -732,7 +732,7 @@ ACT.delMeal = el => { const d = getDay(el.dataset.k); const m = d.meals.find(x =
 ACT.delDay = el => { if (!confirm('Hele dag ' + fmtDay(el.dataset.k) + ' verwijderen?')) return; delete DB.days[el.dataset.k]; save(); go('#/dagboek'); };
 ACT.editMeal = el => {
   const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id);
-  $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>Wijzigen</h2><button class="iconbtn" data-act="closeSheet">✕</button></div>' +
+  $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>' + tr('Wijzigen') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>' +
     '<label class="fld"><span>Omschrijving</span><input id="em_desc" value="' + esc(m.desc || '') + '"></label>' +
     '<div class="grid2"><label class="fld"><span>' + tr('Tijd') + '</span><input id="em_time" type="time" value="' + esc(m.time || '') + '"></label><label class="fld"><span>' + tr('Moment') + '</span><select id="em_slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (m.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label>' +
     '<label class="fld"><span>kcal</span><input id="em_kcal" type="number" inputmode="decimal" value="' + (isNum(m.kcal) ? m.kcal : '') + '"></label><label class="fld"><span>eiwit g</span><input id="em_protein" type="number" inputmode="decimal" value="' + (isNum(m.protein) ? m.protein : '') + '"></label>' +
@@ -847,7 +847,7 @@ ACT.ingScan = el => { const i = Number(el.dataset.i); findByBarcode(food => fill
 ACT.ingOcr = el => { const i = Number(el.dataset.i), file = el.files[0]; el.value = ''; if (!file) return; openFoodEditor({ id: uid(), name: PREP.ingredients[i].name || '', brand: '', barcode: '', per: { kcal: null, protein: null, carbs: null, fat: null, fiber: null }, units: [], source: 'etiket' }, f => fillIng(i, f), file); };
 ACT.ingLib = el => {
   const i = Number(el.dataset.i);
-  $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>Uit bibliotheek</h2><button class="iconbtn" data-act="closeSheet">✕</button></div>' +
+  $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>' + tr('Uit bibliotheek') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>' +
     (DB.foods.length ? libSearch('', 400).map(f => '<button class="pick wide" data-act="ingLibPick" data-i="' + i + '" data-id="' + f.id + '"><b>' + esc(f.name) + '</b><small>' + fmtNum(f.per.kcal) + ' kcal / 100 g</small></button>').join('') : '<p class="muted">Je bibliotheek is nog leeg.</p>');
   $('#sheet').hidden = false;
 };
@@ -936,12 +936,12 @@ function renderInsights() {
 }
 ACT.runAI = async el => {
   const out = $('#aiout'); const q = $('#aiq').value.trim();
-  el.disabled = true; out.innerHTML = '<p class="muted">Bezig met analyseren…</p>';
+  el.disabled = true; out.innerHTML = '<p class="muted">' + tr('Bezig met analyseren…') + '</p>';
   try {
     const text = await askAI(q);
     DB.ai.push({ k: todayKey(), q, text }); if (DB.ai.length > 30) DB.ai.shift(); save();
     out.innerHTML = mdLite(text);
-  } catch (e) { out.innerHTML = '<p class="note">' + esc(e.message) + '</p>'; }
+  } catch (e) { console.error('AI analyse mislukt', e); out.innerHTML = '<p class="note">' + tr('De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.') + '</p>'; }
   el.disabled = false;
 };
 ACT.shareWeek = () => shareText(weekSummaryText(7), 'Weeksamenvatting');
@@ -1283,7 +1283,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.31';
+const APP_VERSION = '1.10.32';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
