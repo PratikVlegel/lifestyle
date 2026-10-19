@@ -2329,5 +2329,14 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   '{symptom}: matig of ernstig op {count} van {total} dagen waarop je dit beoordeelde.': '{symptom}: mittelschwer oder stark an {count} von {total} Tagen, an denen du es bewertet hast.',
   'Op de beoordeelde symptomen noteerde je geen matige of ernstige score. Dit zegt alleen iets over de scores die je hebt ingevuld.': 'Bei den bewerteten Symptomen hast du keine mittelschwere oder starke Ausprägung erfasst. Das beschreibt nur die von dir eingegebenen Bewertungen.'
 });
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Er is onvoldoende lokale opslagruimte voor deze import. Maak ruimte vrij of kies een kleinere back-up; je huidige dagboek is behouden.': 'There is not enough local storage for this import. Free up space or choose a smaller backup; your current diary has been kept.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Er is onvoldoende lokale opslagruimte voor deze import. Maak ruimte vrij of kies een kleinere back-up; je huidige dagboek is behouden.': 'L’espace de stockage local est insuffisant pour cet import. Libérez de l’espace ou choisissez une sauvegarde plus petite ; votre journal actuel a été conservé.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Er is onvoldoende lokale opslagruimte voor deze import. Maak ruimte vrij of kies een kleinere back-up; je huidige dagboek is behouden.': 'Der lokale Speicherplatz reicht für diesen Import nicht aus. Gib Speicherplatz frei oder wähle eine kleinere Sicherung; dein aktuelles Tagebuch wurde beibehalten.'
+});
 for (const locale of ['nl-BE', 'en-GB', 'fr-FR', 'de-DE']) Object.assign(UI_EXTRA_TRANSLATIONS[locale], { kg: 'kg' });
 if (currentLocale() === 'nl-BE') applyLocale();

@@ -1253,7 +1253,10 @@ ACT.importFile = async el => {
     const mode = obj.kind === 'prep-update' ? 'merge' : Object.keys(DB.days).length && !confirm(n + ' dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.') ? 'replace' : 'merge';
     if (mode === 'replace' && !confirm('Zeker? Alles op deze gsm wordt vervangen.')) return;
     importJSON(obj, mode); runMigrations(); toast(obj.kind === 'prep-update' ? (importJSON.lastUpdated || 0) + ' mealpreps bijgewerkt.' : n + ' dagen ingelezen.'); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
-  } catch (e) { console.warn('Import mislukt', e); alert(tr('Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.')); }
+  } catch (e) {
+    console.warn('Import mislukt', e);
+    alert(e && e.code === 'storage_quota' ? tr('Er is onvoldoende lokale opslagruimte voor deze import. Maak ruimte vrij of kies een kleinere back-up; je huidige dagboek is behouden.') : tr('Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.'));
+  }
   el.value = '';
 };
 ACT.importMd = async el => {
@@ -1362,7 +1365,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.67';
+const APP_VERSION = '1.10.68';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

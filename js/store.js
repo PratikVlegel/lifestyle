@@ -96,9 +96,9 @@ function migrate(d) {
   out.reminders = reminders.length ? reminders : defaultData().reminders;
   return out;
 }
-function save() {
+function save(quiet) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); return true; }
-  catch (e) { alert('Opslaan mislukt: ' + e.message + '. Maak een back-up via Meer → Back-up.'); return false; }
+  catch (e) { if (!quiet) alert('Opslaan mislukt: ' + e.message + '. Maak een back-up via Meer → Back-up.'); return false; }
 }
 
 /* ---------- datums ---------- */
@@ -396,6 +396,8 @@ function validateImportData(obj) {
 }
 function importJSON(obj, mode) {
   validateImportData(obj);
+  const previousState = JSON.stringify(DB);
+  try {
   if (!obj || typeof obj !== 'object' || !(obj.days || obj.preps || obj.foods)) throw new Error('Dit lijkt geen back-up van deze app.');
   obj.days = obj.days || {};
   if (mode === 'replace') {
@@ -460,5 +462,13 @@ function importJSON(obj, mode) {
     if (obj.reminders && !DB.intakeDone) DB.reminders = obj.reminders;
   }
   DB.intakeDone = true;
-  save();
+  if (!save(true)) {
+    const error = new Error('Onvoldoende lokale opslagruimte om de import op te slaan.');
+    error.code = 'storage_quota';
+    throw error;
+  }
+  } catch (e) {
+    DB = JSON.parse(previousState);
+    throw e;
+  }
 }
