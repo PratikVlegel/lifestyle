@@ -139,9 +139,9 @@ function renderHome() {
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
   const cards = [activeTrainingHomeCard(), weekCard(), feedbackCard()].filter(Boolean);
   if (cards.length) h += '<div class="home-focus-list">' + cards.join('') + '</div>';
+  h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
   const visibleKpis = homeKpiKeys();
   h += '<h2 class="sec home-kpi-heading">' + tr('Kerncijfers') + '<a class="link" href="#/ontdek">' + tr('Aanpassen') + '</a></h2>' + (visibleKpis.length ? '<div class="kpis">' + visibleKpis.map(k => k === 'diary' ? diaryKpiTile() : kpiTile(k)).join('') + '</div>' : '<p class="small muted">' + tr('Er zijn geen kerncijfers gekozen.') + '</p>');
-  h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
   const day = getDay(k);
   h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
   h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
@@ -1354,7 +1354,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.52';
+const APP_VERSION = '1.10.53';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
