@@ -44,16 +44,65 @@ function renderCycleModule() {
   h += '<section class="card"><h3>' + tr('Jouw cyclusgegevens beheren') + '</h3><p class="muted small">' + tr('Je kunt deze functie uitschakelen of alle cyclusgegevens van dit toestel verwijderen.') + '</p><button class="link danger" data-act="cycleClear">' + tr('Alle cyclusgegevens wissen') + '</button></section>';
   view().innerHTML = h;
 }
+function cycleMessageIndex(date, group, length) {
+  let hash = 0; const text = String(group);
+  for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  const dateText = String(date || todayKey());
+  const day = Date.parse(dateText + 'T00:00:00Z');
+  const dayNumber = Number.isFinite(day) ? Math.floor(day / 86400000) : 0;
+  return (dayNumber + hash) % length;
+}
 function cycleWarmAdvice(log) {
-  const messages = [];
-  if (log.pain >= 2) messages.push(tr('Pijn vraagt geen prestatie. Als bewegen prettig voelt, kies iets zachts; rust nemen is ook een goede keuze. Warmte kan voor sommige mensen comfortabel zijn.'));
-  if (log.cravings >= 2) messages.push(tr('Meer honger of trek is geen gebrek aan discipline. Probeer jezelf een vullende maaltijd of snack te geven en laat schuldgevoel of compenseren achterwege.'));
-  if (log.energy >= 2 || log.sleep >= 2) messages.push(tr('Als je energie laag voelt, mag je je planning kleiner maken, iets eenvoudigs eten en herstel voorrang geven. Je hoeft niets in te halen.'));
-  if (log.mood >= 2) messages.push(tr('Wat je voelt verdient aandacht. Kies één steunende stap die haalbaar voelt, zoals iemand berichten, rust nemen of je dag lichter maken.'));
-  if (log.bloating >= 2 || log.headache >= 2) messages.push(tr('Ongemak kan zwaar wegen. Kies wat voor jou prettig voelt, drink naar dorst en forceer geen eten, drinken of training.'));
+  const options = [];
+  if (log.pain >= 2) options.push(['pain', log.pain, [
+    'Als warmte voor jou prettig is, kan je dat proberen; bewegen hoeft vandaag geen doel te zijn.',
+    'Je hoeft pijn niet weg te trainen. Rust, warmte of rustige beweging mag je kiezen op basis van wat goed voelt.',
+    'Pijn is genoeg reden om je planning aan te passen. Kies comfort dat voor jou werkt en forceer geen training.'
+  ]]);
+  if (log.cravings >= 2) options.push(['cravings', log.cravings, [
+    'Meer trek is geen gebrek aan discipline. Een vullende maaltijd of snack kan een vriendelijker antwoord zijn dan jezelf beperken.',
+    'Je hoeft cravings niet te compenseren. Kies iets dat je verzadigt en waar je je goed bij voelt.',
+    'Als je trek sterker is dan anders, mag je daar praktisch op inspelen met eten dat energie geeft en bij je past.'
+  ]]);
+  if (log.energy >= 2 || log.sleep >= 2) options.push(['energy', Math.max(log.energy || 0, log.sleep || 0), [
+    'Als je energie lager is, maak je planning lichter waar dat kan. Rust nemen is geen achterstand die je moet inhalen.',
+    'Een eenvoudige maaltijd en minder druk op je planning kunnen vandaag genoeg zijn; je hoeft niets te compenseren.',
+    'Kies wat haalbaar is en stel niet-noodzakelijke taken uit als dat kan. Je hoeft je energie niet eerst te bewijzen.'
+  ]]);
+  if (log.mood >= 2) options.push(['mood', log.mood, [
+    'Een zwaardere stemming is niet iets dat je met wilskracht hoeft weg te duwen. Wil je met iemand praten, of liever eerst ruimte nemen?',
+    'Je hoeft niet te verklaren waarom je je zo voelt om steun te verdienen. Een vertrouwd persoon benaderen kan een kleine eerste stap zijn.',
+    'Als dit zwaar voelt, kies één steunmoment dat bij jou past: iemand contacteren, je agenda aanpassen of rust nemen.'
+  ]]);
+  if (log.bloating >= 2 || log.headache >= 2) options.push(['discomfort', Math.max(log.bloating || 0, log.headache || 0), [
+    'Ongemak kan veel ruimte innemen. Kijk of rust, warmte of je gewone medische plan helpend is, zonder jezelf te forceren.',
+    'Je hoeft ongemak niet te compenseren met eten of beweging. Kies comfort dat bij jou past en vraag hulp als klachten je zorgen geven.',
+    'Probeer alleen wat voor jou prettig voelt. Je mag je dag aanpassen zonder het ongemak te moeten wegredeneren.'
+  ]]);
+  let message;
+  if (options.length) {
+    const highest = Math.max(...options.map(x => x[1]));
+    const main = options.filter(x => x[1] === highest);
+    const [key, , lines] = main[cycleMessageIndex(cycleSafeState().selectedDate, 'main:' + main.map(x => x[0]).join(','), main.length)];
+    message = lines[cycleMessageIndex(cycleSafeState().selectedDate, key, lines.length)];
+  } else {
+    const lines = [
+      'Je hoeft je dag niet aan een cyclusfase aan te passen. Je ervaring van vandaag mag bepalen wat prettig voelt.',
+      'Als je vandaag weinig klachten merkt, hoef je niets speciaal aan te passen. Volg het ritme dat voor jou werkt.',
+      'Er is geen vast schema dat je lichaam vandaag moet volgen. Je kan je gewone planning aanhouden of bijsturen als jij dat wilt.'
+    ];
+    message = lines[cycleMessageIndex(cycleSafeState().selectedDate, 'no-symptoms', lines.length)];
+  }
+  const messages = [tr(message)];
   const support = ['Rustiger aan','Lichte beweging','Een voedzame snack of maaltijd','Warmte of comfort','Praten met iemand','Anders'];
-  if (Number.isInteger(log.support)) messages.unshift(trf('Je koos voor: {choice}. Fijn dat je ruimte maakte voor wat je nodig had.', { choice: tr(support[log.support] || 'Anders') }));
-  if (!messages.length) messages.push(tr('Je hoeft je dag niet aan een cyclusfase aan te passen. Merk op wat jij nodig hebt; als het goed voelt, mag je je gewone ritme volgen.'));
+  if (Number.isInteger(log.support)) {
+    const followUps = [
+      'Je koos iets dat vandaag kan helpen. Laat dat een passend startpunt zijn.',
+      'Je noteerde wat je nodig hebt. Als dat later verandert, mag je ook iets anders kiezen.',
+      'Dat is een concreet vertrekpunt; je hoeft er niets mee te bewijzen.'
+    ];
+    messages.push(trf('Je koos voor: {choice}. {followUp}', { choice: tr(support[log.support] || 'Anders'), followUp: tr(followUps[cycleMessageIndex(cycleSafeState().selectedDate, 'support', followUps.length)]) }));
+  }
   return '<section class="card cycle-warm"><h2>' + tr('Een zachte gedachte bij je registratie') + '</h2>' + messages.map(m => '<p>' + esc(m) + '</p>').join('') + '<small class="muted">' + tr('Geen persoonlijk medisch advies. Jij kent je lichaam en grenzen het best.') + '</small></section>';
 }
 function cyclePatterns(c) {
