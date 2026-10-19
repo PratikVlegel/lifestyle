@@ -2266,4 +2266,7 @@ for (const [locale, labels] of Object.entries({
     'Deze vergelijkingen zijn verkennend. Je bekijkt meerdere factoren en kleine groepen; verschillen kunnen toevallig zijn. De app test geen statistische zekerheid.': 'Diese Vergleiche sind explorativ. Es werden mehrere Faktoren und kleine Gruppen betrachtet; Unterschiede können zufällig sein. Die App prüft keine statistische Signifikanz.'
   }
 })) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { 'Omschrijving': 'Description' });
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { 'Omschrijving': 'Description' });
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Omschrijving': 'Beschreibung' });
 if (currentLocale() === 'nl-BE') applyLocale();
