@@ -2180,4 +2180,10 @@ const DUTCH_SOURCE_TRANSLATIONS = {
 };
 Object.assign(UI_TRANSLATIONS['nl-BE'] || (UI_TRANSLATIONS['nl-BE'] = {}), DUTCH_SOURCE_TRANSLATIONS);
 Object.assign(UI_EXTRA_TRANSLATIONS['nl-BE'] || (UI_EXTRA_TRANSLATIONS['nl-BE'] = {}), DUTCH_SOURCE_TRANSLATIONS);
+for (const [locale, labels] of Object.entries({
+  'en-GB': { 'Log kcal-schatting': 'Log activity calorie estimate' },
+  'fr-FR': { 'Log kcal-schatting': 'Enregistrer une estimation des calories d’activité' },
+  'de-DE': { 'Log kcal-schatting': 'Geschätzten Aktivitätsverbrauch erfassen' },
+  'nl-BE': { 'Log kcal-schatting': 'Kcal-schatting loggen' }
+})) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
 if (currentLocale() === 'nl-BE') applyLocale();

@@ -61,8 +61,8 @@ function activitiesHtml(d, k, editable) {
 
 /* Sheet om een activiteit toe te voegen. */
 let ACT_CB = null, ACT_DRAFT = null;
-function openActivitySheet(k, cb) {
-  ACT_CB = cb; ACT_DRAFT = { id: uid(), type: 'wandelen', min: 30, int: 'matig', k };
+function openActivitySheet(k, cb, preset = {}) {
+  ACT_CB = cb; ACT_DRAFT = { id: uid(), type: preset.type || 'wandelen', min: preset.min || 30, int: preset.int || 'matig', k };
   renderActivitySheet();
   $('#sheet').hidden = false; document.body.classList.add('noscroll');
 }
