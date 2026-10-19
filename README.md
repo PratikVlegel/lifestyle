@@ -21,7 +21,7 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `js/library.js` | Productenbibliotheek, producteditor, eenheden, barcode |
 | `js/ocr.js` | Gratis tekstherkenning van etiketten op het toestel |
 | `js/cloud.js` | Gedeelde productenbibliotheek via Supabase (anoniem account) |
-| `ocr/` | Tesseract.js 5.1.1 + Nederlands taalmodel (Apache 2.0) |
+| `ocr/` | Tesseract.js 5.1.1 + Nederlands taalmodel, ZXing 0.21.3 barcodelezer voor iPhone (Apache 2.0) |
 | `supabase/schema.sql` | Tabel en beveiligingsregels van de gedeelde bibliotheek |
 | `sw.js` | Service worker (offline). Verhoog `VERSION` bij elke update. |
 | `manifest.webmanifest` | Installatie als app |

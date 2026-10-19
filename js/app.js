@@ -450,26 +450,62 @@ ACT.pickFree = () => {
 
 /* ---------- barcode scannen (Open Food Facts, online) ---------- */
 let SCAN = null;
+/* Barcode scannen: ingebouwde BarcodeDetector (Android/Chrome) of ZXing als reserve (iPhone/Safari). */
+let ZX = null;
+async function zxingReader() {
+  if (ZX) return ZX;
+  await loadScript('ocr/zxing.min.js');
+  const hints = new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E]);
+  hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+  const r = new ZXing.MultiFormatReader(); r.setHints(hints);
+  ZX = r; return r;
+}
 async function scanBarcode(onCode) {
   let h = '<div class="sheet-h"><h2>Barcode scannen</h2><button class="iconbtn" data-act="closeSheet">✕</button></div>';
-  const supported = 'BarcodeDetector' in window;
-  h += supported ? '<video id="scanv" playsinline muted></video><p class="muted small">Richt de camera op de barcode.</p>' : '<p class="note">Je browser ondersteunt geen camerascan. Typ de barcode in.</p>';
-  h += '<div class="inrow"><input id="bcode" type="text" inputmode="numeric" placeholder="barcode (EAN)"><button class="btn ghost" data-act="lookupCode">Zoek</button></div><div id="scanmsg"></div>';
+  const native = 'BarcodeDetector' in window;
+  const camera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  h += camera ? '<div class="scanbox"><video id="scanv" playsinline muted autoplay></video><i class="scanline"></i></div><p class="muted small">Richt de camera op de barcode en hou hem rustig, op ±15 cm.</p>' : '<p class="note">Je toestel geeft geen toegang tot de camera. Typ de barcode in.</p>';
+  h += '<div class="inrow"><input id="bcode" type="text" inputmode="numeric" placeholder="of typ de cijfers onder de barcode"><button class="btn ghost" data-act="lookupCode">Zoek</button></div><div id="scanmsg"></div>';
   $('#sheet .sheet-in').innerHTML = h; $('#sheet').hidden = false;
   SCAN = { onCode };
-  if (!supported) return;
+  if (!camera) return;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+    if (!SCAN) { stream.getTracks().forEach(t => t.stop()); return; }
     SCAN.stream = stream;
     const v = $('#scanv'); v.srcObject = stream; await v.play();
-    const det = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
-    const loop = async () => {
-      if (!SCAN || !SCAN.stream) return;
-      try { const r = await det.detect(v); if (r.length) { $('#bcode').value = r[0].rawValue; stopScan(true); return SCAN.onCode(r[0].rawValue); } } catch (e) { }
-      SCAN.t = setTimeout(loop, 300);
-    };
-    loop();
-  } catch (e) { $('#scanmsg').innerHTML = '<p class="note">Camera niet beschikbaar: ' + esc(e.message) + '</p>'; }
+    const found = code => { if (!SCAN || !SCAN.stream) return; $('#bcode').value = code; if (navigator.vibrate) navigator.vibrate(60); stopScan(true); SCAN.onCode(code); };
+    if (native) {
+      const det = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+      const loop = async () => {
+        if (!SCAN || !SCAN.stream) return;
+        try { const r = await det.detect(v); if (r.length) return found(r[0].rawValue); } catch (e) { }
+        SCAN.t = setTimeout(loop, 250);
+      };
+      loop();
+    } else {
+      const reader = await zxingReader();
+      const c = document.createElement('canvas'), ctx = c.getContext('2d', { willReadFrequently: true });
+      const loop = () => {
+        if (!SCAN || !SCAN.stream) return;
+        if (v.videoWidth) {
+          // middenstrook van het beeld: sneller en betrouwbaarder
+          const w = v.videoWidth, hh = v.videoHeight, sh = Math.round(hh * 0.5);
+          c.width = Math.min(w, 960); c.height = Math.round(sh * c.width / w);
+          ctx.drawImage(v, 0, Math.round((hh - sh) / 2), w, sh, 0, 0, c.width, c.height);
+          try {
+            const bmp = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(c)));
+            const res = reader.decodeWithState(bmp);
+            if (res) return found(res.getText());
+          } catch (e) { /* niets gevonden in dit beeld */ }
+          reader.reset && reader.reset();
+        }
+        SCAN.t = setTimeout(loop, 200);
+      };
+      loop();
+    }
+  } catch (e) { const m = $('#scanmsg'); if (m) m.innerHTML = '<p class="note">Camera niet beschikbaar' + (/NotAllowed|Permission/i.test(e.name + e.message) ? ': geef de app toestemming voor de camera in je instellingen' : ': ' + esc(e.message)) + '. Je kan de cijfers ook intypen.</p>'; }
 }
 function stopScan(keep) { if (SCAN && SCAN.stream) { SCAN.stream.getTracks().forEach(t => t.stop()); SCAN.stream = null; clearTimeout(SCAN.t); } if (!keep) SCAN = null; }
 ACT.lookupCode = () => { const c = $('#bcode').value.trim(); if (!/^[0-9]{6,14}$/.test(c)) return toast('Een barcode bestaat uit 6 tot 14 cijfers.'); stopScan(true); SCAN.onCode(c); };
@@ -975,7 +1011,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.3.2';
+const APP_VERSION = '1.3.3';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
