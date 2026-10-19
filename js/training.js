@@ -152,7 +152,7 @@ const CUSTOM_EXERCISE_LIBRARY = [
   { id: 'dead-bug', name: 'Dead bug', focus: 'Romp; houd je onderrug rustig', target: '8–12' },
   { id: 'plank', name: 'Plank', focus: 'Romp; houd je lichaam in een rechte lijn', target: '30 sec' },
   { id: 'side-plank', name: 'Zijwaartse plank', focus: 'Romp en heupen; houd je heupen gestapeld', target: '20 sec' },
-  { id: 'bird-dog', name: 'Bird dog', focus: 'Romp en coördinatie; houd elke herhaling 3 seconden stabiel', target: '8–12', holdSeconds: 3 },
+  { id: 'bird-dog', name: 'Bird dog', focus: 'Romp en coördinatie; houd elke herhaling 3 seconden stabiel', target: '8', holdSeconds: 3 },
   { id: 'calf-raise', name: 'Kuitheffen', focus: 'Kuiten en enkels', target: '10–15' }
 ];
 function renderCustomTrainingBuilder() {
