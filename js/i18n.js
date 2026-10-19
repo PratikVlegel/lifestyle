@@ -1259,6 +1259,17 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], CYCLE_WARM_TRANSLATIONS['de-DE']);
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], INTAKE_STEP_TRANSLATIONS['en-GB']);
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], INTAKE_STEP_TRANSLATIONS['fr-FR']);
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], INTAKE_STEP_TRANSLATIONS['de-DE']);
+for (const [locale, labels] of Object.entries({
+  'en-GB': {
+    'Startscherm':'Home screen','Kies je kerncijfers':'Choose your dashboard metrics','Open deze instelling via het vraagteken rechtsboven op Vandaag. Vink aan wat je wilt zien; je kunt maximaal zes tegels kiezen.':'Open this setting using the question mark at the top right of Today. Select what you want to see; you can choose up to six tiles.','onderdelen':'sections','vandaag bijgehouden':'logged today','Aanvullen ›':'Add details ›','De dagboektegel toont hoeveel soorten gegevens je vandaag hebt ingevuld. Tik erop om je dagboek aan te vullen.':'The diary tile counts the types of information you logged today. Tap it to add to your diary.','Aanpassen':'Customise','Kies minimaal één kerncijfer.':'Choose at least one metric.','Je kunt maximaal zes kerncijfers kiezen.':'You can choose up to six metrics.'
+  },
+  'fr-FR': {
+    'Startscherm':'Écran d’accueil','Kies je kerncijfers':'Choisissez vos indicateurs','Open deze instelling via het vraagteken rechtsboven op Vandaag. Vink aan wat je wilt zien; je kunt maximaal zes tegels kiezen.':'Ouvrez ce réglage avec le point d’interrogation en haut à droite d’Aujourd’hui. Cochez les éléments à afficher ; vous pouvez choisir jusqu’à six tuiles.','onderdelen':'rubriques','vandaag bijgehouden':'renseignées aujourd’hui','Aanvullen ›':'Compléter ›','De dagboektegel toont hoeveel soorten gegevens je vandaag hebt ingevuld. Tik erop om je dagboek aan te vullen.':'La tuile du journal compte les types d’informations renseignés aujourd’hui. Touchez-la pour compléter votre journal.','Aanpassen':'Personnaliser','Kies minimaal één kerncijfer.':'Choisissez au moins un indicateur.','Je kunt maximaal zes kerncijfers kiezen.':'Vous pouvez choisir jusqu’à six indicateurs.'
+  },
+  'de-DE': {
+    'Startscherm':'Startbildschirm','Kies je kerncijfers':'Wähle deine Kennzahlen','Open deze instelling via het vraagteken rechtsboven op Vandaag. Vink aan wat je wilt zien; je kunt maximaal zes tegels kiezen.':'Öffne diese Einstellung über das Fragezeichen oben rechts auf Heute. Wähle aus, was du sehen möchtest; du kannst bis zu sechs Kacheln auswählen.','onderdelen':'Bereiche','vandaag bijgehouden':'heute erfasst','Aanvullen ›':'Ergänzen ›','De dagboektegel toont hoeveel soorten gegevens je vandaag hebt ingevuld. Tik erop om je dagboek aan te vullen.':'Die Tagebuch-Kachel zählt, welche Arten von Angaben du heute erfasst hast. Tippe darauf, um dein Tagebuch zu ergänzen.','Aanpassen':'Anpassen','Kies minimaal één kerncijfer.':'Wähle mindestens eine Kennzahl.','Je kunt maximaal zes kerncijfers kiezen.':'Du kannst bis zu sechs Kennzahlen auswählen.'
+  }
+})) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
 
 function tr(text) {
   const locale = currentLocale();

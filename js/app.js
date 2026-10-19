@@ -116,6 +116,21 @@ function reminderDisplayLabel(label) {
 
 /* ================= home ================= */
 const KPI_ORDER = ['kcal', 'protein', 'water', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fiber', 'caffeine', 'fat'];
+const HOME_KPI_CHOICES = [...KPI_ORDER, 'diary'];
+function homeKpiKeys() {
+  const saved = DB.settings.homeKpis;
+  if (Array.isArray(saved)) {
+    const valid = [...new Set(saved.filter(k => HOME_KPI_CHOICES.includes(k)))].slice(0, 6);
+    if (valid.length) return valid;
+  }
+  const defaults = {
+    food: ['kcal', 'protein', 'fiber', 'water'],
+    movement: ['steps', 'burn', 'sleep', 'diary'],
+    wellbeing: ['mood', 'energy', 'sleep', 'diary'],
+    balanced: ['kcal', 'protein', 'steps', 'diary']
+  };
+  return defaults[DB.settings.homeFocus] || defaults.balanced;
+}
 function renderHome() {
   const k = todayKey();
   const due = dueReminder();
@@ -125,18 +140,10 @@ function renderHome() {
     h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(reminderDisplayLabel(due.label)) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
   }
   h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
-  const homeCards = { week: weekCard(), training: activeTrainingHomeCard(), mood: moodHomeCard(), feedback: feedbackCard() };
-  const homeOrders = { food: ['week', 'feedback', 'training', 'mood'], movement: ['training', 'week', 'feedback', 'mood'], wellbeing: ['mood', 'week', 'feedback', 'training'], balanced: ['week', 'training', 'mood', 'feedback'] };
-  h += '<div class="home-focus-list">' + (homeOrders[DB.settings.homeFocus] || homeOrders.balanced).map(key => homeCards[key]).join('') + '</div>';
+  const cards = [activeTrainingHomeCard(), weekCard(), feedbackCard()].filter(Boolean);
+  if (cards.length) h += '<div class="home-focus-list">' + cards.join('') + '</div>';
+  h += '<h2 class="sec home-kpi-heading">' + tr('Kerncijfers') + '<a class="link" href="#/ontdek">' + tr('Aanpassen') + '</a></h2><div class="kpis">' + homeKpiKeys().map(k => k === 'diary' ? diaryKpiTile() : kpiTile(k)).join('') + '</div>';
   h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
-  h += '<a class="card diary-discover" href="#/dag/' + k + '"><b>' + tr('Je dagboek kan meer bijhouden') + '</b><p class="small">' + tr('Stemming, energie, slaap, stress, nicotine, frisdrank, zoetigheden en supplementen vind je bij de details van een dag.') + '</p><span class="plan-go">' + tr('Dagboek van vandaag aanvullen ›') + '</span></a>';
-  const focusKpis = {
-    food: ['kcal', 'protein', 'fiber', 'water', 'caffeine', 'steps', 'burn', 'sleep', 'mood', 'energy', 'weight', 'fat'],
-    movement: ['steps', 'burn', 'sleep', 'kcal', 'protein', 'water', 'fiber', 'mood', 'energy', 'weight', 'caffeine', 'fat'],
-    wellbeing: ['mood', 'energy', 'sleep', 'water', 'steps', 'kcal', 'protein', 'fiber', 'burn', 'weight', 'caffeine', 'fat'],
-    balanced: KPI_ORDER
-  };
-  h += '<h2 class="sec">' + tr('Kerncijfers') + '</h2><div class="kpis">' + (focusKpis[DB.settings.homeFocus] || focusKpis.balanced).map(kpiTile).join('') + '</div>';
   const day = getDay(k);
   h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
   h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
@@ -145,6 +152,7 @@ function renderHome() {
 function renderDiscoveryGuide() {
   const readiness = moodDiaryReadiness();
   let h = header('Ontdek de app', 'Snel naar logboek, inzichten, community en instellingen', true);
+  h += homeKpiSettingsCard();
   h += '<section class="card guide-card"><span class="pill">' + tr('Begin hier') + '</span><h2>' + tr('Je dagboek is het vertrekpunt') + '</h2><p>' + tr('Je kunt per dag niet alleen maaltijden noteren, maar ook slaap, stemming, energie, stress, beweging, cafeïne, alcohol, nicotinevormen, frisdrank, zoetigheden en supplementen. Alleen ingevulde gegevens tellen mee.') + '</p><a class="btn" href="#/dag/' + todayKey() + '">' + tr('Vandaag aanvullen') + '</a><a class="link" href="#/dagboek">' + tr('Alle dagen bekijken ›') + '</a></section>';
   h += '<section class="card guide-card"><span class="pill">' + tr('Persoonlijk welzijn') + '</span><h2>' + tr('Inzichten groeien mee met je dagboek') + '</h2><p>' + trf('Je hebt {count} stemmingsdagen genoteerd in de laatste 60 dagen. Voor persoonlijke vergelijkingen zijn minstens 14 stemmingsdagen nodig; daarna vergelijkt de app alleen dagen waarop beide waarden bekend zijn.', { count: readiness.count }) + '</p><a class="btn ghost" href="#/stemming">' + tr(readiness.ready ? 'Persoonlijke vergelijkingen bekijken' : 'Uitleg over stemming en gewoontes') + '</a></section>';
   h += '<section class="card guide-card"><span class="pill">' + tr('Community') + '</span><h2>' + tr('Recepten, plannen en ervaringen') + '</h2><p>' + tr('Deel een mealprep met voedingswaarden per portie, zoek recepten en geef sterren of een reactie. Je kunt ook trainingsschema’s delen, door anderen laten beoordelen en een kopie bewaren.') + '</p><p class="small muted">' + tr('Communityrangschikkingen tonen op dit moment alleen vrijwillig gedeelde stappen en beweegminuten. Voedingswaarden en macro’s worden niet gedeeld.') + '</p><a class="link" href="#/recepten">' + tr('Gedeelde recepten ›') + '</a> · <a class="link" href="#/train-community">' + tr('Communityschema’s ›') + '</a> · <a class="link" href="#/community-kpi/weekly">' + tr('Communitycijfers ›') + '</a></section>';
@@ -152,6 +160,38 @@ function renderDiscoveryGuide() {
   h += '<section class="card guide-card"><span class="pill">' + tr('Herinneringen') + '</span><h2>' + tr('Laat je op een handig moment herinneren') + '</h2><p>' + tr('Pas check-intijden aan in Meer. Webpush werkt per toestel nadat je meldingen inschakelt; anders kun je een agenda-export gebruiken.') + '</p><a class="link" href="#/meer">' + tr('Herinneringen instellen ›') + '</a></section>';
   view().innerHTML = h;
 }
+function diaryKpiTile() {
+  const d = getDay(todayKey());
+  const count = diaryLoggedSections(d);
+  return '<a class="kpi diary-kpi" href="#/dag/' + todayKey() + '"><span class="kl">' + tr('Dagboek') + '</span><span class="kv">' + count + '<small> ' + tr('onderdelen') + '</small></span><span class="ks">' + tr('vandaag bijgehouden') + '</span><span class="diary-kpi-link">' + tr('Aanvullen ›') + '</span></a>';
+}
+function diaryLoggedSections(d) {
+  if (!d) return 0;
+  let n = 0;
+  if ((d.meals || []).length) n++;
+  if ((d.activities || []).length) n++;
+  if (['weight', 'mood', 'energy', 'stress', 'sleepH', 'steps', 'waterMl', 'caffeine', 'alcohol', 'softDrinkServings', 'sweetsServings'].some(k => isNum(d[k]))) n++;
+  if (Object.hasOwn(d, 'nicotineForms') || Object.hasOwn(d, 'vape')) n++;
+  if (d.supplementsLogged || (d.supplements || []).length) n++;
+  return n;
+}
+function homeKpiSettingsCard() {
+  const selected = homeKpiKeys();
+  const labels = { diary: 'Dagboek' };
+  let h = '<section class="card guide-card home-kpi-settings"><span class="pill">' + tr('Startscherm') + '</span><h2>' + tr('Kies je kerncijfers') + '</h2><p>' + tr('Open deze instelling via het vraagteken rechtsboven op Vandaag. Vink aan wat je wilt zien; je kunt maximaal zes tegels kiezen.') + '</p><div class="home-kpi-options">';
+  for (const key of HOME_KPI_CHOICES) {
+    const label = key === 'diary' ? labels.diary : METRICS[key].label;
+    h += '<label class="toggle"><input type="checkbox" data-chg="homeKpiToggle" data-k="' + key + '" ' + (selected.includes(key) ? 'checked' : '') + '> ' + esc(tr(label)) + '</label>';
+  }
+  return h + '</div><p class="small muted">' + tr('De dagboektegel toont hoeveel soorten gegevens je vandaag hebt ingevuld. Tik erop om je dagboek aan te vullen.') + '</p></section>';
+}
+ACT.homeKpiToggle = el => {
+  const selected = homeKpiKeys();
+  const next = el.checked ? [...selected, el.dataset.k] : selected.filter(k => k !== el.dataset.k);
+  if (!el.checked && !next.length) { el.checked = true; return toast(tr('Kies minimaal één kerncijfer.')); }
+  if (next.length > 6) { el.checked = false; return toast(tr('Je kunt maximaal zes kerncijfers kiezen.')); }
+  DB.settings.homeKpis = next; save(); renderDiscoveryGuide();
+};
 function renderCommunityProfile() {
   let h = header('Communityprofiel', 'Kies de naam die andere leden zien', true);
   h += '<div class="card"><p>' + tr('Deze naam wordt getoond bij recepten, beoordelingen, gedeelde schema’s en vrijwillig gedeelde beweegcijfers. Je echte naam, e-mailadres en dagboek worden niet getoond.') + '</p><label class="fld"><span>' + tr('Communitynaam') + '</span><input id="communityName" maxlength="40" value="' + esc(DB.settings.communityName || '') + '" placeholder="' + esc(tr('Kies een naam')) + '"></label><button class="btn" data-act="saveCommunityName">' + tr('Communitynaam opslaan') + '</button></div>';
@@ -1316,7 +1356,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.49';
+const APP_VERSION = '1.10.50';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
