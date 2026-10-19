@@ -1,5 +1,5 @@
 /* Service worker: houdt de app offline beschikbaar. Verhoog VERSION bij elke update. */
-const VERSION = 'vd-1.10.24';
+const VERSION = 'vd-1.10.25';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js', 'js/i18n.js', 'js/ocr.js', 'js/cloud.js', 'js/library.js', 'js/migrate.js', 'js/activity.js', 'js/share.js', 'js/insights2.js', 'js/mood.js', 'js/cycle.js', 'js/week.js', 'js/extras.js', 'js/invite.js', 'js/admin.js', 'js/training.js', 'js/community-kpi.js', 'js/charts.js', 'js/insights.js', 'js/app.js', 'js/push.js', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

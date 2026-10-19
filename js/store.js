@@ -251,12 +251,29 @@ function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: 
 function validateImportData(obj) {
   const record = v => !!v && typeof v === 'object' && !Array.isArray(v);
   const fail = message => { throw new Error('Ongeldige back-up: ' + message); };
+  const validDate = value => {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const date = new Date(value + 'T00:00:00Z');
+    return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  };
   if (!record(obj)) fail('verwacht een JSON-object.');
   for (const field of ['days', 'profile', 'goals', 'settings', 'training', 'cycleTracking']) {
     if (obj[field] !== undefined && obj[field] !== null && !record(obj[field])) fail('het veld ' + field + ' heeft een ongeldig formaat.');
   }
-  if (obj.cycleTracking && obj.cycleTracking.periodStarts !== undefined && (!Array.isArray(obj.cycleTracking.periodStarts) || obj.cycleTracking.periodStarts.length > 120)) fail('cyclusregistraties hebben een ongeldig formaat.');
-  if (obj.cycleTracking && obj.cycleTracking.logs !== undefined && (!record(obj.cycleTracking.logs) || Object.keys(obj.cycleTracking.logs).length > 5000)) fail('cyclusdagboek heeft een ongeldig formaat.');
+  if (obj.cycleTracking) {
+    const cycle = obj.cycleTracking;
+    if (cycle.enabled !== undefined && typeof cycle.enabled !== 'boolean') fail('de cyclusinstelling heeft een ongeldig formaat.');
+    if (cycle.selectedDate !== undefined && cycle.selectedDate !== '' && !validDate(cycle.selectedDate)) fail('de geselecteerde cyclusdatum is ongeldig.');
+    if (cycle.periodStarts !== undefined && (!Array.isArray(cycle.periodStarts) || cycle.periodStarts.length > 120 || cycle.periodStarts.some(k => !validDate(k)))) fail('cyclusregistraties hebben een ongeldig formaat.');
+    if (cycle.logs !== undefined) {
+      if (!record(cycle.logs) || Object.keys(cycle.logs).length > 5000) fail('cyclusdagboek heeft een ongeldig formaat.');
+      const fields = { bleeding: [0, 3], pain: [0, 3], mood: [0, 3], energy: [0, 3], cravings: [0, 3], sleep: [0, 3], bloating: [0, 3], headache: [0, 3], support: [0, 5] };
+      for (const [date, log] of Object.entries(cycle.logs)) {
+        if (!validDate(date) || !record(log)) fail('een cyclusregistratie heeft een ongeldige datum of structuur.');
+        for (const [field, value] of Object.entries(log)) if (fields[field] && (!Number.isInteger(value) || value < fields[field][0] || value > fields[field][1])) fail('een cyclusregistratie bevat een waarde buiten het toegestane bereik.');
+      }
+    }
+  }
   for (const field of ['preps', 'foods', 'ai', 'reminders', 'mealPatch']) {
     if (obj[field] !== undefined && obj[field] !== null && !Array.isArray(obj[field])) fail('het veld ' + field + ' moet een lijst zijn.');
     if (Array.isArray(obj[field]) && obj[field].length > 10000) fail('de lijst ' + field + ' is te groot.');
@@ -294,6 +311,12 @@ function validateImportData(obj) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !record(day)) fail('een dag heeft een ongeldige datum of structuur.');
     const date = new Date(key + 'T00:00:00Z');
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== key) fail('een dag bevat een ongeldige datum.');
+    for (const [field, limit] of Object.entries({ moodNote: 1000, alcoholNote: 200, cpap: 100, notes: 4000 })) {
+      if (day[field] !== undefined && day[field] !== null && (typeof day[field] !== 'string' || day[field].length > limit)) fail(key + ' · ' + field + ' is ongeldig of te lang.');
+    }
+    if (day.sleepQ !== undefined && day.sleepQ !== null && !['slecht', 'matig', 'uitgerust', 'goed uitgerust', '?'].includes(day.sleepQ)) fail(key + ' · slaapkwaliteit bevat een ongeldige keuze.');
+    if (day.supplementsLogged !== undefined && typeof day.supplementsLogged !== 'boolean') fail(key + ' · supplementsLogged heeft een ongeldig formaat.');
+    if (day.supplements !== undefined && (!Array.isArray(day.supplements) || day.supplements.length > 8 || day.supplements.some(s => !record(s) || typeof s.name !== 'string' || !s.name.trim() || s.name.length > 80 || (s.dose !== undefined && s.dose !== null && (typeof s.dose !== 'string' || s.dose.length > 40))))) fail(key + ' · supplementregistraties hebben een ongeldig formaat.');
     if (day.meals !== undefined && !Array.isArray(day.meals)) fail('de maaltijden van ' + key + ' zijn geen lijst.');
     if ((day.meals || []).length > 100) fail('er staan meer dan 100 maaltijden op ' + key + '.');
     if (day.activities !== undefined && !Array.isArray(day.activities)) fail('de activiteiten van ' + key + ' zijn geen lijst.');
@@ -364,6 +387,18 @@ function importJSON(obj, mode) {
         for (const [f, v] of Object.entries(d)) if (f !== 'meals' && (cur[f] === undefined || cur[f] === null)) cur[f] = v;
         const ids = new Set((cur.meals || []).map(m => m.id));
         for (const m of d.meals || []) if (!ids.has(m.id)) cur.meals.push(m);
+      }
+    }
+    if (obj.cycleTracking) {
+      const importedCycle = migrate({ cycleTracking: obj.cycleTracking }).cycleTracking;
+      DB.cycleTracking = DB.cycleTracking || defaultData().cycleTracking;
+      DB.cycleTracking.enabled = DB.cycleTracking.enabled || importedCycle.enabled;
+      DB.cycleTracking.selectedDate = DB.cycleTracking.selectedDate || importedCycle.selectedDate;
+      DB.cycleTracking.periodStarts = [...new Set([...(DB.cycleTracking.periodStarts || []), ...importedCycle.periodStarts])].sort().slice(-120);
+      DB.cycleTracking.logs = DB.cycleTracking.logs || {};
+      for (const [date, log] of Object.entries(importedCycle.logs)) {
+        if (!DB.cycleTracking.logs[date]) DB.cycleTracking.logs[date] = log;
+        else for (const [field, value] of Object.entries(log)) if (DB.cycleTracking.logs[date][field] === undefined || DB.cycleTracking.logs[date][field] === null) DB.cycleTracking.logs[date][field] = value;
       }
     }
     const updated = new Set();

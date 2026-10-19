@@ -295,7 +295,7 @@ function renderCheckin(rid, dateKey) {
       choice('sleepQ', 'Hoe uitgerust?', ['slecht', 'matig', 'uitgerust', 'goed uitgerust']) +
       choice('cpap', 'CPAP?', ['hele nacht', 'deel van de nacht', 'nee']) + '</div>';
     h += '<div class="card"><h3>' + tr('Hoe was je dag?') + '</h3>' + scale('mood', 'Stemming') + scale('energy', 'Energie') + scale('stress', 'Stress / spanning', true) +
-      '<label class="fld"><span>' + tr('Waarom zo? (werk, mensen, honger, slaap…)') + '</span><input type="text" data-ci="moodNote" value="' + esc(CI.f.moodNote || '') + '" placeholder="' + tr('bv. drukke dag, ruzie op het werk') + '"></label></div>';
+      '<label class="fld"><span>' + tr('Waarom zo? (werk, mensen, honger, slaap…)') + '</span><input type="text" maxlength="1000" data-ci="moodNote" value="' + esc(CI.f.moodNote || '') + '" placeholder="' + tr('bv. drukke dag, ruzie op het werk') + '"></label></div>';
     h += '<div class="card"><h3>' + tr('Beweging en drinken') + '</h3>' +
       field('steps', 'Stappen', 'number', { unit: '', step: '1', unknown: 'onbekend', bare: true }) +
       field('waterL', 'Water vandaag in totaal', 'number', { unit: 'l', step: '0.25', unknown: 'onbekend', bare: true, hint: trf('Al genoteerd: {amount}', { amount: day && isNum(day.waterMl) ? fmtNum(day.waterMl / 1000, 2) + ' l' : tr('niets') }) }) +
@@ -304,7 +304,7 @@ function renderCheckin(rid, dateKey) {
       field('softDrinkServings', tr('Frisdrank'), 'number', { unit: tr('glazen of blikjes'), step: '0.5', unknown: tr('onbekend'), bare: true, optional: true }) +
       field('sweetsServings', tr('Snoep of zoetigheden'), 'number', { unit: tr('porties'), step: '0.5', unknown: tr('onbekend'), bare: true, optional: true }) +
       field('alcohol', 'Alcohol (glazen)', 'number', { unit: 'glazen', step: '1', unknown: 'onbekend', bare: true }) +
-      (Number(CI.f.alcohol) > 0 ? '<label class="fld"><span>' + tr('Wat gedronken?') + '</span><input type="text" data-ci="alcoholNote" value="' + esc(CI.f.alcoholNote || '') + '"></label>' : '') + '</div>';
+      (Number(CI.f.alcohol) > 0 ? '<label class="fld"><span>' + tr('Wat gedronken?') + '</span><input type="text" maxlength="200" data-ci="alcoholNote" value="' + esc(CI.f.alcoholNote || '') + '"></label>' : '') + '</div>';
     h += expQuestionHtml();
     h += '<div class="card"><h3>' + tr('Andere activiteiten vandaag?') + '</h3><p class="muted small">' + tr('Fietsen, fitness, zwemmen, padel… Wandelen telt al mee via je stappen.') + '</p>' + activitiesHtml(getDay(CI.k), CI.k, true) + '<button class="chip add" data-act="ciAct">+ ' + tr('activiteit') + '</button></div>';
     h += slotBlock('na', 'Iets gegeten of gedronken na het avondeten?');
@@ -407,6 +407,14 @@ ACT.ciDelItem = el => { const s = el.dataset.s; CI.items[s].splice(Number(el.dat
 ACT.ciAdd = el => { const s = el.dataset.s; openPicker(items => { CI.items[s] = (CI.items[s] || []).concat(items); CI.ans[s] = undefined; rerenderCI(); }); };
 
 ACT.ciSave = () => {
+  for (const [field, limit] of [['moodNote', 1000], ['alcoholNote', 200]]) {
+    const value = CI.f[field];
+    if (typeof value === 'string' && value.length > limit) {
+      toast(trf('Tekst mag maximaal {count} tekens bevatten.', { count: limit }));
+      const input = document.querySelector('[data-ci="' + field + '"]'); if (input) input.focus();
+      return;
+    }
+  }
   for (const f of ['weight', 'sleepH', 'waterL', 'steps', 'caffeine', 'alcohol', 'softDrinkServings', 'sweetsServings']) {
     const v = CI.f[f];
     if (typeof v === 'number') {
@@ -1254,7 +1262,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.24';
+const APP_VERSION = '1.10.25';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
