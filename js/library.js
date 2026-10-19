@@ -53,7 +53,7 @@ function renderFoodEditor(note) {
   const P = PED;
   const locked = P.rid && !P.own;
   let h = '<div class="sheet-h"><h2>' + (P.isNew ? 'Nieuw product' : 'Product') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="Sluiten">✕</button></div>';
-  if (note) h += '<p class="note">' + note + '</p>';
+  if (note) h += '<p class="note">' + esc(tr(note)) + '</p>';
   if (locked) h += '<p class="muted small">Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.</p>';
   h += '<div class="chips"><button class="chip" data-act="pedScan">Scan barcode</button><label class="chip">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="pedPhoto"></label></div><div id="ocrstat"></div>';
   h += '<label class="fld"><span>Naam</span><input data-pf="name" value="' + esc(P.name) + '" placeholder="bv. Kipfilet"></label>';
@@ -100,13 +100,15 @@ ACT.pedScan = () => {
     if (!PED.brand && food.brand) PED.brand = food.brand;
     for (const n of NUTR) if (isNum(food.per[n])) PED.per[n] = food.per[n];
     if (food.rid) { PED.rid = food.rid; PED.own = food.own; }
-    renderFoodEditor(food.per && isNum(food.per.kcal) ? 'Gevonden: ' + esc(food.name) + '. Kijk de waarden even na.' : 'Barcode ingevuld. Dit product is nog nergens bekend: neem een foto van het etiket of vul de waarden zelf in.');
-  }, code => { PED = keep; PED_CB = cb; PED.barcode = code; renderFoodEditor('Barcode ' + esc(code) + ' is nog nergens bekend. Neem een foto van het etiket of vul de waarden zelf in.'); });
+    renderFoodEditor(food.per && isNum(food.per.kcal)
+      ? trf('Product gevonden: {name}. Controleer de waarden.', { name: food.name })
+      : 'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.');
+  }, code => { PED = keep; PED_CB = cb; PED.barcode = code; renderFoodEditor(trf('Barcode {code} is nog niet bekend. Scan het etiket of vul de waarden zelf in.', { code })); });
 };
 ACT.pedPhoto = el => { const f = el.files[0]; el.value = ''; if (f) runOcr(f); };
 async function runOcr(file) {
   const st = $('#ocrstat');
-  const show = t => { const s = $('#ocrstat'); if (s) s.innerHTML = '<p class="note">' + t + '</p>'; };
+  const show = t => { const s = $('#ocrstat'); if (s) s.innerHTML = '<p class="note">' + esc(tr(t)) + '</p>'; };
   show('Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.');
   try {
     const r = await ocrLabel(file, m => { if (m.status && m.progress !== undefined) show(ocrStatus(m)); });
@@ -114,12 +116,17 @@ async function runOcr(file) {
     for (const n of found) PED.per[n] = r.values[n];
     PED.uncertain = r.values.uncertain || [];
     if (!PED.source || PED.source === 'eigen') PED.source = 'etiket';
-    renderFoodEditor(found.length ? found.length + ' van de 5 waarden gelezen' + (found.length < 5 ? ' (' + NUTR.filter(n => !found.includes(n)).map(n => NUTR_LABEL[n]).join(', ') + ' niet gevonden)' : '') + '. Controleer ze even met het etiket.' : 'Ik kon geen voedingswaarden lezen. Neem de foto van dichterbij, recht van voor en zonder schittering, of vul ze zelf in.');
-  } catch (e) { show(esc(e.message)); }
+    if (found.length) {
+      const missing = NUTR.filter(n => !found.includes(n)).map(n => tr(NUTR_LABEL[n])).join(', ');
+      renderFoodEditor(found.length < 5
+        ? trf('{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.', { count: found.length, missing })
+        : tr('Alle 5 waarden gelezen. Controleer ze met het etiket.'));
+    } else renderFoodEditor('Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.');
+  } catch (e) { console.error('Etiket lezen mislukt', e); show('Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.'); }
 }
 function ocrStatus(m) {
   const map = { 'loading tesseract core': 'Tekstherkenning laden', 'loading language traineddata': 'Taalbestand laden', 'initializing api': 'Opstarten', 'recognizing text': 'Tekst lezen' };
-  return (map[m.status] || m.status) + '… ' + Math.round((m.progress || 0) * 100) + '%';
+  return tr(map[m.status] || 'Tekstherkenning') + '… ' + Math.round((m.progress || 0) * 100) + '%';
 }
 ACT.pedSave = () => {
   const P = PED;

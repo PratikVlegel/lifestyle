@@ -1964,3 +1964,77 @@ const REMINDER_LIMIT_TRANSLATIONS = {
   }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], REMINDER_LIMIT_TRANSLATIONS[locale]);
+const OCR_AND_REVIEW_TRANSLATIONS = {
+  'nl-BE': {
+    'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.',
+    'Product gevonden: {name}. Controleer de waarden.': 'Product gevonden: {name}. Controleer de waarden.',
+    'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.': 'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.',
+    'Barcode {code} is nog niet bekend. Scan het etiket of vul de waarden zelf in.': 'Barcode {code} is nog niet bekend. Scan het etiket of vul de waarden zelf in.',
+    '{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.': '{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.',
+    'Alle 5 waarden gelezen. Controleer ze met het etiket.': 'Alle 5 waarden gelezen. Controleer ze met het etiket.',
+    'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.': 'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.',
+    'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.': 'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.',
+    'Tekstherkenning': 'Tekstherkenning', 'Tekstherkenning laden': 'Tekstherkenning laden', 'Taalbestand laden': 'Taalbestand laden', 'Opstarten': 'Opstarten', 'Tekst lezen': 'Tekst lezen',
+    'Je beoordeling opslaan is mislukt. Probeer het opnieuw.': 'Je beoordeling opslaan is mislukt. Probeer het opnieuw.'
+  },
+  'en-GB': {
+    'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Reading the label… The app downloads text recognition the first time (about 7 MB); it then works offline.',
+    'Product gevonden: {name}. Controleer de waarden.': 'Product found: {name}. Check the values.',
+    'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.': 'Barcode entered. This product is not in the database yet: scan the label or enter the values yourself.',
+    'Barcode {code} is nog niet bekend. Scan het etiket of vul de waarden zelf in.': 'Barcode {code} is not in the database yet. Scan the label or enter the values yourself.',
+    '{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.': 'Read {count} of 5 values; not found: {missing}. Check the label to confirm.',
+    'Alle 5 waarden gelezen. Controleer ze met het etiket.': 'All 5 values read. Check them against the label.',
+    'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.': 'I could not read the nutrition values. Take a closer, straight-on photo without glare, or enter the values yourself.',
+    'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.': 'Could not read the label. Try a sharper photo or enter the values yourself.',
+    'Tekstherkenning': 'Text recognition', 'Tekstherkenning laden': 'Loading text recognition', 'Taalbestand laden': 'Loading language data', 'Opstarten': 'Starting up', 'Tekst lezen': 'Reading text',
+    'Je beoordeling opslaan is mislukt. Probeer het opnieuw.': 'Could not save your review. Please try again.'
+  },
+  'fr-FR': {
+    'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Lecture de l’étiquette… Au premier usage, l’application télécharge la reconnaissance de texte (environ 7 Mo), puis elle fonctionne hors ligne.',
+    'Product gevonden: {name}. Controleer de waarden.': 'Produit trouvé : {name}. Vérifiez les valeurs.',
+    'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.': 'Code-barres saisi. Ce produit est encore inconnu : scannez l’étiquette ou saisissez les valeurs vous-même.',
+    'Barcode {code} is nog niet bekend. Scan het etiket of vul de waarden zelf in.': 'Le code-barres {code} est inconnu. Scannez l’étiquette ou saisissez les valeurs vous-même.',
+    '{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.': '{count} valeurs sur 5 lues ; introuvables : {missing}. Vérifiez sur l’étiquette.',
+    'Alle 5 waarden gelezen. Controleer ze met het etiket.': 'Les 5 valeurs ont été lues. Vérifiez-les sur l’étiquette.',
+    'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.': 'Impossible de lire les valeurs nutritionnelles. Prenez une photo plus proche, bien de face et sans reflet, ou saisissez les valeurs vous-même.',
+    'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.': 'La lecture de l’étiquette a échoué. Essayez une photo plus nette ou saisissez les valeurs vous-même.',
+    'Tekstherkenning': 'Reconnaissance de texte', 'Tekstherkenning laden': 'Chargement de la reconnaissance de texte', 'Taalbestand laden': 'Chargement des données linguistiques', 'Opstarten': 'Démarrage', 'Tekst lezen': 'Lecture du texte',
+    'Je beoordeling opslaan is mislukt. Probeer het opnieuw.': 'Impossible d’enregistrer votre avis. Réessayez.'
+  },
+  'de-DE': {
+    'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Etikett wird gelesen … Beim ersten Mal lädt die App die Texterkennung (ca. 7 MB); danach funktioniert sie offline.',
+    'Product gevonden: {name}. Controleer de waarden.': 'Produkt gefunden: {name}. Prüfe die Werte.',
+    'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.': 'Barcode eingegeben. Dieses Produkt ist noch nicht bekannt: Scanne das Etikett oder gib die Werte selbst ein.',
+    'Barcode {code} is nog niet bekend. Scan het etiket of vul de waarden zelf in.': 'Der Barcode {code} ist noch unbekannt. Scanne das Etikett oder gib die Werte selbst ein.',
+    '{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.': '{count} von 5 Werten erkannt; nicht gefunden: {missing}. Bitte mit dem Etikett abgleichen.',
+    'Alle 5 waarden gelezen. Controleer ze met het etiket.': 'Alle 5 Werte wurden erkannt. Bitte mit dem Etikett abgleichen.',
+    'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.': 'Die Nährwerte konnten nicht gelesen werden. Nimm ein näheres, gerades Foto ohne Spiegelungen auf oder gib die Werte selbst ein.',
+    'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.': 'Das Etikett konnte nicht gelesen werden. Versuche ein schärferes Foto oder gib die Werte selbst ein.',
+    'Tekstherkenning': 'Texterkennung', 'Tekstherkenning laden': 'Texterkennung wird geladen', 'Taalbestand laden': 'Sprachdaten werden geladen', 'Opstarten': 'Wird gestartet', 'Tekst lezen': 'Text wird gelesen',
+    'Je beoordeling opslaan is mislukt. Probeer het opnieuw.': 'Deine Bewertung konnte nicht gespeichert werden. Bitte versuche es erneut.'
+  }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], OCR_AND_REVIEW_TRANSLATIONS[locale]);
+const TIMED_EXERCISE_TRANSLATIONS = {
+  'nl-BE': {
+    'Herhalingen of duur': 'Herhalingen of duur', 'bv. 8–12 of 30 sec': 'bv. 8–12 of 30 sec',
+    'Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).': 'Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).',
+    'Vul per trainingsdag minstens één oefening in met 1–10 sets, een herhalingsaantal of duur in seconden en 0–600 seconden rust.': 'Vul per trainingsdag minstens één oefening in met 1–10 sets, een herhalingsaantal of duur in seconden en 0–600 seconden rust.'
+  },
+  'en-GB': {
+    'Herhalingen of duur': 'Reps or duration', 'bv. 8–12 of 30 sec': 'e.g. 8–12 or 30 sec',
+    'Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).': 'Enter reps (e.g. 8–12) or a duration in seconds (e.g. 30 sec).',
+    'Vul per trainingsdag minstens één oefening in met 1–10 sets, een herhalingsaantal of duur in seconden en 0–600 seconden rust.': 'Add at least one exercise for each training day, with 1–10 sets, a rep count or duration in seconds, and 0–600 seconds of rest.'
+  },
+  'fr-FR': {
+    'Herhalingen of duur': 'Répétitions ou durée', 'bv. 8–12 of 30 sec': 'ex. 8–12 ou 30 s',
+    'Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).': 'Saisissez les répétitions (ex. 8–12) ou une durée en secondes (ex. 30 s).',
+    'Vul per trainingsdag minstens één oefening in met 1–10 sets, een herhalingsaantal of duur in seconden en 0–600 seconden rust.': 'Ajoutez au moins un exercice pour chaque jour, avec 1 à 10 séries, un nombre de répétitions ou une durée en secondes, et 0 à 600 secondes de repos.'
+  },
+  'de-DE': {
+    'Herhalingen of duur': 'Wiederholungen oder Dauer', 'bv. 8–12 of 30 sec': 'z. B. 8–12 oder 30 Sek.',
+    'Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).': 'Gib Wiederholungen (z. B. 8–12) oder eine Dauer in Sekunden ein (z. B. 30 Sek.).',
+    'Vul per trainingsdag minstens één oefening in met 1–10 sets, een herhalingsaantal of duur in seconden en 0–600 seconden rust.': 'Füge für jeden Trainingstag mindestens eine Übung mit 1–10 Sätzen, einer Wiederholungszahl oder Dauer in Sekunden und 0–600 Sekunden Pause hinzu.'
+  }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], TIMED_EXERCISE_TRANSLATIONS[locale]);
