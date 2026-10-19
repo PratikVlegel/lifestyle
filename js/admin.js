@@ -8,9 +8,9 @@ async function checkAdmin() {
 }
 function inviteText(code) {
   return 'Hoi! Ik gebruik een app voor mijn voedingsdagboek en mealpreps. Doe je mee?\n\n' +
-    '1. Open ' + APP_LINK + ' in Chrome op je gsm\n' +
-    '2. Menu ⋮ → App installeren\n' +
-    '3. Vul deze code in: ' + code + '\n\nJe dagboek blijft op je eigen gsm; alleen producten en recepten deel je met de groep.';
+    'Android:\n1. Open ' + APP_LINK + ' in Chrome\n2. Menu ⋮ → App installeren\n3. Open de app en vul de code in\n\n' +
+    'iPhone:\n1. Open ' + APP_LINK + ' in Safari\n2. Deelknop (vierkant met pijl) → Zet op beginscherm → Voeg toe\n3. Open de app via het nieuwe icoon op je beginscherm (niet in Safari) en vul daar de code in\n\n' +
+    'Code: ' + code + '\n\nJe dagboek blijft op je eigen gsm; alleen producten en recepten deel je met de groep.';
 }
 let INV_LAST = null;
 async function renderAdmin() {

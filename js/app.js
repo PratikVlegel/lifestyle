@@ -745,7 +745,7 @@ function renderMore(sub) {
   h += '<h3>Meldingen op je gsm</h3><p class="muted small">Een web-app kan geen meldingen inplannen terwijl hij dicht is. Daarom twee betrouwbare manieren die ook offline werken:</p>' +
     '<ol class="small"><li><b>Agenda (aanbevolen):</b> download het agendabestand en importeer het in Google Agenda of Samsung Agenda. Elke herinnering geeft een melding met een link die meteen de juiste check-in opent.</li><li><b>Wekker:</b> zet per herinnering een terugkerende wekker in je Klok-app.</li></ol>' +
     '<div class="inrow"><button class="btn" data-act="ics">Download agendabestand (.ics)</button></div>' +
-    '<div class="chips">' + DB.reminders.filter(r => r.on).map(r => '<a class="chip" href="' + alarmIntent(r) + '">⏰ ' + r.time + '</a>').join('') + '</div>' +
+    (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '<p class="muted small">iPhone: open het gedownloade bestand en tik op "Voeg alles toe" om de herinneringen in Agenda te zetten.</p>' : '<div class="chips">' + DB.reminders.filter(r => r.on).map(r => '<a class="chip" href="' + alarmIntent(r) + '">⏰ ' + r.time + '</a>').join('') + '</div>') +
     '<label class="fld"><span>Adres van deze app (voor de links in de agenda)</span><input type="url" value="' + esc(S.appUrl || appBase()) + '" data-chg="setAppUrl"></label>' +
     '<label class="toggle"><input type="checkbox" ' + (S.notify ? 'checked' : '') + ' data-chg="setNotify"> Ook meldingen geven zolang de app open staat</label></div>';
 
@@ -975,7 +975,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.3.2';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
