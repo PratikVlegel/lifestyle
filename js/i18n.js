@@ -2970,6 +2970,9 @@ for (const [locale, copy] of Object.entries(DIARY_MOOD_OPT_IN_COPY)) {
   UI_EXTRA_TRANSLATIONS[locale]['Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Je kunt stemmingsvergelijkingen zelf inschakelen bij Stemming en gewoontes. Vanaf 14 stemmingsdagen in de laatste 60 dagen toont de app alleen vergelijkingen met voldoende gegevens.'] = copy;
 }
 const DIETITIAN_REPORT_DATA_COPY = {
+  'nl-BE': {
+    'Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.': 'Voedingsgemiddelden gebruiken alleen ingevulde, berekenbare gegevens. Niet-geregistreerde maaltijden tellen niet mee en kunnen totalen lager maken dan je werkelijke inname. Een kcal-dagschatting kan door jou zijn ingevoerd; deze cijfers zijn geen klinische voedingsbeoordeling.'
+  },
   'en-GB': {
     'Voedingsgemiddelden uit geregistreerde gegevens': 'Nutrition averages from logged data',
     'Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.': 'Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.'
