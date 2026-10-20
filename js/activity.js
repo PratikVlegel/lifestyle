@@ -90,7 +90,7 @@ ACT.actSave = () => {
   if (!Number.isInteger(Number(A.min)) || Number(A.min) < 1 || Number(A.min) > 1440) return toast(tr('Kies een duur tussen 1 minuut en 24 uur.'));
   const a = { id: A.id, type: A.type, min: Number(A.min), int: A.int }; if (A.note) a.note = String(A.note).trim().slice(0, 200);
   const cb = ACT_CB; ACT_DRAFT = null; closeSheet();
-  if (cb) cb(a); else { const d = getDay(A.k, true); d.activities = (d.activities || []).concat(a); save(); toast(tr('Activiteit bewaard')); render(); }
+  if (cb) cb(a); else { const d = getDay(A.k, true); d.activities = (d.activities || []).concat(a); if (!save()) return; toast(tr('Activiteit bewaard')); render(); }
 };
 ACT.delAct = el => { const d = getDay(el.dataset.k); d.activities = (d.activities || []).filter(a => a.id !== el.dataset.id); save(); render(); };
 ACT.quickAct = () => openActivitySheet(todayKey());

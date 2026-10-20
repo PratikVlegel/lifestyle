@@ -220,13 +220,13 @@ function kpiTile(key) {
 }
 ACT.openKpi = el => go('#/kpi/' + el.dataset.k);
 ACT.openCheckin = el => go('#/checkin/' + el.dataset.id);
-ACT.quickWater = () => { const d = getDay(todayKey(), true), total = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; if (total > NUM_LIMITS.waterMl[1]) return toast(tr('Invoerlimiet bereikt: maximaal 30 l water per dag.')); d.waterMl = total; save(); toast(trf('Water vandaag: {amount} l', { amount: fmtNum(d.waterMl / 1000, 2) })); render(); };
-ACT.quickCoffee = () => { const d = getDay(todayKey(), true), total = (isNum(d.caffeine) ? d.caffeine : 0) + 1; if (total > NUM_LIMITS.caffeine[1]) return toast(tr('Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.')); d.caffeine = total; save(); toast(trf('Cafeïne vandaag: {count} porties', { count: d.caffeine })); render(); };
+ACT.quickWater = () => { const d = getDay(todayKey(), true), total = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; if (total > NUM_LIMITS.waterMl[1]) return toast(tr('Invoerlimiet bereikt: maximaal 30 l water per dag.')); d.waterMl = total; if (!save()) return; toast(trf('Water vandaag: {amount} l', { amount: fmtNum(d.waterMl / 1000, 2) })); render(); };
+ACT.quickCoffee = () => { const d = getDay(todayKey(), true), total = (isNum(d.caffeine) ? d.caffeine : 0) + 1; if (total > NUM_LIMITS.caffeine[1]) return toast(tr('Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.')); d.caffeine = total; if (!save()) return; toast(trf('Cafeïne vandaag: {count} porties', { count: d.caffeine })); render(); };
 ACT.quickEat = () => openPicker(items => {
   const d = getDay(todayKey(), true);
   const slot = slotForNow();
   items.forEach(it => { it.slot = slot; it.time = nowTime(); d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); });
-  save(); toast(tr('Genoteerd bij') + ' ' + tr(SLOTS[slot])); render();
+  if (!save()) return; toast(tr('Genoteerd bij') + ' ' + tr(SLOTS[slot])); render();
 });
 function slotForNow() {
   const t = nowTime();
@@ -765,12 +765,12 @@ ACT.supplementAdd = el => {
   if (!name) { toast(tr('Vul eerst de naam van het supplement in.')); if (nameInput) nameInput.focus(); return; }
   const d = getDay(k, true); d.supplements = Array.isArray(d.supplements) ? d.supplements.slice(0, 8) : [];
   if (d.supplements.length >= 8) return;
-  d.supplements.push({ name, dose }); d.supplementsLogged = true; save(); renderDay(k);
+  d.supplements.push({ name, dose }); d.supplementsLogged = true; if (!save()) return; renderDay(k);
 };
-ACT.supplementRemove = el => { const d = getDay(el.dataset.k, true); d.supplements = Array.isArray(d.supplements) ? d.supplements : []; d.supplements.splice(Number(el.dataset.i), 1); save(); renderDay(el.dataset.k); };
-ACT.supplementNone = el => { const d = getDay(el.dataset.k, true); d.supplements = []; d.supplementsLogged = true; save(); renderDay(el.dataset.k); };
-ACT.supplementClear = el => { const d = getDay(el.dataset.k, true); delete d.supplements; delete d.supplementsLogged; save(); renderDay(el.dataset.k); };
-ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }); save(); render(); });
+ACT.supplementRemove = el => { const d = getDay(el.dataset.k, true); d.supplements = Array.isArray(d.supplements) ? d.supplements : []; d.supplements.splice(Number(el.dataset.i), 1); if (!save()) return; renderDay(el.dataset.k); };
+ACT.supplementNone = el => { const d = getDay(el.dataset.k, true); d.supplements = []; d.supplementsLogged = true; if (!save()) return; renderDay(el.dataset.k); };
+ACT.supplementClear = el => { const d = getDay(el.dataset.k, true); delete d.supplements; delete d.supplementsLogged; if (!save()) return; renderDay(el.dataset.k); };
+ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }); if (!save()) return; render(); });
 ACT.saveDay = el => {
   const fields = [...document.querySelectorAll('[data-dk]')];
   for (const i of fields) {
@@ -792,7 +792,7 @@ ACT.saveDay = el => {
     d[n] = v;
   });
   if (!dayHasDiaryContent(d)) delete DB.days[el.dataset.k];
-  save(); toast(tr('Bewaard')); render();
+  if (!save()) return; toast(tr('Bewaard')); render();
 };
 function dayNicotineChoice(d, k) {
   let selected = Array.isArray(d.nicotineForms) ? d.nicotineForms : [];
@@ -812,7 +812,7 @@ ACT.dayNicotine = el => {
     if (forms.has(v)) forms.delete(v); else forms.add(v);
     d.nicotineForms = [...forms];
   }
-  save(); renderDay(el.dataset.k);
+  if (!save()) return; renderDay(el.dataset.k);
 };
 ACT.dropOverride = el => { delete getDay(el.dataset.k).kcalOverride; save(); render(); };
 ACT.delMeal = el => { const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id); if (!confirm(trf('Verwijderen: {item}?', { item: m.desc || tr('item') }))) return; if (m.prepId) usePortion(m.prepId, -m.portion); d.meals = d.meals.filter(x => x !== m); save(); render(); };
@@ -1412,7 +1412,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.98';
+const APP_VERSION = '1.11.1';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
