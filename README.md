@@ -53,6 +53,8 @@ Het cyclus- en symptoomdagboek is optioneel en blijft in de lokale browseropslag
 
 `supabase/010_private_feedback_notes.sql` is toegepast op het Supabase-project om vrije feedbacknotities uit de selecteerbare communityvelden te halen. Nieuwe vrije notities worden lokaal bewaard; gestructureerde feedback en de expliciet openbare beoordeling/reactie blijven deelbaar.
 
+`supabase/018_bound_community_json_payloads.sql` is toegepast op productie. De drie nieuwe invoerlimieten staan bewust op `NOT VALID`: bestaande records worden niet volledig gescand, terwijl alle nieuwe of gewijzigde rijen de controles wel moeten doorstaan. Daarom kunnen oudere records nog buiten de nieuwe limieten vallen totdat ze aangepast zijn.
+
 ## Back-up en import
 
 Een JSON-back-up bevat persoonlijke dagboek- en appgegevens. De export laat de Anthropic API-sleutel, pushabonnementen, Supabase-serverinstellingen en communitylidmaatschap/beheerdersstatus weg. Een vervangende import behoudt de vertrouwde instellingen van dit toestel en schakelt push uit; profielkeuzes en numerieke grenzen worden gevalideerd voordat gegevens worden opgeslagen.
