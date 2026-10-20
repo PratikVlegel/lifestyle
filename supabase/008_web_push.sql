@@ -33,6 +33,7 @@ create table if not exists public.webpush_deliveries (
   state text not null default 'processing' check (state in ('processing', 'sent', 'failed')),
   attempts integer not null default 1 check (attempts between 1 and 20),
   lease_until timestamptz not null default (now() + interval '5 minutes'),
+  next_attempt_at timestamptz not null default now(),
   sent_at timestamptz,
   last_error text,
   primary key (subscription_id, reminder_id, local_date)
@@ -53,13 +54,19 @@ begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'service role required' using errcode = '42501';
   end if;
+  update public.webpush_deliveries
+     set state = 'failed', lease_until = now(), next_attempt_at = 'infinity'::timestamptz,
+         last_error = coalesce(last_error, 'retry_limit_reached')
+   where subscription_id = p_subscription_id and reminder_id = p_reminder_id and local_date = p_local_date
+     and state = 'processing' and lease_until < now() and attempts >= 20;
   insert into public.webpush_deliveries(subscription_id, reminder_id, local_date)
   values (p_subscription_id, p_reminder_id, p_local_date)
   on conflict (subscription_id, reminder_id, local_date) do update
     set state = 'processing', attempts = webpush_deliveries.attempts + 1,
-        lease_until = now() + interval '5 minutes', last_error = null
-    where webpush_deliveries.state = 'failed'
-       or (webpush_deliveries.state = 'processing' and webpush_deliveries.lease_until < now())
+        lease_until = now() + interval '5 minutes', next_attempt_at = now(), last_error = null
+    where webpush_deliveries.attempts < 20
+      and ((webpush_deliveries.state = 'failed' and webpush_deliveries.next_attempt_at <= now())
+       or (webpush_deliveries.state = 'processing' and webpush_deliveries.lease_until < now()))
   returning true into claimed;
   return coalesce(claimed, false);
 end;
@@ -81,7 +88,16 @@ begin
      set state = case when p_success then 'sent' else 'failed' end,
          sent_at = case when p_success then now() else null end,
          lease_until = now(),
-         last_error = case when p_success then null else left(coalesce(p_error, 'send failed'), 300) end
+         next_attempt_at = case
+           when p_success then now()
+           when attempts >= 20 then 'infinity'::timestamptz
+           else now() + make_interval(secs => least(21600, (300 * power(2, attempts - 1))::integer))
+         end,
+         last_error = case
+           when p_success then null
+           when coalesce(p_error, '') ~* 'https?://' then 'push_error_redacted'
+           else left(coalesce(p_error, 'send failed'), 300)
+         end
    where subscription_id = p_subscription_id and reminder_id = p_reminder_id and local_date = p_local_date;
 end;
 $$;
