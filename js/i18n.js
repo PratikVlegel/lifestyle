@@ -2945,3 +2945,10 @@ const MEALPREP_FLOW_TRANSLATIONS = {
   }
 };
 for (const [locale, labels] of Object.entries(MEALPREP_FLOW_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+
+const SMALL_UI_COPY_TRANSLATIONS = {
+  'en-GB': { 'Voedingsdagboek': 'Food diary', 'werkt offline': 'works offline', 'versie': 'version' },
+  'fr-FR': { 'Voedingsdagboek': 'Journal alimentaire', 'werkt offline': 'fonctionne hors ligne', 'versie': 'version' },
+  'de-DE': { 'Voedingsdagboek': 'Ernährungstagebuch', 'werkt offline': 'funktioniert offline', 'versie': 'Version' }
+};
+for (const [locale, labels] of Object.entries(SMALL_UI_COPY_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);

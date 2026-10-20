@@ -1094,7 +1094,7 @@ function renderMore(sub) {
     '<div class="inrow wrap"><a class="btn ghost" href="#/rapport">' + tr('Rapport voor diëtist, psycholoog, coach of arts') + '</a></div>' +
     '<button class="link" data-act="redoIntake">' + tr('Intake opnieuw doen') + '</button> · <button class="link danger" data-act="wipe">' + tr('Alles wissen') + '</button></div>';
   h += installCard();
-  h += '<p class="muted small center">Voedingsdagboek · werkt offline · versie ' + APP_VERSION + '</p>';
+  h += '<p class="muted small center">' + tr('Voedingsdagboek') + ' · ' + tr('werkt offline') + ' · ' + tr('versie') + ' ' + APP_VERSION + '</p>';
   view().innerHTML = h;
   runDiag();
 }
@@ -1415,7 +1415,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.11.4';
+const APP_VERSION = '1.11.5';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

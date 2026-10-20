@@ -283,7 +283,7 @@ function openFeedback(id) {
 }
 function renderFeedback() {
   const p = prepById(FB.id);
-  let h = '<div class="sheet-h"><h2>' + esc(p.name) + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="Sluiten">✕</button></div>';
+  let h = '<div class="sheet-h"><h2>' + esc(p.name) + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>';
   for (const [k, q, opts] of FB_Q) {
     h += '<div class="fld" data-fq="' + k + '"><span>' + tr(q) + '</span>' + (typeof opts[0] === 'number'
       ? '<div class="stars">' + opts.map(v => '<button class="' + (FB[k] >= v ? 'on' : '') + '" data-act="fbSet" data-k="' + k + '" data-v="' + v + '" aria-label="' + v + ' ' + tr('van 5') + '">★</button>').join('') + '</div>'
