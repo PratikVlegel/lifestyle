@@ -849,7 +849,7 @@ function renderPreps() {
       '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + (prepKnows(p, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + tr(NUTR_LABEL[n])) + '</span>').join('') + '</div>' +
       '<small class="muted">' + tr('per portie') + ' · ' + tr('gemaakt') + ' ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + (p.feedback ? ' · ' + esc(feedbackSummary(p.feedback)) : '') + (p.sharedId ? ' · ' + tr('gedeeld') : '') + '</small></a>';
   }).join('');
-  h += '<a class="card prepc" href="#/bieb"><div class="pc-h"><b>Productenbibliotheek</b><span class="pill">' + DB.foods.length + '</span></div><small class="muted">Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.' + (cloudReady() && DB.settings.share !== false ? ' Gedeeld over je toestellen en met andere gebruikers.' : '') + '</small></a>';
+  h += '<a class="card prepc" href="#/bieb"><div class="pc-h"><b>' + tr('Productenbibliotheek') + '</b><span class="pill">' + DB.foods.length + '</span></div><small class="muted">' + tr('Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.') + (cloudReady() && DB.settings.share !== false ? ' ' + tr('Gedeeld over je toestellen en met andere gebruikers.') : '') + '</small></a>';
   view().innerHTML = h;
 }
 ACT.newPrep = () => { PREP = { id: uid(), name: '', date: todayKey(), portions: 3, left: 3, plan: '', cooked: null, ingredients: [blankIng()] , isNew: true }; go('#/prep/nieuw'); };
@@ -859,40 +859,43 @@ function renderPrep(id) {
   if (!PREP) return go('#/preps');
   const P = PREP;
   let h = header(P.isNew ? 'Nieuwe mealprep' : P.name, 'Vul per ingrediënt de hoeveelheid en het etiket in', true);
-  h += '<div class="card"><label class="fld"><span>Naam</span><input maxlength="200" data-pp="name" value="' + esc(P.name) + '" placeholder="bv. Chili met bioburger en rijst"></label>' +
-    '<div class="grid2"><label class="fld"><span>Porties</span><input type="number" inputmode="numeric" data-pp="portions" value="' + P.portions + '"></label><label class="fld"><span>Nog over</span><input type="number" inputmode="decimal" step="0.25" data-pp="left" value="' + (isNum(P.left) ? P.left : '') + '"></label></div><label class="fld"><span>Gemaakt op</span><input type="date" data-pp="date" value="' + esc(P.date || '') + '"></label>' +
-    '<label class="fld"><span>Planning (optioneel)</span><input data-pp="plan" value="' + esc(P.plan || '') + '" placeholder="bv. lunch ma–wo"></label>' +
-    '<label class="fld"><span>Gewicht bereid, hele pot (optioneel)</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="cooked" value="' + (isNum(P.cooked) ? P.cooked : '') + '"><em>g</em></div></label></div>';
+  h += '<div class="card"><label class="fld"><span>' + tr('Naam') + '</span><input maxlength="200" data-pp="name" value="' + esc(P.name) + '" placeholder="' + esc(tr('bv. Chili met bioburger en rijst')) + '"></label>' +
+    '<div class="grid2"><label class="fld"><span>' + tr('Porties') + '</span><input type="number" inputmode="numeric" data-pp="portions" value="' + P.portions + '"></label><label class="fld"><span>' + tr('Nog over') + '</span><input type="number" inputmode="decimal" step="0.25" data-pp="left" value="' + (isNum(P.left) ? P.left : '') + '"></label></div><label class="fld"><span>' + tr('Gemaakt op') + '</span><input type="date" data-pp="date" value="' + esc(P.date || '') + '"></label>' +
+    '<label class="fld"><span>' + tr('Planning (optioneel)') + '</span><input data-pp="plan" value="' + esc(P.plan || '') + '" placeholder="' + esc(tr('bv. lunch ma–wo')) + '"></label>' +
+    '<label class="fld"><span>' + tr('Gewicht bereid, hele pot (optioneel)') + '</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="cooked" value="' + (isNum(P.cooked) ? P.cooked : '') + '"><em>g</em></div></label></div>';
   h += prepExtrasHtml(P);
-  h += '<h2 class="sec">Ingrediënten</h2>';
+  h += '<h2 class="sec">' + tr('Ingrediënten') + '</h2>';
   h += P.ingredients.map((g, i) => '<div class="card ing" data-i="' + i + '">' +
-    '<div class="inrow"><input class="grow" maxlength="200" data-pp="ing.' + i + '.name" value="' + esc(g.name) + '" placeholder="Ingrediënt" list="foodlist"><button class="iconbtn sm" data-act="delIng" data-i="' + i + '" aria-label="Verwijder">✕</button></div>' +
-    '<div class="grid2"><label class="fld"><span>Hoeveelheid (hele prep)</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="ing.' + i + '.grams" value="' + (isNum(g.grams) ? g.grams : '') + '"><em>g/ml</em></div></label>' +
-    '<label class="fld"><span>Waarden zijn</span><select data-pp="ing.' + i + '.mode"><option value="per100"' + (g.mode !== 'totaal' ? ' selected' : '') + '>per 100 g (etiket)</option><option value="totaal"' + (g.mode === 'totaal' ? ' selected' : '') + '>totaal voor deze hoeveelheid</option></select></label></div>' +
-    '<div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + NUTR_LABEL[n] + '</span><input type="number" inputmode="decimal" data-pp="ing.' + i + '.per.' + n + '" value="' + (isNum(g.per[n]) ? g.per[n] : '') + '"></label>').join('') + '</div>' +
-    '<div class="chips"><button class="chip" data-act="ingLib" data-i="' + i + '">Uit bibliotheek</button><button class="chip" data-act="ingScan" data-i="' + i + '">Scan barcode</button><label class="chip">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="ingOcr" data-i="' + i + '"></label></div>' + ingUnitChips(g, i) +
+    '<div class="inrow"><input class="grow" maxlength="200" data-pp="ing.' + i + '.name" value="' + esc(g.name) + '" placeholder="' + esc(tr('Ingrediënt')) + '" list="foodlist"><button class="iconbtn sm" data-act="delIng" data-i="' + i + '" aria-label="' + esc(tr('Verwijder')) + '">✕</button></div>' +
+    '<div class="grid2"><label class="fld"><span>' + tr('Hoeveelheid (hele prep)') + '</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="ing.' + i + '.grams" value="' + (isNum(g.grams) ? g.grams : '') + '"><em>g/ml</em></div></label>' +
+    '<label class="fld"><span>' + tr('Waarden zijn') + '</span><select data-pp="ing.' + i + '.mode"><option value="per100"' + (g.mode !== 'totaal' ? ' selected' : '') + '>' + tr('per 100 g (etiket)') + '</option><option value="totaal"' + (g.mode === 'totaal' ? ' selected' : '') + '>' + tr('totaal voor deze hoeveelheid') + '</option></select></label></div>' +
+    '<div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + tr(NUTR_LABEL[n]) + '</span><input type="number" inputmode="decimal" data-pp="ing.' + i + '.per.' + n + '" value="' + (isNum(g.per[n]) ? g.per[n] : '') + '"></label>').join('') + '</div>' +
+    '<div class="chips"><button class="chip" data-act="ingLib" data-i="' + i + '">' + tr('Uit bibliotheek') + '</button><button class="chip" data-act="ingScan" data-i="' + i + '">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="ingOcr" data-i="' + i + '"></label></div>' + ingUnitChips(g, i) +
     '<small class="muted" id="ingsum_' + i + '">' + ingSummary(g) + '</small></div>').join('');
   h += '<datalist id="foodlist">' + DB.foods.map(f => '<option value="' + esc(f.name) + '">').join('') + '</datalist>';
-  h += '<button class="btn ghost" data-act="addIng">+ ingrediënt</button>';
+  h += '<button class="btn ghost" data-act="addIng">+ ' + tr('ingrediënt') + '</button>';
   h += '<div class="card sticky" id="preptot">' + prepTotalsHtml() + '</div>';
-  h += '<div class="inrow"><button class="btn big" data-act="savePrep">Bewaar mealprep</button>' + (P.isNew ? '' : '<button class="btn ghost" data-act="sharePrep">Deel</button>') + '</div>';
-  if (!P.isNew) h += '<div class="inrow"><button class="link" data-act="dupPrep">Opnieuw maken (kopie)</button><button class="link danger" data-act="delPrep">Verwijderen</button></div>';
+  h += '<div class="inrow"><button class="btn big" data-act="savePrep">' + tr('Bewaar mealprep') + '</button>' + (P.isNew ? '' : '<button class="btn ghost" data-act="sharePrep">' + tr('Deel') + '</button>') + '</div>';
+  if (!P.isNew) h += '<div class="inrow"><button class="link" data-act="dupPrep">' + tr('Opnieuw maken (kopie)') + '</button><button class="link danger" data-act="delPrep">' + tr('Verwijderen') + '</button></div>';
   view().innerHTML = h;
 }
 function prepKnows(p, n) { return (p.ingredients || []).some(g => g.per && isNum(g.per[n])); }
 function ingSummary(g) {
   const t = ingTotals(g);
-  if (!isNum(t.kcal)) return 'Nog geen kcal.';
-  return 'Samen ≈ ' + fmtNum(t.kcal) + ' kcal' + (isNum(t.protein) ? ', ' + fmtNum(t.protein) + ' g eiwit' : '') + ' in de hele prep.';
+  if (!isNum(t.kcal)) return tr('Nog geen kcal.');
+  return isNum(t.protein)
+    ? trf('Samen ≈ {kcal} kcal en {protein} g eiwit in de hele prep.', { kcal: fmtNum(t.kcal), protein: fmtNum(t.protein) })
+    : trf('Samen ≈ {kcal} kcal in de hele prep.', { kcal: fmtNum(t.kcal) });
 }
 function prepTotalsHtml() {
   const { tot, per, missing } = prepTotals(PREP);
   const p = Math.max(1, Number(PREP.portions) || 1);
-  let h = '<div class="pt-h"><b>Per portie</b><small>' + p + ' porties</small></div><div class="macro big">' + NUTR.map(n => '<span><b>' + (prepKnows(PREP, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div>';
-  h += '<small class="muted">Hele prep ≈ ' + fmtNum(tot.kcal) + ' kcal, ' + fmtNum(tot.protein) + ' g eiwit' + (isNum(PREP.cooked) ? ' · ≈ ' + fmtNum(PREP.cooked / p) + ' g bereid per portie' : '') + '.';
-  const miss = NUTR.filter(n => missing[n]).map(n => NUTR_LABEL[n]);
-  if (miss.length) h += ' Ontbreekt bij sommige ingrediënten: ' + miss.join(', ') + ' (telt als 0).';
-  if (per.kcal) h += ' Eiwit levert ' + Math.round(per.protein * 4 / per.kcal * 100) + '% van de kcal.';
+  let h = '<div class="pt-h"><b>' + tr('Per portie') + '</b><small>' + p + ' ' + tr('porties') + '</small></div><div class="macro big">' + NUTR.map(n => '<span><b>' + (prepKnows(PREP, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + tr(NUTR_LABEL[n])) + '</span>').join('') + '</div>';
+  h += '<small class="muted">' + trf('Hele prep ≈ {kcal} kcal, {protein} g eiwit.', { kcal: fmtNum(tot.kcal), protein: fmtNum(tot.protein) });
+  if (isNum(PREP.cooked)) h += ' ' + trf('≈ {grams} g bereid per portie.', { grams: fmtNum(PREP.cooked / p) });
+  const miss = NUTR.filter(n => missing[n]).map(n => tr(NUTR_LABEL[n]));
+  if (miss.length) h += ' ' + trf('Ontbreekt bij sommige ingrediënten: {nutrients} (telt als 0).', { nutrients: miss.join(', ') });
+  if (per.kcal) h += ' ' + trf('Eiwit levert {percent}% van de kcal.', { percent: Math.round(per.protein * 4 / per.kcal * 100) });
   return h + '</small>';
 }
 function prepInput(el) {
@@ -934,7 +937,7 @@ ACT.ingOcr = el => { const i = Number(el.dataset.i), file = el.files[0]; el.valu
 ACT.ingLib = el => {
   const i = Number(el.dataset.i);
   $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>' + tr('Uit bibliotheek') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>' +
-    (DB.foods.length ? libSearch('', 400).map(f => '<button class="pick wide" data-act="ingLibPick" data-i="' + i + '" data-id="' + f.id + '"><b>' + esc(f.name) + '</b><small>' + fmtNum(f.per.kcal) + ' kcal / 100 g</small></button>').join('') : '<p class="muted">Je bibliotheek is nog leeg.</p>');
+    (DB.foods.length ? libSearch('', 400).map(f => '<button class="pick wide" data-act="ingLibPick" data-i="' + i + '" data-id="' + f.id + '"><b>' + esc(f.name) + '</b><small>' + fmtNum(f.per.kcal) + ' kcal / 100 g</small></button>').join('') : '<p class="muted">' + tr('Je bibliotheek is nog leeg.') + '</p>');
   $('#sheet').hidden = false;
 };
 ACT.ingLibPick = el => fillIng(Number(el.dataset.i), DB.foods.find(f => f.id === el.dataset.id));
@@ -982,9 +985,9 @@ ACT.dupPrep = () => { const c = JSON.parse(JSON.stringify(PREP)); c.id = uid(); 
 ACT.delPrep = () => { if (!confirm(tr('Mealprep verwijderen? Wat je al at, blijft in je dagboek.'))) return; DB.preps = DB.preps.filter(p => p.id !== PREP.id); save(); PREP = null; go('#/preps'); };
 ACT.sharePrep = () => {
   const { per, tot } = prepTotals(PREP);
-  const txt = PREP.name + ' (' + PREP.portions + ' porties, gemaakt ' + fmtDay(PREP.date || todayKey()) + ')\n' +
-    PREP.ingredients.map(g => '- ' + g.name + ': ' + (g.grams ?? '?') + ' g' + (g.mode === 'per100' && isNum(g.per.kcal) ? ' (' + g.per.kcal + ' kcal/100 g)' : '')).join('\n') +
-    '\nPer portie ≈ ' + fmtNum(per.kcal) + ' kcal, ' + fmtNum(per.protein) + ' g eiwit, ' + fmtNum(per.carbs) + ' g koolhydraten, ' + fmtNum(per.fat) + ' g vet, ' + fmtNum(per.fiber) + ' g vezels. Hele prep ≈ ' + fmtNum(tot.kcal) + ' kcal (ruwe schatting).';
+  const txt = trf('{name} ({portions} porties, gemaakt op {date})', { name: PREP.name, portions: PREP.portions, date: fmtDay(PREP.date || todayKey()) }) + '\n' +
+    PREP.ingredients.map(g => trf('- {name}: {amount} g', { name: g.name, amount: g.grams ?? '?' }) + (g.mode === 'per100' && isNum(g.per.kcal) ? trf(' ({kcal} kcal/100 g)', { kcal: g.per.kcal }) : '')).join('\n') +
+    '\n' + trf('Per portie ≈ {kcal} kcal, {protein} g eiwit, {carbs} g koolhydraten, {fat} g vet en {fiber} g vezels.', { kcal: fmtNum(per.kcal), protein: fmtNum(per.protein), carbs: fmtNum(per.carbs), fat: fmtNum(per.fat), fiber: fmtNum(per.fiber) }) + ' ' + trf('Hele prep ≈ {kcal} kcal (ruwe schatting).', { kcal: fmtNum(tot.kcal) });
   shareText(txt, PREP.name);
 };
 async function shareText(txt, title) {
@@ -1412,7 +1415,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.11.3';
+const APP_VERSION = '1.11.4';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

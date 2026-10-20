@@ -2896,3 +2896,52 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Vul een hoeveelheid in.': 'Gib eine Menge ein.', 'Barcode scannen': 'Barcode scannen', 'Richt de camera op de barcode en hou hem rustig, op ±15 cm.': 'Richte die Kamera auf den Barcode und halte sie ruhig, etwa 15 cm entfernt.',
   'Je toestel geeft geen toegang tot de camera. Typ de barcode in.': 'Dein Gerät kann nicht auf die Kamera zugreifen. Gib den Barcode manuell ein.', 'Of typ de cijfers onder de barcode': 'Oder gib die Ziffern unter dem Barcode ein', 'Zoek': 'Suchen', 'Zoeken…': 'Suche läuft …', 'Offline: opzoeken kan niet.': 'Offline: Die Suche ist nicht verfügbar.'
 });
+
+const MEALPREP_FLOW_TRANSLATIONS = {
+  'en-GB': {
+    'Productenbibliotheek': 'Food library', 'Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.': 'Foods with label values and units. Scan, photograph or add foods, then reuse them in any recipe.',
+    'Gedeeld over je toestellen en met andere gebruikers.': 'Shared across your devices and with other users.', 'bv. Chili met bioburger en rijst': 'e.g. Chilli with plant-based mince and rice',
+    'Porties': 'Servings', 'porties': 'servings', 'Nog over': 'Remaining', 'Gemaakt op': 'Prepared on', 'Planning (optioneel)': 'Plan (optional)', 'bv. lunch ma–wo': 'e.g. lunch Mon–Wed',
+    'Gewicht bereid, hele pot (optioneel)': 'Cooked weight, whole batch (optional)', 'Ingrediënten': 'Ingredients', 'Ingrediënt': 'Ingredient', 'ingrediënt': 'ingredient', 'Verwijder': 'Remove',
+    'Hoeveelheid (hele prep)': 'Amount (whole batch)', 'Waarden zijn': 'Values are', 'per 100 g (etiket)': 'per 100 g (label)', 'totaal voor deze hoeveelheid': 'total for this amount',
+    'Uit bibliotheek': 'From library', 'Scan barcode': 'Scan barcode', 'Foto etiket': 'Photograph label', 'Bewaar mealprep': 'Save meal prep', 'Deel': 'Share', 'Opnieuw maken (kopie)': 'Make again (copy)',
+    'Nog geen kcal.': 'No kcal values yet.', 'Samen ≈ {kcal} kcal en {protein} g eiwit in de hele prep.': 'Total for the whole batch: about {kcal} kcal and {protein} g protein.',
+    'Samen ≈ {kcal} kcal in de hele prep.': 'Total for the whole batch: about {kcal} kcal.', 'Per portie': 'Per serving', 'Hele prep ≈ {kcal} kcal, {protein} g eiwit.': 'Whole batch: about {kcal} kcal and {protein} g protein.',
+    '≈ {grams} g bereid per portie.': 'About {grams} g cooked weight per serving.', 'Ontbreekt bij sommige ingrediënten: {nutrients} (telt als 0).': 'Missing for some ingredients: {nutrients} (counted as 0).',
+    'Eiwit levert {percent}% van de kcal.': 'Protein provides {percent}% of the calories.', 'Je bibliotheek is nog leeg.': 'Your library is empty.',
+    '{name} ({portions} porties, gemaakt op {date})': '{name} ({portions} servings, prepared on {date})', '- {name}: {amount} g': '- {name}: {amount} g', ' ({kcal} kcal/100 g)': ' ({kcal} kcal/100 g)',
+    'Per portie ≈ {kcal} kcal, {protein} g eiwit, {carbs} g koolhydraten, {fat} g vet en {fiber} g vezels.': 'Per serving: about {kcal} kcal, {protein} g protein, {carbs} g carbohydrates, {fat} g fat and {fiber} g fibre.',
+    'Hele prep ≈ {kcal} kcal (ruwe schatting).': 'Whole batch: about {kcal} kcal (rough estimate).'
+  },
+  'fr-FR': {
+    'Productenbibliotheek': 'Bibliothèque d’aliments', 'Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.': 'Aliments avec valeurs d’étiquette et unités. Scannez, photographiez ou ajoutez des aliments, puis réutilisez-les dans vos recettes.',
+    'Gedeeld over je toestellen en met andere gebruikers.': 'Partagés entre vos appareils et avec les autres utilisateurs.', 'bv. Chili met bioburger en rijst': 'ex. chili au haché végétal et riz',
+    'Porties': 'Portions', 'porties': 'portions', 'Nog over': 'Restant', 'Gemaakt op': 'Préparé le', 'Planning (optioneel)': 'Planification (facultatif)', 'bv. lunch ma–wo': 'ex. déjeuner lun.–mer.',
+    'Gewicht bereid, hele pot (optioneel)': 'Poids cuit, préparation entière (facultatif)', 'Ingrediënten': 'Ingrédients', 'Ingrediënt': 'Ingrédient', 'ingrediënt': 'ingrédient', 'Verwijder': 'Supprimer',
+    'Hoeveelheid (hele prep)': 'Quantité (préparation entière)', 'Waarden zijn': 'Valeurs indiquées pour', 'per 100 g (etiket)': '100 g (étiquette)', 'totaal voor deze hoeveelheid': 'cette quantité au total',
+    'Uit bibliotheek': 'Depuis la bibliothèque', 'Scan barcode': 'Scanner le code-barres', 'Foto etiket': 'Photographier l’étiquette', 'Bewaar mealprep': 'Enregistrer le repas préparé', 'Deel': 'Partager', 'Opnieuw maken (kopie)': 'Refaire (copie)',
+    'Nog geen kcal.': 'Pas encore de valeur en kcal.', 'Samen ≈ {kcal} kcal en {protein} g eiwit in de hele prep.': 'Préparation entière : environ {kcal} kcal et {protein} g de protéines.',
+    'Samen ≈ {kcal} kcal in de hele prep.': 'Préparation entière : environ {kcal} kcal.', 'Per portie': 'Par portion', 'Hele prep ≈ {kcal} kcal, {protein} g eiwit.': 'Préparation entière : environ {kcal} kcal et {protein} g de protéines.',
+    '≈ {grams} g bereid per portie.': 'Environ {grams} g cuits par portion.', 'Ontbreekt bij sommige ingrediënten: {nutrients} (telt als 0).': 'Valeur manquante pour certains ingrédients : {nutrients} (comptée comme 0).',
+    'Eiwit levert {percent}% van de kcal.': 'Les protéines représentent {percent} % des kcal.', 'Je bibliotheek is nog leeg.': 'Votre bibliothèque est vide.',
+    '{name} ({portions} porties, gemaakt op {date})': '{name} ({portions} portions, préparé le {date})', '- {name}: {amount} g': '- {name} : {amount} g', ' ({kcal} kcal/100 g)': ' ({kcal} kcal/100 g)',
+    'Per portie ≈ {kcal} kcal, {protein} g eiwit, {carbs} g koolhydraten, {fat} g vet en {fiber} g vezels.': 'Par portion : environ {kcal} kcal, {protein} g de protéines, {carbs} g de glucides, {fat} g de lipides et {fiber} g de fibres.',
+    'Hele prep ≈ {kcal} kcal (ruwe schatting).': 'Préparation entière : environ {kcal} kcal (estimation approximative).'
+  },
+  'de-DE': {
+    'Productenbibliotheek': 'Lebensmittelbibliothek', 'Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.': 'Lebensmittel mit Nährwerten vom Etikett und Einheiten. Scanne, fotografiere oder füge Lebensmittel hinzu und verwende sie in jedem Rezept wieder.',
+    'Gedeeld over je toestellen en met andere gebruikers.': 'Auf deinen Geräten und mit anderen Nutzern geteilt.', 'bv. Chili met bioburger en rijst': 'z. B. Chili mit pflanzlichem Hack und Reis',
+    'Porties': 'Portionen', 'porties': 'Portionen', 'Nog over': 'Übrig', 'Gemaakt op': 'Zubereitet am', 'Planning (optioneel)': 'Planung (optional)', 'bv. lunch ma–wo': 'z. B. Mittagessen Mo–Mi',
+    'Gewicht bereid, hele pot (optioneel)': 'Gekochtes Gewicht, ganze Menge (optional)', 'Ingrediënten': 'Zutaten', 'Ingrediënt': 'Zutat', 'ingrediënt': 'Zutat', 'Verwijder': 'Entfernen',
+    'Hoeveelheid (hele prep)': 'Menge (gesamte Zubereitung)', 'Waarden zijn': 'Werte beziehen sich auf', 'per 100 g (etiket)': '100 g (Etikett)', 'totaal voor deze hoeveelheid': 'diese Menge insgesamt',
+    'Uit bibliotheek': 'Aus Bibliothek', 'Scan barcode': 'Barcode scannen', 'Foto etiket': 'Etikett fotografieren', 'Bewaar mealprep': 'Mahlzeit speichern', 'Deel': 'Teilen', 'Opnieuw maken (kopie)': 'Erneut zubereiten (Kopie)',
+    'Nog geen kcal.': 'Noch keine kcal-Werte.', 'Samen ≈ {kcal} kcal en {protein} g eiwit in de hele prep.': 'Gesamte Zubereitung: etwa {kcal} kcal und {protein} g Eiweiß.',
+    'Samen ≈ {kcal} kcal in de hele prep.': 'Gesamte Zubereitung: etwa {kcal} kcal.', 'Per portie': 'Pro Portion', 'Hele prep ≈ {kcal} kcal, {protein} g eiwit.': 'Gesamte Zubereitung: etwa {kcal} kcal und {protein} g Eiweiß.',
+    '≈ {grams} g bereid per portie.': 'Etwa {grams} g gekochtes Gewicht pro Portion.', 'Ontbreekt bij sommige ingrediënten: {nutrients} (telt als 0).': 'Bei einigen Zutaten fehlen Werte für: {nutrients} (wird als 0 gezählt).',
+    'Eiwit levert {percent}% van de kcal.': 'Eiweiß liefert {percent} % der Kalorien.', 'Je bibliotheek is nog leeg.': 'Deine Bibliothek ist noch leer.',
+    '{name} ({portions} porties, gemaakt op {date})': '{name} ({portions} Portionen, zubereitet am {date})', '- {name}: {amount} g': '- {name}: {amount} g', ' ({kcal} kcal/100 g)': ' ({kcal} kcal/100 g)',
+    'Per portie ≈ {kcal} kcal, {protein} g eiwit, {carbs} g koolhydraten, {fat} g vet en {fiber} g vezels.': 'Pro Portion: etwa {kcal} kcal, {protein} g Eiweiß, {carbs} g Kohlenhydrate, {fat} g Fett und {fiber} g Ballaststoffe.',
+    'Hele prep ≈ {kcal} kcal (ruwe schatting).': 'Gesamte Zubereitung: etwa {kcal} kcal (grobe Schätzung).'
+  }
+};
+for (const [locale, labels] of Object.entries(MEALPREP_FLOW_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
