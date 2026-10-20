@@ -2659,3 +2659,23 @@ const B6_SUPPLEMENT_EVIDENCE_TRANSLATIONS = {
   }
 };
 for (const [locale, labels] of Object.entries(B6_SUPPLEMENT_EVIDENCE_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+
+const QUICK_ENTRY_LIMIT_TRANSLATIONS = {
+  'nl-BE': {
+    'Invoerlimiet bereikt: maximaal 30 l water per dag.': 'Invoerlimiet bereikt: maximaal 30 l water per dag.',
+    'Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.': 'Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.'
+  },
+  'en-GB': {
+    'Invoerlimiet bereikt: maximaal 30 l water per dag.': 'Entry limit reached: maximum 30 l of water per day.',
+    'Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.': 'Entry limit reached: maximum 100 caffeine servings per day.'
+  },
+  'fr-FR': {
+    'Invoerlimiet bereikt: maximaal 30 l water per dag.': 'Limite de saisie atteinte : 30 l d’eau maximum par jour.',
+    'Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.': 'Limite de saisie atteinte : 100 portions de caféine maximum par jour.'
+  },
+  'de-DE': {
+    'Invoerlimiet bereikt: maximaal 30 l water per dag.': 'Eingabelimit erreicht: höchstens 30 l Wasser pro Tag.',
+    'Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.': 'Eingabelimit erreicht: höchstens 100 Koffeinportionen pro Tag.'
+  }
+};
+for (const [locale, labels] of Object.entries(QUICK_ENTRY_LIMIT_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);

@@ -220,8 +220,8 @@ function kpiTile(key) {
 }
 ACT.openKpi = el => go('#/kpi/' + el.dataset.k);
 ACT.openCheckin = el => go('#/checkin/' + el.dataset.id);
-ACT.quickWater = () => { const d = getDay(todayKey(), true); d.waterMl = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; save(); toast(trf('Water vandaag: {amount} l', { amount: fmtNum(d.waterMl / 1000, 2) })); render(); };
-ACT.quickCoffee = () => { const d = getDay(todayKey(), true); d.caffeine = (isNum(d.caffeine) ? d.caffeine : 0) + 1; save(); toast(trf('Cafeïne vandaag: {count} porties', { count: d.caffeine })); render(); };
+ACT.quickWater = () => { const d = getDay(todayKey(), true), total = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; if (total > NUM_LIMITS.waterMl[1]) return toast(tr('Invoerlimiet bereikt: maximaal 30 l water per dag.')); d.waterMl = total; save(); toast(trf('Water vandaag: {amount} l', { amount: fmtNum(d.waterMl / 1000, 2) })); render(); };
+ACT.quickCoffee = () => { const d = getDay(todayKey(), true), total = (isNum(d.caffeine) ? d.caffeine : 0) + 1; if (total > NUM_LIMITS.caffeine[1]) return toast(tr('Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.')); d.caffeine = total; save(); toast(trf('Cafeïne vandaag: {count} porties', { count: d.caffeine })); render(); };
 ACT.quickEat = () => openPicker(items => {
   const d = getDay(todayKey(), true);
   const slot = slotForNow();
@@ -472,7 +472,17 @@ ACT.ciNicotine = el => {
 ACT.ciUnknown = el => { const f = el.dataset.f; CI.f[f] = CI.f[f] === '?' ? undefined : '?'; rerenderCI(); };
 ACT.ciChoice = el => { const f = el.dataset.f; const v = el.dataset.num ? Number(el.dataset.v) : el.dataset.v; CI.f[f] = CI.f[f] === v ? undefined : v; rerenderCI(); };
 ACT.ciAns = el => { const s = el.dataset.s; CI.ans[s] = CI.ans[s] === el.dataset.v ? undefined : el.dataset.v; rerenderCI(); };
-ACT.ciStep = el => { const f = el.dataset.f; CI[f] = Math.max(0, CI[f] + Number(el.dataset.d)); rerenderCI(); };
+ACT.ciStep = el => {
+  const f = el.dataset.f, delta = Number(el.dataset.d), day = getDay(CI.k);
+  const currentWater = isNum(day && day.waterMl) ? day.waterMl : 0;
+  const currentCaffeine = isNum(day && day.caffeine) ? day.caffeine : 0;
+  const limit = f === 'glasses'
+    ? Math.max(0, Math.floor((NUM_LIMITS.waterMl[1] - currentWater) / DB.settings.glassMl))
+    : Math.max(0, NUM_LIMITS.caffeine[1] - currentCaffeine);
+  const next = Math.max(0, Math.min(limit, CI[f] + delta));
+  if (delta > 0 && next === CI[f]) return toast(tr(f === 'glasses' ? 'Invoerlimiet bereikt: maximaal 30 l water per dag.' : 'Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.'));
+  CI[f] = next; rerenderCI();
+};
 ACT.ciDelItem = el => { const s = el.dataset.s; CI.items[s].splice(Number(el.dataset.i), 1); rerenderCI(); };
 ACT.ciAdd = el => { const s = el.dataset.s; openPicker(items => { CI.items[s] = (CI.items[s] || []).concat(items); CI.ans[s] = undefined; rerenderCI(); }); };
 
@@ -491,6 +501,11 @@ ACT.ciSave = () => {
       const err = numericError(f, v, DB);
       if (err) { toast(err); const input = document.querySelector('[data-ci="' + f + '"]'); if (input) input.focus(); return; }
     }
+  }
+  if (CI.kind !== 'dag') {
+    const existing = getDay(CI.k) || {};
+    if (CI.glasses && (isNum(existing.waterMl) ? existing.waterMl : 0) + CI.glasses * DB.settings.glassMl > NUM_LIMITS.waterMl[1]) return toast(tr('Invoerlimiet bereikt: maximaal 30 l water per dag.'));
+    if (CI.shots && (isNum(existing.caffeine) ? existing.caffeine : 0) + CI.shots > NUM_LIMITS.caffeine[1]) return toast(tr('Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.'));
   }
   const errs = [];
   document.querySelectorAll('[data-req]').forEach(n => n.classList.remove('bad'));
@@ -1375,7 +1390,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.89';
+const APP_VERSION = '1.10.90';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
