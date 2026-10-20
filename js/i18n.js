@@ -2627,3 +2627,11 @@ const REPORT_CLARITY_TRANSLATIONS = {
   }
 };
 for (const [locale, labels] of Object.entries(REPORT_CLARITY_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+
+const INTAKE_PRIVACY_COPY = {
+  'nl-BE': 'Je persoonlijke dagboek wordt lokaal in deze browser bewaard en werkt ook offline. Delen met de community of AI gebeurt alleen wanneer je daar zelf voor kiest.',
+  'en-GB': 'Your personal diary is stored locally in this browser and also works offline. Data is shared with the community or AI only when you choose to share it.',
+  'fr-FR': 'Votre journal personnel est enregistré localement dans ce navigateur et fonctionne aussi hors ligne. Les données ne sont partagées avec la communauté ou l’IA que si vous choisissez de le faire.',
+  'de-DE': 'Dein persönliches Tagebuch wird lokal in diesem Browser gespeichert und funktioniert auch offline. Daten werden nur dann mit der Community oder einer KI geteilt, wenn du das selbst auswählst.'
+};
+for (const [locale, copy] of Object.entries(INTAKE_PRIVACY_COPY)) UI_EXTRA_TRANSLATIONS[locale][INTAKE_PRIVACY_COPY['nl-BE']] = copy;

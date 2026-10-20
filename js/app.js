@@ -1281,7 +1281,7 @@ function renderIntake(step) {
   if (step === '1') {
     const lang = DB.settings.language || 'nl-BE';
     h = '<div class="card intake-language"><label class="fld"><span>' + tr('Kies eerst je taal') + '</span><select data-chg="language" aria-label="' + esc(tr('Taal')) + '"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>' +
-      '<div class="hero"><h1>' + tr('Voedingsdagboek') + '</h1><p>' + tr('Je eigen dagboek voor eten, drinken, slaap, stemming en stappen. Werkt offline, alles blijft op je gsm.') + '</p></div>' +
+      '<div class="hero"><h1>' + tr('Voedingsdagboek') + '</h1><p>' + tr('Je persoonlijke dagboek wordt lokaal in deze browser bewaard en werkt ook offline. Delen met de community of AI gebeurt alleen wanneer je daar zelf voor kiest.') + '</p></div>' +
       '<div class="card"><h3>' + tr('Heb je al een dagboek?') + '</h3><p class="muted small">' + tr('Importeer het bestand dat je kreeg (.json). Dan staan je dagen, mealpreps, doelen en check-in-tijden er meteen in.') + '</p><label class="btn">' + tr('Dagboek importeren') + '<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
       '<div class="card"><h3>' + tr('Nieuw beginnen') + '</h3><p class="muted small">' + tr('Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.') + '</p><button class="btn ghost" data-act="intakeGo" data-s="2">' + tr('Start intake') + '</button></div>' + installCard();
   } else if (step === '2') {
@@ -1375,7 +1375,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.87';
+const APP_VERSION = '1.10.88';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
