@@ -101,8 +101,9 @@ function alcoholReport(dateKeys) {
   const values = dateKeys.map(k => DB.days[k]?.alcohol).filter(v => isNum(v) && v >= 0);
   if (!values.length) return tr('No alcohol entries were recorded in this period; missing entries are unknown.');
   const zero = values.filter(v => v === 0).length;
-  return esc(trf('Days with an alcohol entry: {logged}. Average per recorded day: {average} glasses. Entries explicitly marked zero: {zero}. Days unknown or unrecorded: {unknown}.', {
-    logged: values.length, average: fmtNum(values.reduce((sum, value) => sum + value, 0) / values.length, 1), zero, unknown: dateKeys.length - values.length
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return esc(trf('Alcohol total: {total} glasses · logged days: {logged} · mean per logged day: {average} glasses · zero entries: {zero} · unknown or unrecorded days: {unknown}.', {
+    total: fmtNum(total, 1), logged: values.length, average: fmtNum(total / values.length, 1), zero, unknown: dateKeys.length - values.length
   }));
 }
 function nicotineReport(dateKeys) {
