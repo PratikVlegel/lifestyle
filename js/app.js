@@ -999,7 +999,7 @@ function renderInsights() {
   h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">' + tr('Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.') + '</p>';
   h += '<h2 class="sec">' + tr('Diepere analyse met AI') + '</h2>';
   if (DB.settings.apiKey) {
-    h += '<div class="card">' + aiDataDisclosure() + '<label class="fld"><span>' + tr('Vraag (optioneel)') + '</span><textarea id="aiq" rows="2" placeholder="' + tr('bv. Waarom voel ik me op woensdag zo moe?') + '"></textarea></label><button class="btn" data-act="runAI">' + tr('Analyseer mijn laatste 3 weken') + '</button><div id="aiout"></div></div>';
+    h += '<div class="card">' + aiDataDisclosure() + '<label class="fld"><span>' + tr('Vraag (optioneel)') + '</span><textarea id="aiq" rows="2" maxlength="2000" placeholder="' + tr('bv. Waarom voel ik me op woensdag zo moe?') + '"></textarea></label><button class="btn" data-act="runAI">' + tr('Analyseer mijn laatste 3 weken') + '</button><div id="aiout"></div></div>';
   } else {
     h += '<p class="card muted small">' + tr('Stel een eigen Claude API-sleutel in bij Meer → AI om hier op knop een diepere analyse te vragen. Zonder sleutel kan je de samenvatting delen en in een chat plakken.') + '</p>';
   }
@@ -1009,12 +1009,13 @@ function renderInsights() {
 }
 ACT.runAI = async el => {
   const out = $('#aiout'); const q = $('#aiq').value.trim();
+  if (q.length > 2000) return toast(tr('Je vraag mag maximaal 2.000 tekens bevatten.'));
   el.disabled = true; out.innerHTML = '<p class="muted">' + tr('Bezig met analyseren…') + '</p>';
   try {
     const text = await askAI(q);
     DB.ai.push({ k: todayKey(), q, text }); if (DB.ai.length > 30) DB.ai.shift(); save();
     out.innerHTML = mdLite(text);
-  } catch (e) { console.error('AI analyse mislukt', e); out.innerHTML = '<p class="note">' + tr('De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.') + '</p>'; }
+  } catch (e) { console.error('AI analyse mislukt', e); out.innerHTML = '<p class="note">' + tr(e && e.code === 'ai_question_too_long' ? 'Je vraag mag maximaal 2.000 tekens bevatten.' : 'De analyse is niet gelukt. Controleer je verbinding en instellingen en probeer opnieuw.') + '</p>'; }
   el.disabled = false;
 };
 ACT.shareWeek = () => shareText(weekSummaryText(7), 'Weeksamenvatting');
@@ -1374,7 +1375,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.77';
+const APP_VERSION = '1.10.78';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

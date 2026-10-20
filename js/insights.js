@@ -196,6 +196,8 @@ const AI_SYSTEM = 'Je bent een ondersteunende leefstijlcoach voor de gebruiker v
 
 async function askAI(question) {
   const S = DB.settings;
+  const userQuestion = String(question || '').trim();
+  if (userQuestion.length > 2000) { const error = new Error('AI question exceeds the limit.'); error.code = 'ai_question_too_long'; throw error; }
   if (!S.apiKey) throw new Error('Geen API-sleutel ingesteld (Meer → AI).');
   if (!navigator.onLine) throw new Error('Je bent offline. De offline adviezen hierboven werken wel.');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -203,7 +205,7 @@ async function askAI(question) {
     headers: { 'content-type': 'application/json', 'x-api-key': S.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({
       model: S.model || 'claude-sonnet-4-5', max_tokens: 1500, system: AI_SYSTEM,
-      messages: [{ role: 'user', content: aiContext(21) + '\n\nVRAAG: ' + (question || 'Analyseer mijn laatste 3 weken en geef advies.') }]
+      messages: [{ role: 'user', content: aiContext(21) + '\n\nVRAAG: ' + (userQuestion || 'Analyseer mijn laatste 3 weken en geef advies.') }]
     })
   });
   const j = await res.json().catch(() => ({}));

@@ -2365,28 +2365,32 @@ const AI_DISCLOSURE_TRANSLATIONS = {
   }
 };
 for (const [locale, labels] of Object.entries(AI_DISCLOSURE_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
-const REMINDER_VALIDATION_TRANSLATIONS = {
+const INPUT_VALIDATION_TRANSLATIONS = {
   'nl-BE': {
     'Voer een geldige tijd in.': 'Voer een geldige tijd in.',
     'Vul een naam in voor deze herinnering.': 'Vul een naam in voor deze herinnering.',
-    'Controleer de naam en tijd van elke herinnering.': 'Controleer de naam en tijd van elke herinnering.'
+    'Controleer de naam en tijd van elke herinnering.': 'Controleer de naam en tijd van elke herinnering.',
+    'Je vraag mag maximaal 2.000 tekens bevatten.': 'Je vraag mag maximaal 2.000 tekens bevatten.'
   },
   'en-GB': {
     'Voer een geldige tijd in.': 'Enter a valid time.',
     'Vul een naam in voor deze herinnering.': 'Enter a name for this reminder.',
-    'Controleer de naam en tijd van elke herinnering.': 'Check the name and time for each reminder.'
+    'Controleer de naam en tijd van elke herinnering.': 'Check the name and time for each reminder.',
+    'Je vraag mag maximaal 2.000 tekens bevatten.': 'Your question can contain up to 2,000 characters.'
   },
   'fr-FR': {
     'Voer een geldige tijd in.': 'Saisissez une heure valide.',
     'Vul een naam in voor deze herinnering.': 'Saisissez un nom pour ce rappel.',
-    'Controleer de naam en tijd van elke herinnering.': 'Vérifiez le nom et l’heure de chaque rappel.'
+    'Controleer de naam en tijd van elke herinnering.': 'Vérifiez le nom et l’heure de chaque rappel.',
+    'Je vraag mag maximaal 2.000 tekens bevatten.': 'Votre question peut contenir jusqu’à 2 000 caractères.'
   },
   'de-DE': {
     'Voer een geldige tijd in.': 'Gib eine gültige Uhrzeit ein.',
     'Vul een naam in voor deze herinnering.': 'Gib einen Namen für diese Erinnerung ein.',
-    'Controleer de naam en tijd van elke herinnering.': 'Prüfe Name und Uhrzeit jeder Erinnerung.'
+    'Controleer de naam en tijd van elke herinnering.': 'Prüfe Name und Uhrzeit jeder Erinnerung.',
+    'Je vraag mag maximaal 2.000 tekens bevatten.': 'Deine Frage darf höchstens 2.000 Zeichen enthalten.'
   }
 };
-for (const [locale, labels] of Object.entries(REMINDER_VALIDATION_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+for (const [locale, labels] of Object.entries(INPUT_VALIDATION_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
 for (const locale of ['nl-BE', 'en-GB', 'fr-FR', 'de-DE']) Object.assign(UI_EXTRA_TRANSLATIONS[locale], { kg: 'kg' });
 if (currentLocale() === 'nl-BE') applyLocale();
