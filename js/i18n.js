@@ -1952,10 +1952,10 @@ const CAMERA_UI_TRANSLATIONS = {
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], CAMERA_UI_TRANSLATIONS[locale]);
 const TRAINING_DEFAULT_TRANSLATIONS = {
-  'nl-BE': { 'Krachttraining': 'Krachttraining' },
-  'en-GB': { 'Krachttraining': 'Strength training' },
-  'fr-FR': { 'Krachttraining': 'Musculation' },
-  'de-DE': { 'Krachttraining': 'Krafttraining' }
+  'nl-BE': { 'Krachttraining': 'Krachttraining', 'Beginner': 'Beginner' },
+  'en-GB': { 'Krachttraining': 'Strength training', 'Beginner': 'Beginner' },
+  'fr-FR': { 'Krachttraining': 'Musculation', 'Beginner': 'Débutant' },
+  'de-DE': { 'Krachttraining': 'Krafttraining', 'Beginner': 'Anfänger' }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], TRAINING_DEFAULT_TRANSLATIONS[locale]);
 const MOOD_EVIDENCE_TRANSLATIONS = {
@@ -2022,6 +2022,13 @@ const BACKUP_CONTENT_TRANSLATIONS = {
   }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], BACKUP_CONTENT_TRANSLATIONS[locale]);
+const CYCLE_LEVEL_OPTION_TRANSLATIONS = {
+  'nl-BE': { 'Ernstig': 'Ernstig' },
+  'en-GB': { 'Ernstig': 'Severe' },
+  'fr-FR': { 'Ernstig': 'Sévère' },
+  'de-DE': { 'Ernstig': 'Stark' }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], CYCLE_LEVEL_OPTION_TRANSLATIONS[locale]);
 const OCR_AND_REVIEW_TRANSLATIONS = {
   'nl-BE': {
     'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.',
@@ -2104,7 +2111,7 @@ const EXERCISE_LIBRARY_TRANSLATIONS = {
     'Training naar de andere gekozen dagen gekopieerd.': 'Training naar de andere gekozen dagen gekopieerd.',
     'Kies minstens één andere trainingsdag om naartoe te kopiëren.': 'Kies minstens één andere trainingsdag om naartoe te kopiëren.',
     'Goblet squat': 'Goblet squat', 'Stoel squat': 'Stoel squat', 'Heupbrug': 'Heupbrug', 'Push-up': 'Push-up', 'Push-up tegen de muur': 'Push-up tegen de muur', 'Roeien met dumbbell': 'Roeien met dumbbell', 'Roeien met weerstandsband': 'Roeien met weerstandsband', 'Dead bug': 'Dead bug', 'Plank': 'Plank', 'Zijwaartse plank': 'Zijwaartse plank', 'Bird dog': 'Bird dog', 'Kuitheffen': 'Kuitheffen',
-    'Benen en heupen': 'Benen en heupen', 'Benen; stoel als steun': 'Benen; stoel als steun', 'Billen en heupen': 'Billen en heupen', 'Borst en armen': 'Borst en armen', 'Borst en armen; handen tegen de muur': 'Borst en armen; handen tegen de muur', 'Rug; trek gecontroleerd': 'Rug; trek gecontroleerd', 'Rug; trek de band naar je toe': 'Rug; trek de band naar je toe', 'Romp; houd je onderrug rustig': 'Romp; houd je onderrug rustig', 'Romp; houd je lichaam in een rechte lijn': 'Romp; houd je lichaam in een rechte lijn', 'Romp en heupen; houd je heupen gestapeld': 'Romp en heupen; houd je heupen gestapeld', 'Romp en coördinatie; beweeg rustig': 'Romp en coördinatie; beweeg rustig', 'Kuiten en enkels': 'Kuiten en enkels'
+    'Benen en heupen': 'Benen en heupen', 'Benen; stoel als steun': 'Benen; stoel als steun', 'Billen en heupen': 'Billen en heupen', 'Borst en armen': 'Borst en armen', 'Borst en armen; handen tegen de muur': 'Borst en armen; handen tegen de muur', 'Rug; trek gecontroleerd': 'Rug; trek gecontroleerd', 'Rug; trek de band naar je toe': 'Rug; trek de band naar je toe', 'Romp; houd je onderrug rustig': 'Romp; houd je onderrug rustig', 'Romp; houd je lichaam in een rechte lijn': 'Romp; houd je lichaam in een rechte lijn', 'Romp en heupen; houd je heupen gestapeld': 'Romp en heupen; houd je heupen gestapeld', 'Romp en coördinatie; beweeg rustig': 'Romp en coördinatie; beweeg rustig', 'Romp en coördinatie; houd elke herhaling 3 seconden stabiel': 'Romp en coördinatie; houd elke herhaling 3 seconden stabiel', 'Kuiten en enkels': 'Kuiten en enkels'
   },
   'en-GB': {
     'Typ je eigen oefening of kies een suggestie uit de oefenbibliotheek.': 'Type your own exercise or choose a suggestion from the exercise library.',
@@ -2113,7 +2120,7 @@ const EXERCISE_LIBRARY_TRANSLATIONS = {
     'Training naar de andere gekozen dagen gekopieerd.': 'Training copied to the other selected days.',
     'Kies minstens één andere trainingsdag om naartoe te kopiëren.': 'Choose at least one other training day to copy to.',
     'Goblet squat': 'Goblet squat', 'Stoel squat': 'Chair squat', 'Heupbrug': 'Glute bridge', 'Push-up': 'Push-up', 'Push-up tegen de muur': 'Wall push-up', 'Roeien met dumbbell': 'Dumbbell row', 'Roeien met weerstandsband': 'Resistance-band row', 'Dead bug': 'Dead bug', 'Plank': 'Plank', 'Zijwaartse plank': 'Side plank', 'Bird dog': 'Bird dog', 'Kuitheffen': 'Calf raise',
-    'Benen en heupen': 'Legs and hips', 'Benen; stoel als steun': 'Legs; use a chair for support', 'Billen en heupen': 'Glutes and hips', 'Borst en armen': 'Chest and arms', 'Borst en armen; handen tegen de muur': 'Chest and arms; hands against the wall', 'Rug; trek gecontroleerd': 'Back; pull with control', 'Rug; trek de band naar je toe': 'Back; pull the band towards you', 'Romp; houd je onderrug rustig': 'Core; keep your lower back steady', 'Romp; houd je lichaam in een rechte lijn': 'Core; keep your body in a straight line', 'Romp en heupen; houd je heupen gestapeld': 'Core and hips; keep your hips stacked', 'Romp en coördinatie; beweeg rustig': 'Core and coordination; move slowly', 'Kuiten en enkels': 'Calves and ankles'
+    'Benen en heupen': 'Legs and hips', 'Benen; stoel als steun': 'Legs; use a chair for support', 'Billen en heupen': 'Glutes and hips', 'Borst en armen': 'Chest and arms', 'Borst en armen; handen tegen de muur': 'Chest and arms; hands against the wall', 'Rug; trek gecontroleerd': 'Back; pull with control', 'Rug; trek de band naar je toe': 'Back; pull the band towards you', 'Romp; houd je onderrug rustig': 'Core; keep your lower back steady', 'Romp; houd je lichaam in een rechte lijn': 'Core; keep your body in a straight line', 'Romp en heupen; houd je heupen gestapeld': 'Core and hips; keep your hips stacked', 'Romp en coördinatie; beweeg rustig': 'Core and coordination; move slowly', 'Romp en coördinatie; houd elke herhaling 3 seconden stabiel': 'Core and coordination; hold each rep steady for 3 seconds', 'Kuiten en enkels': 'Calves and ankles'
   },
   'fr-FR': {
     'Typ je eigen oefening of kies een suggestie uit de oefenbibliotheek.': 'Saisissez votre exercice ou choisissez une suggestion dans la bibliothèque.',
@@ -2122,7 +2129,7 @@ const EXERCISE_LIBRARY_TRANSLATIONS = {
     'Training naar de andere gekozen dagen gekopieerd.': 'Séance copiée vers les autres jours sélectionnés.',
     'Kies minstens één andere trainingsdag om naartoe te kopiëren.': 'Choisissez au moins un autre jour d’entraînement comme destination.',
     'Goblet squat': 'Squat avec haltère', 'Stoel squat': 'Squat sur chaise', 'Heupbrug': 'Pont fessier', 'Push-up': 'Pompe', 'Push-up tegen de muur': 'Pompe contre un mur', 'Roeien met dumbbell': 'Rowing avec haltère', 'Roeien met weerstandsband': 'Rowing avec bande élastique', 'Dead bug': 'Dead bug', 'Plank': 'Gainage ventral', 'Zijwaartse plank': 'Gainage latéral', 'Bird dog': 'Bird dog', 'Kuitheffen': 'Extensions des mollets',
-    'Benen en heupen': 'Jambes et hanches', 'Benen; stoel als steun': 'Jambes ; chaise en appui', 'Billen en heupen': 'Fessiers et hanches', 'Borst en armen': 'Poitrine et bras', 'Borst en armen; handen tegen de muur': 'Poitrine et bras ; mains contre le mur', 'Rug; trek gecontroleerd': 'Dos ; tirez avec contrôle', 'Rug; trek de band naar je toe': 'Dos ; tirez la bande vers vous', 'Romp; houd je onderrug rustig': 'Tronc ; gardez le bas du dos stable', 'Romp; houd je lichaam in een rechte lijn': 'Tronc ; gardez le corps aligné', 'Romp en heupen; houd je heupen gestapeld': 'Tronc et hanches ; gardez les hanches alignées', 'Romp en coördinatie; beweeg rustig': 'Tronc et coordination ; bougez lentement', 'Kuiten en enkels': 'Mollets et chevilles'
+    'Benen en heupen': 'Jambes et hanches', 'Benen; stoel als steun': 'Jambes ; chaise en appui', 'Billen en heupen': 'Fessiers et hanches', 'Borst en armen': 'Poitrine et bras', 'Borst en armen; handen tegen de muur': 'Poitrine et bras ; mains contre le mur', 'Rug; trek gecontroleerd': 'Dos ; tirez avec contrôle', 'Rug; trek de band naar je toe': 'Dos ; tirez la bande vers vous', 'Romp; houd je onderrug rustig': 'Tronc ; gardez le bas du dos stable', 'Romp; houd je lichaam in een rechte lijn': 'Tronc ; gardez le corps aligné', 'Romp en heupen; houd je heupen gestapeld': 'Tronc et hanches ; gardez les hanches alignées', 'Romp en coördinatie; beweeg rustig': 'Tronc et coordination ; bougez lentement', 'Romp en coördinatie; houd elke herhaling 3 seconden stabiel': 'Tronc et coordination ; maintenez chaque répétition 3 secondes', 'Kuiten en enkels': 'Mollets et chevilles'
   },
   'de-DE': {
     'Typ je eigen oefening of kies een suggestie uit de oefenbibliotheek.': 'Gib eine eigene Übung ein oder wähle einen Vorschlag aus der Übungsbibliothek.',
@@ -2131,7 +2138,7 @@ const EXERCISE_LIBRARY_TRANSLATIONS = {
     'Training naar de andere gekozen dagen gekopieerd.': 'Training auf die anderen ausgewählten Tage kopiert.',
     'Kies minstens één andere trainingsdag om naartoe te kopiëren.': 'Wähle mindestens einen anderen Trainingstag als Ziel aus.',
     'Goblet squat': 'Goblet-Kniebeuge', 'Stoel squat': 'Stuhlkniebeuge', 'Heupbrug': 'Glute Bridge', 'Push-up': 'Liegestütz', 'Push-up tegen de muur': 'Liegestütz an der Wand', 'Roeien met dumbbell': 'Rudern mit Kurzhantel', 'Roeien met weerstandsband': 'Rudern mit Widerstandsband', 'Dead bug': 'Dead Bug', 'Plank': 'Unterarmstütz', 'Zijwaartse plank': 'Seitstütz', 'Bird dog': 'Bird Dog', 'Kuitheffen': 'Wadenheben',
-    'Benen en heupen': 'Beine und Hüften', 'Benen; stoel als steun': 'Beine; Stuhl als Stütze', 'Billen en heupen': 'Gesäß und Hüften', 'Borst en armen': 'Brust und Arme', 'Borst en armen; handen tegen de muur': 'Brust und Arme; Hände an die Wand', 'Rug; trek gecontroleerd': 'Rücken; kontrolliert ziehen', 'Rug; trek de band naar je toe': 'Rücken; Band zum Körper ziehen', 'Romp; houd je onderrug rustig': 'Rumpf; unteren Rücken stabil halten', 'Romp; houd je lichaam in een rechte lijn': 'Rumpf; Körper gerade halten', 'Romp en heupen; houd je heupen gestapeld': 'Rumpf und Hüften; Hüften übereinander halten', 'Romp en coördinatie; beweeg rustig': 'Rumpf und Koordination; langsam bewegen', 'Kuiten en enkels': 'Waden und Knöchel'
+    'Benen en heupen': 'Beine und Hüften', 'Benen; stoel als steun': 'Beine; Stuhl als Stütze', 'Billen en heupen': 'Gesäß und Hüften', 'Borst en armen': 'Brust und Arme', 'Borst en armen; handen tegen de muur': 'Brust und Arme; Hände an die Wand', 'Rug; trek gecontroleerd': 'Rücken; kontrolliert ziehen', 'Rug; trek de band naar je toe': 'Rücken; Band zum Körper ziehen', 'Romp; houd je onderrug rustig': 'Rumpf; unteren Rücken stabil halten', 'Romp; houd je lichaam in een rechte lijn': 'Rumpf; Körper gerade halten', 'Romp en heupen; houd je heupen gestapeld': 'Rumpf und Hüften; Hüften übereinander halten', 'Romp en coördinatie; beweeg rustig': 'Rumpf und Koordination; langsam bewegen', 'Romp en coördinatie; houd elke herhaling 3 seconden stabiel': 'Rumpf und Koordination; jede Wiederholung 3 Sekunden stabil halten', 'Kuiten en enkels': 'Waden und Knöchel'
   }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], EXERCISE_LIBRARY_TRANSLATIONS[locale]);
