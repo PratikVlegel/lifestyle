@@ -27,8 +27,13 @@ function moodComparison(title, note, rows, groupA, groupB) {
 function supplementEvidence(name, cycle) {
   const n = name.toLocaleLowerCase('nl-BE');
   if (/\bb6\b|vitamine b6|vitamin b6|b-complex|b complex/.test(n)) return cycle
-    ? { text: 'Voor PMS is mogelijk voordeel van vitamine B6 onderzocht, maar onderzoekers zijn niet zeker. Te veel B6 kan zenuwschade geven; laat een arts of apotheker je product en dosis beoordelen.', url: 'https://ods.od.nih.gov/factsheets/vitaminb6-consumer/' }
-    : { text: 'Voor stemming in het algemeen is extra B-vitamine geen standaardadvies. Een tekort is iets anders dan extra innemen; B6 kan bij langdurig hoge inname zenuwschade veroorzaken.', url: 'https://ods.od.nih.gov/factsheets/vitaminb6-consumer/' };
+    ? { text: 'Bij PMS is vitamine B6 onderzocht, maar het bewijs is beperkt en ondersteunt geen algemeen supplementadvies. EFSA stelt voor volwassenen een bovengrens van 12 mg per dag uit alle bronnen vast, omdat overmatige inname samenhangt met perifere zenuwschade. Dit is een veiligheidsgrens, geen streefwaarde. Bespreek starten of aanpassen met je arts of apotheker.', sources: [
+      { label: 'EFSA · vitamine B6 (veiligheidsgrens)', url: 'https://efsa.onlinelibrary.wiley.com/doi/10.2903/j.efsa.2023.8006' },
+      { label: 'NHS · PMS en supplementen', url: 'https://www.nhs.uk/conditions/pre-menstrual-syndrome/' }
+    ] }
+    : { text: 'Je stemmingslog kan geen B6-tekort vaststellen of aantonen dat B6 helpt. EFSA stelt voor volwassenen een bovengrens van 12 mg per dag uit alle bronnen vast, omdat overmatige inname samenhangt met perifere zenuwschade. Dit is een veiligheidsgrens, geen streefwaarde. Laat je totale inname controleren door je arts of apotheker voordat je iets verandert.', sources: [
+      { label: 'EFSA · vitamine B6 (veiligheidsgrens)', url: 'https://efsa.onlinelibrary.wiley.com/doi/10.2903/j.efsa.2023.8006' }
+    ] };
   if (/\bb12\b|vitamine b12|vitamin b12/.test(n)) return cycle
     ? { text: 'Vitamine B12 is nodig voor het zenuwstelsel en de bloedaanmaak. Een tekort kan klachten geven, maar je dagboek kan geen tekort vaststellen en een supplement is geen algemene PMS-aanbeveling.', url: 'https://ods.od.nih.gov/factsheets/VitaminB12-Consumer/' }
     : { text: 'Een B12-tekort kan klachten geven, maar een stemmingsoverzicht kan geen tekort vaststellen. Extra B12 is geen algemene behandeling voor stemming als er geen tekort is vastgesteld.', url: 'https://ods.od.nih.gov/factsheets/VitaminB12-Consumer/' };
@@ -64,7 +69,8 @@ function supplementMoodPatterns(records) {
       if (Math.abs(delta) >= 1) body += '<p><b>' + tr('Mogelijke vervolgstap') + '</b><br>' + tr('Je ziet hier een verschil van minstens 1 punt in de middelste score. Houd rekening met slaap, stress, reden van gebruik en andere verschillen tussen dagen. Verander niets aan je supplement op basis van deze vergelijking; bespreek het etiket en je ervaring met arts of apotheker als je het voor stemming gebruikt.') + '</p>';
       body += '</div>';
     }
-    body += '<details class="supplement-evidence"><summary>' + tr('Waarom zie ik dit? Onderzoek en uitleg') + '</summary><p>' + tr(evidence.text) + '</p><p class="muted small">' + tr('De app vergelijkt alleen jouw eigen ingevulde dagen. Dit is geen behandeladvies; hoeveelheid, tekort, andere gewoontes en medicatie zijn niet beoordeeld. De grens van 1 punt is alleen een weergavedrempel, geen klinische grens. Andere supplementen kunnen op vergelijkingsdagen ook voorkomen; de invloed van één ingrediënt is niet apart gemeten.') + '</p><a href="' + evidence.url + '" target="_blank" rel="noopener">' + tr('Bekijk de bron') + ' ↗</a></details></div>';
+    const sources = evidence.sources || [{ label: 'Bekijk de bron', url: evidence.url }];
+    body += '<details class="supplement-evidence"><summary>' + tr('Waarom zie ik dit? Onderzoek en uitleg') + '</summary><p>' + tr(evidence.text) + '</p><p class="muted small">' + tr('De app vergelijkt alleen jouw eigen ingevulde dagen. Dit is geen behandeladvies; hoeveelheid, tekort, andere gewoontes en medicatie zijn niet beoordeeld. De grens van 1 punt is alleen een weergavedrempel, geen klinische grens. Andere supplementen kunnen op vergelijkingsdagen ook voorkomen; de invloed van één ingrediënt is niet apart gemeten.') + '</p><p>' + sources.map(source => '<a href="' + source.url + '" target="_blank" rel="noopener">' + esc(tr(source.label)) + ' ↗</a>').join(' · ') + '</p></details></div>';
     h += body; shown++;
   }
   if (!shown) h += '<div class="card muted">' + tr('Nog geen supplementen geregistreerd in deze periode.') + '</div>';
