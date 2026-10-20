@@ -1231,20 +1231,40 @@ function alarmIntent(r) {
   return 'intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=' + hh + ';i.android.intent.extra.alarm.MINUTES=' + mm + ';S.android.intent.extra.alarm.MESSAGE=' + encodeURIComponent('Voedingsdagboek: ' + r.label) + ';end';
 }
 ACT.ics = () => {
-  const base = DB.settings.appUrl || appBase();
-  const start = todayKey().replace(/-/g, '');
+  let base = appBase();
+  try {
+    const configured = new URL(DB.settings.appUrl || appBase());
+    if (['https:', 'http:'].includes(configured.protocol)) base = configured.origin + configured.pathname;
+  } catch (_) { /* Fall back to the currently running app URL. */ }
+  const startKey = todayKey();
+  const start = startKey.replace(/-/g, '');
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
-  const fold = s => s.replace(/[,;]/g, m => '\\' + m);
+  const icalLine = (name, value, text = false) => {
+    let content = String(value);
+    if (text) content = content.replace(/\\/g, '\\\\').replace(/\r\n|\r|\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+    let line = name + ':', bytes = new TextEncoder().encode(line).length;
+    for (const char of content) {
+      const size = new TextEncoder().encode(char).length;
+      if (bytes + size > 75) { line += '\r\n '; bytes = 1; }
+      line += char; bytes += size;
+    }
+    return line + '\r\n';
+  };
   let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Voedingsdagboek//NL\r\nCALSCALE:GREGORIAN\r\n' +
     'BEGIN:VTIMEZONE\r\nTZID:Europe/Brussels\r\nBEGIN:DAYLIGHT\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+0200\r\nTZNAME:CEST\r\nDTSTART:19700329T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\nEND:DAYLIGHT\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+0100\r\nTZNAME:CET\r\nDTSTART:19701025T030000\r\nRRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\nEND:STANDARD\r\nEND:VTIMEZONE\r\n';
   for (const r of DB.reminders.filter(x => x.on)) {
     const t = r.time.replace(':', '') + '00';
     const [hh, mm] = r.time.split(':').map(Number);
-    const end = pad(mm + 5 >= 60 ? hh + 1 : hh) + pad((mm + 5) % 60) + '00';
+    const endMinute = hh * 60 + mm + 5;
+    const endDate = endMinute >= 1440 ? addDays(startKey, 1).replace(/-/g, '') : start;
+    const endTime = endMinute % 1440;
+    const end = pad(Math.floor(endTime / 60)) + pad(endTime % 60) + '00';
     const link = base + '#/checkin/' + r.id;
-    ics += 'BEGIN:VEVENT\r\nUID:' + r.id + '-' + start + '@voedingsdagboek\r\nDTSTAMP:' + stamp + '\r\nDTSTART;TZID=Europe/Brussels:' + start + 'T' + t + '\r\nDTEND;TZID=Europe/Brussels:' + start + 'T' + end + '\r\nRRULE:FREQ=DAILY\r\nTRANSP:TRANSPARENT\r\nCLASS:PRIVATE\r\n' +
-      'SUMMARY:' + fold(tr('Check-in:') + ' ' + reminderDisplayLabel(r.label)) + '\r\nDESCRIPTION:' + fold(tr('Open je voedingsdagboek:') + ' ' + link) + '\r\nURL:' + link + '\r\n' +
-      'BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:' + fold(reminderDisplayLabel(r.label)) + '\r\nTRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n';
+    ics += 'BEGIN:VEVENT\r\nUID:' + r.id + '-' + start + '@voedingsdagboek\r\nDTSTAMP:' + stamp + '\r\nDTSTART;TZID=Europe/Brussels:' + start + 'T' + t + '\r\nDTEND;TZID=Europe/Brussels:' + endDate + 'T' + end + '\r\nRRULE:FREQ=DAILY\r\nTRANSP:TRANSPARENT\r\nCLASS:PRIVATE\r\n' +
+      icalLine('SUMMARY', tr('Check-in:') + ' ' + reminderDisplayLabel(r.label), true) +
+      icalLine('DESCRIPTION', tr('Open je voedingsdagboek:') + ' ' + link, true) +
+      icalLine('URL', link) +
+      'BEGIN:VALARM\r\nACTION:DISPLAY\r\n' + icalLine('DESCRIPTION', reminderDisplayLabel(r.label), true) + 'TRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n';
   }
   ics += 'END:VCALENDAR\r\n';
   download('voedingsdagboek-herinneringen.ics', ics, 'text/calendar');
