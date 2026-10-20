@@ -23,6 +23,14 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+function safePushError(error: unknown): string {
+  if (error instanceof Error && error.name === 'TimeoutError') return 'push_timeout';
+  // Fetch errors can include the full subscription endpoint, which contains a
+  // provider token. Keep only the error class in the delivery ledger.
+  const name = error instanceof Error ? error.name.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) : '';
+  return name ? `push_error_${name}` : 'send_failed';
+}
+
 function permittedEndpoint(endpoint: string): boolean {
   try {
     const u = new URL(endpoint);
@@ -136,7 +144,7 @@ Deno.serve(async req => {
             errText = `subscription_gone_${response.status}`;
           } else if (response.ok) ok = true;
           else errText = `push_service_${response.status}`;
-        } catch (e) { errText = e instanceof Error && e.name === 'TimeoutError' ? 'push_timeout' : e instanceof Error ? e.message.slice(0, 200) : 'send_failed'; }
+        } catch (e) { errText = safePushError(e); }
 
         await admin.rpc('finish_webpush_delivery', {
           p_subscription_id: d.id, p_reminder_id: r.id, p_local_date: localDate,
