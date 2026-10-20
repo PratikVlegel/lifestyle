@@ -101,11 +101,16 @@ Deno.serve(async req => {
     afterId = devices[devices.length - 1].id;
     scanned += devices.length;
 
-    for (const d of devices) {
-      if (!permittedEndpoint(d.endpoint)) { await admin.from('webpush_subscriptions').delete().eq('id', d.id); failed++; continue; }
+    const processDevice = async (d: Device) => {
+      const result = { sent: 0, skipped: 0, failed: 0 };
+      if (!permittedEndpoint(d.endpoint)) {
+        await admin.from('webpush_subscriptions').delete().eq('id', d.id);
+        result.failed++;
+        return result;
+      }
       let zoneOk = true;
       try { new Intl.DateTimeFormat('en', { timeZone: d.timezone }); } catch { zoneOk = false; }
-      if (!zoneOk || !Array.isArray(d.reminders)) { skipped++; continue; }
+      if (!zoneOk || !Array.isArray(d.reminders)) { result.skipped++; return result; }
       for (const r of d.reminders.slice(0, 20)) {
         if (!r || typeof r.id !== 'string' || !/^[a-zA-Z0-9_-]{1,40}$/.test(r.id)) continue;
         const localDate = scheduledDate(now, d.timezone, r.time);
@@ -113,8 +118,8 @@ Deno.serve(async req => {
         const { data: claimed, error: claimError } = await admin.rpc('claim_webpush_delivery', {
           p_subscription_id: d.id, p_reminder_id: r.id, p_local_date: localDate
         });
-        if (claimError) { failed++; continue; }
-        if (!claimed) { skipped++; continue; }
+        if (claimError) { result.failed++; continue; }
+        if (!claimed) { result.skipped++; continue; }
 
         let ok = false, errText = '';
         try {
@@ -137,9 +142,25 @@ Deno.serve(async req => {
           p_subscription_id: d.id, p_reminder_id: r.id, p_local_date: localDate,
           p_success: ok, p_error: ok ? null : errText
         });
-        if (ok) sent++; else failed++;
+        if (ok) result.sent++; else result.failed++;
       }
-    }
+      return result;
+    };
+
+    // Limit parallel work so a busy reminder minute does not send one request
+    // at a time or create an unbounded burst against push providers.
+    let nextDevice = 0;
+    const workers = Math.min(10, devices.length);
+    await Promise.all(Array.from({ length: workers }, async () => {
+      while (nextDevice < devices.length) {
+        const d = devices[nextDevice++];
+        const result = await processDevice(d);
+        sent += result.sent;
+        skipped += result.skipped;
+        failed += result.failed;
+      }
+    }));
+
     if (devices.length < pageSize) break;
   }
   return json({ sent, skipped, failed, scanned });
