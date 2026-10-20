@@ -179,7 +179,7 @@ function renderCustomTrainingPreview(g) {
 }
 ACT.customTrainingField = el => {
   const d = customTrainingDraft(), f = el.dataset.f;
-  if (f === 'weeks') { const n = Number(el.value); if (!Number.isInteger(n) || n < 1 || n > 24) { el.value = d.weeks; return toast('Kies 1 tot 24 weken.'); } d.weeks = n; }
+  if (f === 'weeks') { const n = Number(el.value); if (!Number.isInteger(n) || n < 1 || n > 24) { el.value = d.weeks; return toast(tr('Kies 1 tot 24 weken.')); } d.weeks = n; }
   else d[f] = el.value.slice(0, f === 'name' ? 60 : 40);
   DB.training.generated = null; save(); renderCustomTrainingBuilder();
 };
@@ -196,7 +196,7 @@ ACT.customExerciseField = el => {
   if (['sets', 'rest'].includes(f) && (!Number.isInteger(value) || value < (f === 'sets' ? 1 : 0) || value > (f === 'sets' ? 10 : 600))) { el.value = x[f]; return toast(f === 'sets' ? tr('Sets: kies 1 tot 10.') : tr('Rust: kies 0 tot 600 seconden.')); }
   if (f === 'holdSeconds' && value !== null && (!Number.isInteger(value) || value < 0 || value > 60)) { el.value = x[f] ?? ''; return toast(tr('Houdtijd: kies 0 tot 60 seconden.')); }
   if (f === 'weightKg' && value !== null && (!Number.isFinite(value) || value < 0 || value > 500)) { el.value = x[f] ?? ''; return toast(tr('Gewicht: kies 0 tot 500 kg.')); }
-  if (f === 'reps' && !validExerciseTarget(value)) { el.value = x.reps; return toast('Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).'); }
+  if (f === 'reps' && !validExerciseTarget(value)) { el.value = x.reps; return toast(tr('Vul herhalingen in (bv. 8–12) of een duur in seconden (bv. 30 sec).')); }
   x[f] = f === 'name' ? value.slice(0, 80) : f === 'focus' ? value.slice(0, 160) : value;
   if (f === 'name') {
     const suggestion = CUSTOM_EXERCISE_LIBRARY.find(item => tr(item.name) === value.trim());
@@ -204,17 +204,17 @@ ACT.customExerciseField = el => {
   }
   save();
 };
-ACT.customExerciseAdd = el => { const d = customTrainingDraft(); if (d.sessions[el.dataset.day].exercises.length >= 20) return toast('Maximaal 20 oefeningen per training.'); d.sessions[el.dataset.day].exercises.push({ name: '', sets: 3, reps: '8–12', rest: 90, holdSeconds: null, weightKg: null }); save(); renderCustomTrainingBuilder(); };
+ACT.customExerciseAdd = el => { const d = customTrainingDraft(); if (d.sessions[el.dataset.day].exercises.length >= 20) return toast(tr('Maximaal 20 oefeningen per training.')); d.sessions[el.dataset.day].exercises.push({ name: '', sets: 3, reps: '8–12', rest: 90, holdSeconds: null, weightKg: null }); save(); renderCustomTrainingBuilder(); };
 ACT.customExerciseCopy = el => {
   const d = customTrainingDraft(), exercises = d.sessions[el.dataset.day]?.exercises, index = Number(el.dataset.i);
   if (!exercises || !exercises[index]) return;
-  if (exercises.length >= 20) return toast('Maximaal 20 oefeningen per training.');
+  if (exercises.length >= 20) return toast(tr('Maximaal 20 oefeningen per training.'));
   exercises.splice(index + 1, 0, JSON.parse(JSON.stringify(exercises[index]))); save(); renderCustomTrainingBuilder();
 };
 ACT.customSessionCopy = el => {
   const d = customTrainingDraft(), sourceKey = el.dataset.day, source = d.sessions[sourceKey];
   const targets = d.days.filter(key => key !== sourceKey);
-  if (!targets.length) return toast('Kies minstens één andere trainingsdag om naartoe te kopiëren.');
+  if (!targets.length) return toast(tr('Kies minstens één andere trainingsdag om naartoe te kopiëren.'));
   const hasContent = session => session && (session.title !== 'Krachttraining' || session.detail || session.exercises.some(x => x.name || x.focus));
   if (targets.some(key => hasContent(d.sessions[key])) && !confirm(tr('Dit vervangt de inhoud van de andere gekozen trainingsdagen. Doorgaan?'))) return;
   const labels = Object.fromEntries(TRAIN_DAYS);
@@ -223,8 +223,8 @@ ACT.customSessionCopy = el => {
 };
 ACT.customExerciseRemove = el => { const d = customTrainingDraft(); d.sessions[el.dataset.day]?.exercises.splice(Number(el.dataset.i), 1); save(); renderCustomTrainingBuilder(); };
 ACT.generateCustomTraining = () => {
-  const d = customTrainingDraft(); if (!d.name.trim()) return toast('Geef je schema een naam.'); if (!d.days.length) return toast('Kies minstens één trainingsdag.');
-  for (const day of d.days) { const s = d.sessions[day]; if (!s.exercises.length || s.exercises.some(x => !x.name.trim() || !Number.isInteger(Number(x.sets)) || Number(x.sets) < 1 || Number(x.sets) > 10 || !Number.isInteger(Number(x.rest)) || Number(x.rest) < 0 || Number(x.rest) > 600 || !validExerciseTarget(x.reps) || (x.holdSeconds != null && (!Number.isInteger(Number(x.holdSeconds)) || Number(x.holdSeconds) < 0 || Number(x.holdSeconds) > 60)) || (x.weightKg != null && (!Number.isFinite(Number(x.weightKg)) || Number(x.weightKg) < 0 || Number(x.weightKg) > 500)))) return toast('Vul per trainingsdag minstens één oefening in met 1–10 sets, een herhalingsaantal of duur in seconden en 0–600 seconden rust.'); }
+  const d = customTrainingDraft(); if (!d.name.trim()) return toast(tr('Geef je schema een naam.')); if (!d.days.length) return toast(tr('Kies minstens één trainingsdag.'));
+  for (const day of d.days) { const s = d.sessions[day]; if (!s.exercises.length || s.exercises.some(x => !x.name.trim() || !Number.isInteger(Number(x.sets)) || Number(x.sets) < 1 || Number(x.sets) > 10 || !Number.isInteger(Number(x.rest)) || Number(x.rest) < 0 || Number(x.rest) > 600 || !validExerciseTarget(x.reps) || (x.holdSeconds != null && (!Number.isInteger(Number(x.holdSeconds)) || Number(x.holdSeconds) < 0 || Number(x.holdSeconds) > 60)) || (x.weightKg != null && (!Number.isFinite(Number(x.weightKg)) || Number(x.weightKg) < 0 || Number(x.weightKg) > 500)))) return toast(tr('Vul per trainingsdag minstens één oefening in met 1–10 sets, een herhalingsaantal of duur in seconden en 0–600 seconden rust.')); }
   const labels = Object.fromEntries(TRAIN_DAYS), sessions = d.days.map(k => Object.assign({}, JSON.parse(JSON.stringify(d.sessions[k])), { day: labels[k] }));
   const weeks = Array.from({ length: d.weeks }, (_, i) => ({ number: i + 1, phase: 'Eigen weekschema', focus: 'Pas je belasting alleen aan als je techniek en herstel goed blijven.', sessions: JSON.parse(JSON.stringify(sessions)) }));
   DB.training.generated = { programType: 'custom', customPlan: true, name: d.name.trim().slice(0, 60), goal: d.goal, level: d.level, days: d.days.slice(), weeks };
@@ -300,8 +300,8 @@ function publicTrainingPlan(p) {
 }
 ACT.shareTrainingPlan = async el => {
   const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return;
-  if (!cloudReady() || !DB.settings.member) return toast('Schema’s delen kan na aanmelden bij de community.');
-  if (!navigator.onLine) return toast('Schema’s delen kan alleen met internet.');
+  if (!cloudReady() || !DB.settings.member) return toast(tr('Schema’s delen kan na aanmelden bij de community.'));
+  if (!navigator.onLine) return toast(tr('Schema’s delen kan alleen met internet.'));
   let profileName = DB.settings.communityName;
   if (!profileName) { profileName = prompt(tr('Welke communitynaam mogen andere leden bij dit schema zien?')); if (!profileName) return; }
   try {
@@ -312,9 +312,9 @@ ACT.shareTrainingPlan = async el => {
     if (id) await sb('/rest/v1/shared_training_plans?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: Object.assign({}, body, { updated_at: new Date().toISOString() }) });
     else { const rows = await sb('/rest/v1/shared_training_plans', { method: 'POST', headers: { Prefer: 'return=representation' }, body }); id = rows[0].id; p.sharedId = id; save(); }
     const url = appBase() + '#/train-shared/' + id;
-    try { if (navigator.share) await navigator.share({ title: body.title, text: 'Trainingsschema van ' + profileName, url }); else { await navigator.clipboard.writeText(url); toast('Link gekopieerd.'); } }
-    catch (e) { if (e.name !== 'AbortError') { try { await navigator.clipboard.writeText(url); toast('Link gekopieerd.'); } catch (_) { prompt(tr('Deel deze link:'), url); } } }
-  } catch (e) { toast('Schema delen mislukt: ' + e.message); }
+    try { if (navigator.share) await navigator.share({ title: body.title, text: 'Trainingsschema van ' + profileName, url }); else { await navigator.clipboard.writeText(url); toast(tr('Link gekopieerd.')); } }
+    catch (e) { if (e.name !== 'AbortError') { try { await navigator.clipboard.writeText(url); toast(tr('Link gekopieerd.')); } catch (_) { prompt(tr('Deel deze link:'), url); } } }
+  } catch (e) { toast(trOr(e.message, 'Trainingsschema delen is mislukt. Controleer je verbinding en probeer opnieuw.')); }
 };
 async function renderTrainingCommunity() {
   let h = header('Communityschema’s', 'Ontdek schema’s die leden bewust hebben gedeeld', true);
@@ -334,7 +334,7 @@ async function renderTrainingCommunity() {
     h += '<div class="card community-guide"><b>' + tr('Zo werkt schema’s delen') + '</b><p class="small">' + tr('Deel een eigen weekplan bewust met leden. Zij kunnen het bekijken, beoordelen en een kopie aan hun eigen schema’s toevoegen. Je trainingsgeschiedenis en voortgang worden niet meegedeeld.') + '</p><a class="link" href="#/community-profiel">' + tr('Communitynaam instellen ›') + '</a></div>' +
       '<div class="card"><label class="fld"><span>' + tr('Zoek op schemanaam of communitynaam') + '</span><input type="search" id="communityPlanSearch" data-community-filter="plans" placeholder="' + tr('Zoek in gedeelde schema’s') + '"></label><div class="grid2"><label class="fld"><span>' + tr('Doel of type') + '</span><select id="communityPlanGoal" data-community-filter="plans"><option value="all">' + tr('Alle doelen') + '</option>' + Object.entries(TRAIN_GOALS).map(([key, label]) => '<option value="' + esc(key) + '">' + esc(tr(label)) + '</option>').join('') + '</select></label><label class="fld"><span>' + tr('Niveau') + '</span><select id="communityPlanLevel" data-community-filter="plans"><option value="all">' + tr('Alle niveaus') + '</option>' + TRAIN_LEVELS.map(([key, label]) => '<option value="' + key + '">' + tr(label) + '</option>').join('') + '</select></label></div><small class="muted">' + tr('Zoekopdracht doorzoekt de nieuwste 100 gedeelde schema’s.') + '</small></div><div id="communityPlanResults"></div>';
     view().innerHTML = h; renderTrainingCommunityList();
-  } catch (e) { view().innerHTML = h + '<div class="card note">' + tr('Gedeelde schema’s zijn nog niet beschikbaar. Controleer of de communitytabellen op Supabase zijn bijgewerkt.') + ' ' + esc(e.message) + '</div>'; }
+  } catch (e) { view().innerHTML = h + '<div class="card note">' + esc(trOr(e.message, 'Gedeelde schema’s zijn nog niet beschikbaar. Controleer of de communitytabellen op Supabase zijn bijgewerkt.')) + '</div>'; }
 }
 function renderTrainingCommunityList() {
   const target = document.getElementById('communityPlanResults'); if (!target) return;
@@ -375,19 +375,19 @@ async function renderSharedTraining(id) {
 }
 ACT.saveTrainingReview = async el => {
   const rating = Number($('#trainingRating').value), comment = $('#trainingComment').value.trim().slice(0, 600);
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return toast('Kies eerst een beoordeling van 1 tot 5 sterren.');
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return toast(tr('Kies eerst een beoordeling van 1 tot 5 sterren.'));
   try {
     if (!DB.settings.communityName) { const name = prompt(tr('Kies een communitynaam. Die is zichtbaar bij je beoordeling, niet je echte accountgegevens.')); if (!name) return; await saveCommunityProfile(name); }
     await ensureSession();
     await sb('/rest/v1/shared_training_plan_reviews?on_conflict=plan_id,created_by', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { plan_id: el.dataset.id, rating, comment: comment || null, updated_at: new Date().toISOString() } });
-    delete TRAINING_COMMUNITY_CACHE[el.dataset.id]; toast('Je beoordeling staat bij het schema.'); await renderSharedTraining(el.dataset.id);
-  } catch (e) { console.error('Trainingsbeoordeling opslaan mislukt', e); toast('Je beoordeling opslaan is mislukt. Probeer het opnieuw.'); }
+    delete TRAINING_COMMUNITY_CACHE[el.dataset.id]; toast(tr('Je beoordeling staat bij het schema.')); await renderSharedTraining(el.dataset.id);
+  } catch (e) { console.error('Trainingsbeoordeling opslaan mislukt', e); toast(tr('Je beoordeling opslaan is mislukt. Probeer het opnieuw.')); }
 };
 ACT.copySharedTrainingPlan = el => {
-  const shared = TRAINING_COMMUNITY_CACHE[el.dataset.id]; if (!shared) return toast('Ververs de community en probeer opnieuw.');
+  const shared = TRAINING_COMMUNITY_CACHE[el.dataset.id]; if (!shared) return toast(tr('Ververs de community en probeer opnieuw.'));
   const copy = publicTrainingPlan({ name: shared.title, goal: shared.goal, level: shared.level, weeks: shared.weeks });
   const p = { id: uid(), name: copy.title, goal: shared.goal, level: copy.level, weeks: copy.weeks, customPlan: true, status: 'paused', createdAt: todayKey(), currentWeek: 1, doneSessions: [], copiedFrom: shared.id };
-  savedTrainingPlans().unshift(p); save(); toast('Schema bewaard bij jouw schema’s.'); go('#/schemas');
+  savedTrainingPlans().unshift(p); save(); toast(tr('Schema bewaard bij jouw schema’s.')); go('#/schemas');
 };
 function activeTrainingHomeCard() {
   const p = activeTrainingPlan();
@@ -398,14 +398,14 @@ function activeTrainingHomeCard() {
 }
 ACT.startTrainingPlan = () => {
   const draft = DB.training && DB.training.generated;
-  if (!draft) return toast('Maak eerst een schema om te starten.');
+  if (!draft) return toast(tr('Maak eerst een schema om te starten.'));
   const weeks = Array.isArray(draft.weeks) ? draft.weeks : [{ number: 1, phase: 'Basisweek', focus: 'Herhaal deze week en bouw rustig op.', sessions: draft.sessions || [] }];
-  if (!weeks.length || !weeks[0].sessions.length) return toast('Dit schema heeft geen trainingsdagen om te volgen.');
+  if (!weeks.length || !weeks[0].sessions.length) return toast(tr('Dit schema heeft geen trainingsdagen om te volgen.'));
   const plans = savedTrainingPlans(), old = activeTrainingPlan();
   if (old) old.status = 'paused';
   const p = JSON.parse(JSON.stringify(draft));
   p.id = uid(); p.name = draft.name || TRAIN_GOALS[p.goal] || 'Persoonlijk schema'; p.customPlan = !!draft.customPlan; p.status = 'active'; p.createdAt = todayKey(); p.currentWeek = 1; p.doneSessions = []; p.weeks = weeks;
-  plans.unshift(p); DB.training.activePlanId = p.id; save(); toast(old ? 'Nieuwe schema gestart; je vorige staat op pauze.' : 'Schema gestart. Je voortgang staat op Vandaag en Schema’s.'); go('#/schemas');
+  plans.unshift(p); DB.training.activePlanId = p.id; save(); toast(tr(old ? 'Nieuwe schema gestart; je vorige staat op pauze.' : 'Schema gestart. Je voortgang staat op Vandaag en Schema’s.')); go('#/schemas');
 };
 ACT.pauseTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'paused'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
 ACT.stopTrainingPlan = el => { if (!confirm(tr('Dit schema stopzetten? Je voortgang blijft bewaard.'))) return; const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'stopped'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
@@ -435,9 +435,9 @@ ACT.logPlanActivity = el => {
 ACT.advanceTrainingWeek = el => {
   const p = activeTrainingPlan(); if (!p || p.id !== el.dataset.id) return;
   const week = p.weeks.find(w => w.number === p.currentWeek);
-  if (!week || !week.sessions.every((_, i) => (p.doneSessions || []).includes(week.number + ':' + i))) return toast('Vink eerst alle trainingen van deze week af.');
-  if (p.currentWeek < p.weeks.length) { p.currentWeek++; toast('Volgende week staat klaar.'); }
-  else { p.status = 'completed'; DB.training.activePlanId = null; toast('Schema afgerond. Je voortgang is bewaard.'); }
+  if (!week || !week.sessions.every((_, i) => (p.doneSessions || []).includes(week.number + ':' + i))) return toast(tr('Vink eerst alle trainingen van deze week af.'));
+  if (p.currentWeek < p.weeks.length) { p.currentWeek++; toast(tr('Volgende week staat klaar.')); }
+  else { p.status = 'completed'; DB.training.activePlanId = null; toast(tr('Schema afgerond. Je voortgang is bewaard.')); }
   save(); renderTrainingHub();
 };
 function renderGeneratedTraining(g) {
@@ -740,23 +740,23 @@ function trainingSession(p, i, day) {
 ACT.trainingField = el => {
   const p = trainingData(), f = el.dataset.f;
   const value = el.type === 'checkbox' ? el.checked : ['minutes', 'weeklyActivityMinutes', 'comfortableRunKm', 'weeklyRunKm', 'currentRunDays'].includes(f) ? Number(el.value) : el.value;
-  if (f === 'minutes' && (!Number.isFinite(value) || value < 15 || value > 180)) { el.value = p.minutes; toast('Kies een trainingsduur tussen 15 en 180 minuten.'); return; }
-  if (f === 'comfortableRunKm' && (!Number.isFinite(value) || value < 0 || value > 100)) { el.value = p.comfortableRunKm; toast('Kies een afstand tussen 0 en 100 kilometer.'); return; }
-  if (f === 'weeklyRunKm' && (!Number.isFinite(value) || value < 0 || value > 250)) { el.value = p.weeklyRunKm; toast('Kies een gemiddelde tussen 0 en 250 kilometer.'); return; }
-  if (f === 'currentRunDays' && (!Number.isInteger(value) || value < 0 || value > 7)) { el.value = p.currentRunDays; toast('Kies een aantal dagen tussen 0 en 7.'); return; }
+  if (f === 'minutes' && (!Number.isFinite(value) || value < 15 || value > 180)) { el.value = p.minutes; toast(tr('Kies een trainingsduur tussen 15 en 180 minuten.')); return; }
+  if (f === 'comfortableRunKm' && (!Number.isFinite(value) || value < 0 || value > 100)) { el.value = p.comfortableRunKm; toast(tr('Kies een afstand tussen 0 en 100 kilometer.')); return; }
+  if (f === 'weeklyRunKm' && (!Number.isFinite(value) || value < 0 || value > 250)) { el.value = p.weeklyRunKm; toast(tr('Kies een gemiddelde tussen 0 en 250 kilometer.')); return; }
+  if (f === 'currentRunDays' && (!Number.isInteger(value) || value < 0 || value > 7)) { el.value = p.currentRunDays; toast(tr('Kies een aantal dagen tussen 0 en 7.')); return; }
   if (f === 'category') { p.category = value; p.goal = Object.keys(goalsInCategory(value))[0]; p.days = p.days.slice(0, maxTrainingDays(p)); p.generated = null; save(); renderTrainingPlan(); return; }
   if (f === 'eventDate' && value) {
     const weeks = eventWeeksLeft(value);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || weeks === null || weeks < 0) { el.value = p.eventDate || ''; toast('Kies een geldige datum vanaf vandaag.'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || weeks === null || weeks < 0) { el.value = p.eventDate || ''; toast(tr('Kies een geldige datum vanaf vandaag.')); return; }
   }
-  if (f === 'weeklyActivityMinutes' && (!Number.isFinite(value) || value < 1 || value > 2000)) { el.value = p.weeklyActivityMinutes; toast('Kies een beweegdoel tussen 1 en 2.000 minuten per week.'); return; }
+  if (f === 'weeklyActivityMinutes' && (!Number.isFinite(value) || value < 1 || value > 2000)) { el.value = p.weeklyActivityMinutes; toast(tr('Kies een beweegdoel tussen 1 en 2.000 minuten per week.')); return; }
   if (f === 'goal' && !Object.hasOwn(goalsInCategory(p.category), value)) return;
   p[f] = value;
   if (f === 'goal' || f === 'level') {
     const maxDays = maxTrainingDays(p);
     if (p.days.length > maxDays) {
       p.days = p.days.slice(0, maxDays);
-      toast('Ik heb de gekozen dagen aangepast aan het maximum voor dit doel en niveau.');
+      toast(tr('Ik heb de gekozen dagen aangepast aan het maximum voor dit doel en niveau.'));
     }
   }
   p.generated = null; save(); renderTrainingPlan();
@@ -765,25 +765,25 @@ ACT.trainingDay = el => {
   const p = trainingData(), day = el.dataset.day;
   const days = new Set(p.days);
   if (el.checked) {
-    if (days.size >= maxTrainingDays(p)) { el.checked = false; return toast('Kies maximaal ' + maxTrainingDays(p) + ' trainingsdagen voor dit doel en niveau.'); }
+    if (days.size >= maxTrainingDays(p)) { el.checked = false; return toast(trf('Kies maximaal {count} trainingsdagen voor dit doel en niveau.', { count: maxTrainingDays(p) })); }
     days.add(day);
   } else days.delete(day);
   p.days = TRAIN_DAYS.map(([key]) => key).filter(key => days.has(key)); p.generated = null; save(); renderTrainingPlan();
 };
 ACT.generateTrainingPlan = () => {
   const p = trainingData();
-  if (!p.days.length) return toast('Kies minstens één trainingsdag.');
-  if (p.goal === 'rehab' && !p.rehabCleared) return toast('Vraag eerst toestemming en richtlijnen aan je arts of kinesitherapeut.');
+  if (!p.days.length) return toast(tr('Kies minstens één trainingsdag.'));
+  if (p.goal === 'rehab' && !p.rehabCleared) return toast(tr('Vraag eerst toestemming en richtlijnen aan je arts of kinesitherapeut.'));
   if (['marathon', 'hyrox'].includes(p.goal)) {
-    if (p.days.length < 3) return toast('Kies minstens 3 trainingsdagen voor dit wedstrijdplan.');
+    if (p.days.length < 3) return toast(tr('Kies minstens 3 trainingsdagen voor dit wedstrijdplan.'));
     const plan = eventProgram(p);
-    if (!plan) return toast('Er is te weinig tijd voor een veilige standaardopbouw. Kies een latere wedstrijddatum of overleg met een gekwalificeerde coach.');
+    if (!plan) return toast(tr('Er is te weinig tijd voor een veilige standaardopbouw. Kies een latere wedstrijddatum of overleg met een gekwalificeerde coach.'));
     p.generated = Object.assign({ category: p.category, goal: p.goal, level: p.level, eventDate: p.eventDate, minutes: p.minutes }, plan);
     save(); renderTrainingPlan(); return;
   }
   if (['runStart', 'run5k'].includes(p.goal)) {
     const chosen = p.days.map(k => TRAIN_DAYS.findIndex(d => d[0] === k));
-    if (chosen.some((day, i) => i > 0 && day - chosen[i - 1] < 2) || (chosen.length > 1 && chosen[0] === 0 && chosen[chosen.length - 1] === 6)) return toast('Plan minstens één volledige rustdag tussen looptrainingen, ook over de weekgrens.');
+    if (chosen.some((day, i) => i > 0 && day - chosen[i - 1] < 2) || (chosen.length > 1 && chosen[0] === 0 && chosen[chosen.length - 1] === 6)) return toast(tr('Plan minstens één volledige rustdag tussen looptrainingen, ook over de weekgrens.'));
   }
   const progressive = progressiveProgram(p);
   if (p.goal === 'rehab') progressive.weeks = progressive.weeks.map(w => Object.assign(w, { phase: w.number === 1 ? 'Afspraken met behandelaar plannen' : 'Alleen verder volgens behandelaar' }));

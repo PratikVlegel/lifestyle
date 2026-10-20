@@ -653,6 +653,7 @@ Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { '{minutes} min at a moderate pac
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.': '{minutes} min à un rythme modéré qui permet encore de parler. Progressez doucement ; cela favorise la forme, sans garantir une perte de poids.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.': '{minutes} Min. in mäßigem Tempo, bei dem du noch sprechen kannst. Steigere dich langsam; das unterstützt die Fitness, garantiert aber keine Gewichtsabnahme.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'het ingrediënt': 'the ingredient',
   '{minutes} min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.': '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.',
   'Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.': 'Do about half as many sets as in week {week}; week 8 is also lighter.',
   'Maak de app persoonlijk': 'Personalise your app', 'Kies wat op je startscherm eerst komt. Je kunt alles later aanpassen; je dagboek blijft privé.': 'Choose what appears first on your home screen. You can change this later; your diary stays private.', 'Verder': 'Continue', 'Klaar, start het dagboek': 'Done, open my diary',
@@ -665,6 +666,7 @@ Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
   'Herstelbeweging': 'Recovery movement', 'Kies een ontspannen wandeling of lichte mobiliteit; geef je spieren tijd om te herstellen.': 'Choose an easy walk or light mobility work; give your muscles time to recover.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'het ingrediënt': 'l’ingrédient',
   '{minutes} min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.': '{minutes} min à un rythme modéré qui permet encore de parler. Progressez doucement ; cela favorise la forme, sans garantir une perte de poids.',
   'Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.': 'Faites environ la moitié des séries de la semaine {week} ; la semaine 8 est également allégée.',
   'Maak de app persoonlijk': 'Personnaliser l’application', 'Kies wat op je startscherm eerst komt. Je kunt alles later aanpassen; je dagboek blijft privé.': 'Choisissez ce qui apparaît en premier sur l’accueil. Vous pourrez modifier ce choix ; votre journal reste privé.', 'Verder': 'Continuer', 'Klaar, start het dagboek': 'Terminer et ouvrir mon journal',
@@ -677,6 +679,7 @@ Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
   'Herstelbeweging': 'Mouvement de récupération', 'Kies een ontspannen wandeling of lichte mobiliteit; geef je spieren tijd om te herstellen.': 'Choisissez une marche tranquille ou quelques exercices légers de mobilité ; laissez vos muscles récupérer.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'het ingrediënt': 'die Zutat',
   '{minutes} min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.': '{minutes} Min. in mäßigem Tempo, bei dem du noch sprechen kannst. Steigere dich langsam; das unterstützt die Fitness, garantiert aber keine Gewichtsabnahme.',
   'Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.': 'Mache etwa halb so viele Sätze wie in Woche {week}; auch Woche 8 ist leichter.',
   'Maak de app persoonlijk': 'App personalisieren', 'Kies wat op je startscherm eerst komt. Je kunt alles later aanpassen; je dagboek blijft privé.': 'Wähle aus, was zuerst auf deinem Startbildschirm erscheint. Du kannst das später ändern; dein Tagebuch bleibt privat.', 'Verder': 'Weiter', 'Klaar, start het dagboek': 'Fertig, Tagebuch öffnen',
@@ -1294,6 +1297,12 @@ function trf(text, values) {
   let result = tr(text);
   for (const [key, value] of Object.entries(values || {})) result = result.replaceAll('{' + key + '}', String(value));
   return result;
+}
+function trOr(text, fallback) {
+  const value = String(text || '').trim();
+  const locale = currentLocale();
+  const translations = Object.assign({}, UI_TRANSLATIONS[locale] || {}, UI_EXTRA_TRANSLATIONS[locale] || {});
+  return Object.hasOwn(translations, value) ? tr(value) : Object.values(translations).includes(value) ? value : tr(fallback);
 }
 function localeLanguageName(locale) {
   return ({ 'nl-BE': 'Nederlands', 'en-GB': 'Engels', 'fr-FR': 'Frans', 'de-DE': 'Duits' })[locale] || 'Nederlands';
@@ -2795,3 +2804,30 @@ const OPERATIONAL_DYNAMIC_TRANSLATIONS = {
   }
 };
 for (const [locale, labels] of Object.entries(OPERATIONAL_DYNAMIC_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Controleer de hoeveelheid van {name}.': 'Check the amount for {name}.', 'Vul een hoeveelheid in voor {name}.': 'Enter an amount for {name}.', 'Controleer de {nutrient}-waarde van {name}.': 'Check the {nutrient} value for {name}.',
+  'Controleer de {nutrient}-waarde per 100 g; die moet binnen een realistische positieve grens vallen.': 'Check the {nutrient} value per 100 g; it must be within a realistic positive range.', '{name} staat al in je bibliotheek.': '{name} is already in your library.',
+  'Kies maximaal {count} trainingsdagen voor dit doel en niveau.': 'Choose no more than {count} training days for this goal and level.', '{count} nieuwe producten uit de gedeelde bibliotheek': '{count} new products from the shared library', '{count} nieuw product uit de gedeelde bibliotheek': '{count} new product from the shared library',
+  'Synchroniseren is mislukt. Controleer je verbinding en probeer opnieuw.': 'Sync failed. Check your connection and try again.', 'Verwijderen uit de gedeelde bibliotheek is mislukt. Probeer opnieuw.': 'Could not remove the item from the shared library. Try again.',
+  'Trainingsschema delen is mislukt. Controleer je verbinding en probeer opnieuw.': 'Could not share the training plan. Check your connection and try again.', 'Recept delen is mislukt. Controleer je verbinding en probeer opnieuw.': 'Could not share the recipe. Check your connection and try again.',
+  'Communitynaam opslaan is mislukt. Probeer opnieuw.': 'Could not save the community name. Try again.', 'Delen is niet gelukt. Probeer het opnieuw.': 'Could not share. Try again.', 'Verwijderen is niet gelukt. Probeer het opnieuw.': 'Could not remove it. Try again.',
+  'Beoordeling opslaan is mislukt. Probeer het opnieuw.': 'Could not save the review. Try again.', 'De foto kan niet worden geopend. Kies een andere foto.': 'The photo could not be opened. Choose another photo.', 'Laden mislukt. Controleer je verbinding en probeer opnieuw.': 'Could not load this content. Check your connection and try again.', 'Uitnodiging controleren is mislukt. Controleer je verbinding en probeer opnieuw.': 'Could not check the invitation. Check your connection and try again.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Controleer de hoeveelheid van {name}.': 'Vérifiez la quantité pour {name}.', 'Vul een hoeveelheid in voor {name}.': 'Saisissez une quantité pour {name}.', 'Controleer de {nutrient}-waarde van {name}.': 'Vérifiez la valeur de {nutrient} pour {name}.',
+  'Controleer de {nutrient}-waarde per 100 g; die moet binnen een realistische positieve grens vallen.': 'Vérifiez la valeur de {nutrient} pour 100 g ; elle doit rester dans une plage réaliste.', '{name} staat al in je bibliotheek.': '{name} figure déjà dans votre bibliothèque.',
+  'Kies maximaal {count} trainingsdagen voor dit doel en niveau.': 'Choisissez au maximum {count} jours d’entraînement pour cet objectif et ce niveau.', '{count} nieuwe producten uit de gedeelde bibliotheek': '{count} nouveaux produits de la bibliothèque partagée', '{count} nieuw product uit de gedeelde bibliotheek': '{count} nouveau produit de la bibliothèque partagée',
+  'Synchroniseren is mislukt. Controleer je verbinding en probeer opnieuw.': 'Échec de la synchronisation. Vérifiez votre connexion et réessayez.', 'Verwijderen uit de gedeelde bibliotheek is mislukt. Probeer opnieuw.': 'Impossible de supprimer l’élément de la bibliothèque partagée. Réessayez.',
+  'Trainingsschema delen is mislukt. Controleer je verbinding en probeer opnieuw.': 'Impossible de partager le programme. Vérifiez votre connexion et réessayez.', 'Recept delen is mislukt. Controleer je verbinding en probeer opnieuw.': 'Impossible de partager la recette. Vérifiez votre connexion et réessayez.',
+  'Communitynaam opslaan is mislukt. Probeer opnieuw.': 'Impossible d’enregistrer le nom de communauté. Réessayez.', 'Delen is niet gelukt. Probeer het opnieuw.': 'Le partage a échoué. Réessayez.', 'Verwijderen is niet gelukt. Probeer het opnieuw.': 'La suppression a échoué. Réessayez.',
+  'Beoordeling opslaan is mislukt. Probeer het opnieuw.': 'Impossible d’enregistrer votre avis. Réessayez.', 'De foto kan niet worden geopend. Kies een andere foto.': 'La photo n’a pas pu être ouverte. Choisissez une autre photo.', 'Laden mislukt. Controleer je verbinding en probeer opnieuw.': 'Impossible de charger le contenu. Vérifiez votre connexion et réessayez.', 'Uitnodiging controleren is mislukt. Controleer je verbinding en probeer opnieuw.': 'Impossible de vérifier l’invitation. Vérifiez votre connexion et réessayez.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Controleer de hoeveelheid van {name}.': 'Prüfe die Menge für {name}.', 'Vul een hoeveelheid in voor {name}.': 'Gib eine Menge für {name} ein.', 'Controleer de {nutrient}-waarde van {name}.': 'Prüfe den {nutrient}-Wert für {name}.',
+  'Controleer de {nutrient}-waarde per 100 g; die moet binnen een realistische positieve grens vallen.': 'Prüfe den {nutrient}-Wert pro 100 g; er muss in einem realistischen positiven Bereich liegen.', '{name} staat al in je bibliotheek.': '{name} ist bereits in deiner Bibliothek.',
+  'Kies maximaal {count} trainingsdagen voor dit doel en niveau.': 'Wähle für dieses Ziel und Niveau höchstens {count} Trainingstage.', '{count} nieuwe producten uit de gedeelde bibliotheek': '{count} neue Produkte aus der geteilten Bibliothek', '{count} nieuw product uit de gedeelde bibliotheek': '{count} neues Produkt aus der geteilten Bibliothek',
+  'Synchroniseren is mislukt. Controleer je verbinding en probeer opnieuw.': 'Synchronisierung fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.', 'Verwijderen uit de gedeelde bibliotheek is mislukt. Probeer opnieuw.': 'Das Entfernen aus der geteilten Bibliothek ist fehlgeschlagen. Versuche es erneut.',
+  'Trainingsschema delen is mislukt. Controleer je verbinding en probeer opnieuw.': 'Der Trainingsplan konnte nicht geteilt werden. Prüfe deine Verbindung und versuche es erneut.', 'Recept delen is mislukt. Controleer je verbinding en probeer opnieuw.': 'Das Rezept konnte nicht geteilt werden. Prüfe deine Verbindung und versuche es erneut.',
+  'Communitynaam opslaan is mislukt. Probeer opnieuw.': 'Der Community-Name konnte nicht gespeichert werden. Versuche es erneut.', 'Delen is niet gelukt. Probeer het opnieuw.': 'Teilen fehlgeschlagen. Versuche es erneut.', 'Verwijderen is niet gelukt. Probeer het opnieuw.': 'Entfernen fehlgeschlagen. Versuche es erneut.',
+  'Beoordeling opslaan is mislukt. Probeer het opnieuw.': 'Die Bewertung konnte nicht gespeichert werden. Versuche es erneut.', 'De foto kan niet worden geopend. Kies een andere foto.': 'Das Foto konnte nicht geöffnet werden. Wähle ein anderes Foto.', 'Laden mislukt. Controleer je verbinding en probeer opnieuw.': 'Der Inhalt konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.', 'Uitnodiging controleren is mislukt. Controleer je verbinding en probeer opnieuw.': 'Die Einladung konnte nicht überprüft werden. Prüfe deine Verbindung und versuche es erneut.'
+});

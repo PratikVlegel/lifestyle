@@ -39,7 +39,7 @@ function renderCommunityKpis(period, focusMetric) {
   h += '<button class="btn" data-act="shareCommunityKpis" data-period="' + period + '">' + tr('Geselecteerde cijfers delen') + '</button> <button class="btn ghost" data-act="stopCommunityKpiSharing">' + tr('Mijn gedeelde cijfers verwijderen') + '</button><p class="muted small">' + tr('Vergelijkingen kunnen motiveren, maar vertellen niet het hele verhaal. Dagcijfers schommelen; week en maand geven meer context. Rangschikking is optioneel en bevat geen voedings- of lichaamsgewichtscore.') + '</p></div>';
   h += '<div id="communityKpiBoards"><div class="card muted">' + tr('Rangschikkingen laden…') + '</div></div>';
   view().innerHTML = h;
-  loadCommunityKpiBoards(period, w.start, focusMetric).catch(e => { const target = document.getElementById('communityKpiBoards'); if (target) target.innerHTML = '<div class="card note">' + esc(tr('Communitycijfers konden niet worden geladen.') + ' ' + e.message) + '</div>'; });
+  loadCommunityKpiBoards(period, w.start, focusMetric).catch(e => { const target = document.getElementById('communityKpiBoards'); if (target) target.innerHTML = '<div class="card note">' + esc(trOr(e.message, 'Communitycijfers konden niet worden geladen. Controleer je verbinding en probeer opnieuw.')) + '</div>'; });
 }
 async function loadCommunityKpiBoards(period, start, focusMetric) {
   const target = document.getElementById('communityKpiBoards'); if (!target) return;
@@ -65,11 +65,11 @@ ACT.shareCommunityKpis = async el => {
     const period = el.dataset.period, w = communityKpiWindow(period), rows = checked.map(metric => { const total = communityKpiValue(metric, period); return total ? { user_id: uid, metric, period_type: period, period_start: w.start, value: total.value, days_count: total.days } : null; }).filter(Boolean);
     if (rows.length) await sb('/rest/v1/community_kpis?on_conflict=user_id,metric,period_type,period_start', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: rows });
     DB.settings.communityKpis = checked; save(); toast(tr('Je geselecteerde cijfers zijn gedeeld.')); renderCommunityKpis(period);
-  } catch (e) { toast(tr('Delen is niet gelukt:') + ' ' + e.message); }
+  } catch (e) { toast(trOr(e.message, 'Delen is niet gelukt. Probeer het opnieuw.')); }
 };
 ACT.openCommunityKpi = el => go('#/community-kpi/weekly/' + el.dataset.metric);
 ACT.stopCommunityKpiSharing = async () => {
   if (!confirm(tr('Alle gedeelde communitycijfers verwijderen?'))) return;
   try { const uid = (cloudUser() || {}).id; if (!uid) throw new Error(tr('Communitylid niet gevonden.')); await sb('/rest/v1/community_kpis?user_id=eq.' + encodeURIComponent(uid), { method: 'DELETE' }); DB.settings.communityKpis = []; save(); toast(tr('Je gedeelde communitycijfers zijn verwijderd.')); renderCommunityKpis('weekly'); }
-  catch (e) { toast(tr('Verwijderen is niet gelukt:') + ' ' + e.message); }
+  catch (e) { toast(trOr(e.message, 'Verwijderen is niet gelukt. Probeer het opnieuw.')); }
 };

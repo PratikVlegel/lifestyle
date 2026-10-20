@@ -114,9 +114,9 @@ async function cloudSync(quiet) {
     DB.settings.libSyncAt = new Date().toISOString();
     save();
     const added = DB.foods.length - before;
-    if (!quiet && added > 0) toast(added + ' nieuwe product' + (added > 1 ? 'en' : '') + ' uit de gedeelde bibliotheek');
+    if (!quiet && added > 0) toast(trf(added > 1 ? '{count} nieuwe producten uit de gedeelde bibliotheek' : '{count} nieuw product uit de gedeelde bibliotheek', { count: added }));
     if (/^#\/(bieb|preps)/.test(location.hash)) render();
-  } catch (e) { console.warn('sync', e); if (!quiet) toast('Synchroniseren mislukt: ' + e.message); }
+  } catch (e) { console.warn('sync', e); if (!quiet) toast(tr('Synchroniseren is mislukt. Controleer je verbinding en probeer opnieuw.')); }
   SYNCING = false;
 }
 /* Lokale bibliotheek gelijkzetten met de gedeelde: koppelen, bijwerken, ontdubbelen. */

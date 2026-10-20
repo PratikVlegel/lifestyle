@@ -33,10 +33,10 @@ function libSearch(q, max) {
 document.addEventListener('input', e => {
   if (e.target.id === 'bibq') { LIBQ = e.target.value; const l = $('#biblist'); if (l) l.innerHTML = libRows(libSearch(LIBQ, 300)); }
 });
-ACT.syncNow = () => { toast('Bijwerken…'); cloudSync(false); };
+ACT.syncNow = () => { toast(tr('Bijwerken…')); cloudSync(false); };
 ACT.newFood = () => openFoodEditor(null, () => render());
 ACT.editFood = el => openFoodEditor(DB.foods.find(f => f.id === el.dataset.id), () => render());
-ACT.libScan = () => findByBarcode(food => { if (food.id && DB.foods.includes(food)) { toast(food.name + ' staat al in je bibliotheek'); openFoodEditor(food, () => render()); } else openFoodEditor(food, () => render()); });
+ACT.libScan = () => findByBarcode(food => { if (food.id && DB.foods.includes(food)) { toast(trf('{name} staat al in je bibliotheek.', { name: food.name })); openFoodEditor(food, () => render()); } else openFoodEditor(food, () => render()); });
 ACT.libPhoto = el => { const f = el.files[0]; el.value = ''; if (f) openFoodEditor(null, () => render(), f); };
 
 /* ---------- producteditor (sheet) ---------- */
@@ -130,15 +130,15 @@ function ocrStatus(m) {
 }
 ACT.pedSave = () => {
   const P = PED;
-  if (!String(P.name || '').trim()) return toast('Geef het product een naam.');
+  if (!String(P.name || '').trim()) return toast(tr('Geef het product een naam.'));
   if (String(P.name).length > 200) return toast(tr('De productnaam mag maximaal 200 tekens bevatten.'));
   if (String(P.brand || '').length > 120) return toast(tr('De merknaam mag maximaal 120 tekens bevatten.'));
-  if (!isNum(P.per.kcal)) return toast('Vul minstens de kcal per 100 g in.');
+  if (!isNum(P.per.kcal)) return toast(tr('Vul minstens de kcal per 100 g in.'));
   for (const n of NUTR) {
     const value = P.per[n];
-    if (value !== null && value !== undefined && (!isNum(value) || value < 0 || value > (n === 'kcal' ? 1000 : 100))) return toast('Controleer de ' + NUTR_LABEL[n] + '-waarde per 100 g; die moet binnen een realistische positieve grens vallen.');
+    if (value !== null && value !== undefined && (!isNum(value) || value < 0 || value > (n === 'kcal' ? 1000 : 100))) return toast(trf('Controleer de {nutrient}-waarde per 100 g; die moet binnen een realistische positieve grens vallen.', { nutrient: tr(NUTR_LABEL[n]) }));
   }
-  if (P.barcode && !/^[0-9]{6,14}$/.test(P.barcode)) return toast('De barcode bestaat alleen uit cijfers.');
+  if (P.barcode && !/^[0-9]{6,14}$/.test(P.barcode)) return toast(tr('De barcode bestaat alleen uit cijfers.'));
   if ((P.units || []).length > 100) return toast(tr('Maximaal 100 eenheden per product.'));
   if ((P.units || []).some(u => !u || typeof u.n !== 'string' || u.n.length > 100 || u.g !== null && u.g !== undefined && (!isNum(u.g) || u.g <= 0 || u.g > 100000))) return toast(tr('Controleer de naam en het gewicht van elke eenheid.'));
   P.units = (P.units || []).filter(u => u.n && isNum(u.g) && u.g > 0);
@@ -151,7 +151,7 @@ ACT.pedSave = () => {
   save();
   const saved = P, cb = PED_CB;
   PED = null; closeSheet();
-  toast(isNew ? 'Product bewaard' : 'Bijgewerkt');
+  toast(tr(isNew ? 'Product bewaard' : 'Bijgewerkt'));
   if (navigator.onLine && cloudReady() && saved.dirty) pushFood(saved).catch(e => console.warn(e));
   cb && cb(saved);
 };
@@ -161,7 +161,7 @@ ACT.pedDelete = async () => {
     ? trf('“{name}” verwijderen uit je bibliotheek en de gedeelde bibliotheek?', { name: P.name })
     : trf('“{name}” verwijderen uit je bibliotheek?', { name: P.name });
   if (!confirm(confirmText)) return;
-  if (P.rid && P.own) { try { await deleteRemote(P); } catch (e) { toast('Kon niet uit de gedeelde bibliotheek verwijderen: ' + e.message); return; } }
+  if (P.rid && P.own) { try { await deleteRemote(P); } catch (e) { toast(tr('Verwijderen uit de gedeelde bibliotheek is mislukt. Probeer opnieuw.')); return; } }
   DB.foods = DB.foods.filter(f => f.id !== P.id);
   if (P.rid && !P.own) { DB.settings.hidden = (DB.settings.hidden || []).concat(P.rid); }
   save(); PED = null; closeSheet(); render();

@@ -29,7 +29,7 @@ ACT.redeem = async el => {
       $('nav.tabs').hidden = false;
       go(DB.intakeDone ? '#/' : '#/intake');
     } else { DB.settings.pendingCode = code; renderInvite(tr('Deze code klopt niet, is ingetrokken of al te vaak gebruikt.')); }
-  } catch (e) { renderInvite(tr('Controleren mislukt: ') + e.message); }
+  } catch (e) { renderInvite(trOr(e.message, 'Uitnodiging controleren is mislukt. Controleer je verbinding en probeer opnieuw.')); }
 };
 /* Bij het opstarten: nog lid? (code ingetrokken of nieuwe anonieme sessie) */
 async function checkMembership() {

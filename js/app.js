@@ -590,13 +590,13 @@ ACT.pickTab = el => { PICK_TAB = el.dataset.t; renderPicker(); };
 ACT.pickPrep = el => { const p = prepById(el.dataset.id); const it = itemFromPrep(p, Number(el.dataset.p)); closeSheet(); PICK_CB && PICK_CB([it]); };
 ACT.pickFood = el => {
   const f = DB.foods.find(x => x.id === el.dataset.id); const a = readAmount(f, 'p');
-  if (!a) return toast('Vul een hoeveelheid in.');
+  if (!a) return toast(tr('Vul een hoeveelheid in.'));
   f.used = (f.used || 0) + 1; save(); closeSheet();
   const it = itemFromFood(f, a.g); if (a.label) it.desc = f.name + ' (' + a.label + ', ' + fmtNum(a.g, a.g % 1 ? 1 : 0) + ' g)';
   PICK_CB && PICK_CB([it]);
 };
 ACT.pickFree = () => {
-  const desc = $('#vdesc').value.trim(); if (!desc) return toast('Wat at je?');
+  const desc = $('#vdesc').value.trim(); if (!desc) return toast(tr('Wat at je?'));
   const num = id => { const v = $(id).value.replace(',', '.'); return v === '' ? null : Number(v); };
   for (const [id, key] of [['#vkcal', 'kcal'], ['#vprot', 'protein'], ['#vfib', 'fiber']]) {
     const err = numericError(key, num(id), DB);
@@ -666,7 +666,7 @@ async function scanBarcode(onCode) {
   } catch (e) { const m = $('#scanmsg'); if (m) { const denied = /NotAllowed|Permission/i.test(e.name + e.message); m.innerHTML = '<p class="note">' + tr(denied ? 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.' : 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.') + '</p>'; } }
 }
 function stopScan(keep) { if (SCAN && SCAN.stream) { SCAN.stream.getTracks().forEach(t => t.stop()); SCAN.stream = null; clearTimeout(SCAN.t); } if (!keep) SCAN = null; }
-ACT.lookupCode = () => { const c = $('#bcode').value.trim(); if (!/^[0-9]{6,14}$/.test(c)) return toast('Een barcode bestaat uit 6 tot 14 cijfers.'); stopScan(true); SCAN.onCode(c); };
+ACT.lookupCode = () => { const c = $('#bcode').value.trim(); if (!/^[0-9]{6,14}$/.test(c)) return toast(tr('Een barcode bestaat uit 6 tot 14 cijfers.')); stopScan(true); SCAN.onCode(c); };
 function backToPicker(msg, food) {
   PICK_TAB = 'lib'; renderPicker(msg); $('#sheet').hidden = false;
   const q = $('#libq'); if (q && food) { q.value = food.name; $('#libres').innerHTML = libResults(food.name); }
@@ -940,31 +940,31 @@ ACT.ingLib = el => {
 ACT.ingLibPick = el => fillIng(Number(el.dataset.i), DB.foods.find(f => f.id === el.dataset.id));
 ACT.ingPhoto = async el => {
   const i = Number(el.dataset.i), file = el.files[0]; if (!file) return;
-  toast('Etiket lezen…');
+  toast(tr('Etiket lezen…'));
   try {
     const r = await aiReadLabel(file);
     const food = { id: uid(), name: r.name || PREP.ingredients[i].name || 'Product', per: { kcal: r.kcal, protein: r.protein, carbs: r.carbs, fat: r.fat, fiber: r.fiber } };
     if (PREP.ingredients[i].name) food.name = PREP.ingredients[i].name;
-    DB.foods.push(food); save(); fillIng(i, food); toast('Etiket gelezen. Controleer even de cijfers.');
-  } catch (e) { toast(e.message); }
+    DB.foods.push(food); save(); fillIng(i, food); toast(tr('Etiket gelezen. Controleer even de cijfers.'));
+  } catch (e) { toast(trOr(e.message, 'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.')); }
 };
 ACT.savePrep = () => {
-  if (!PREP.name.trim()) return toast('Geef de mealprep een naam.');
+  if (!PREP.name.trim()) return toast(tr('Geef de mealprep een naam.'));
   if (PREP.name.length > 200) return toast(tr('De naam mag maximaal 200 tekens bevatten.'));
   if ((PREP.recipeNote || '').length > 2000) return toast(tr('De bereidingsnotitie mag maximaal 2000 tekens bevatten.'));
-  if (!Number.isInteger(Number(PREP.portions)) || Number(PREP.portions) < 1 || Number(PREP.portions) > 200) return toast('Kies 1 tot 200 porties.');
-  if (PREP.left !== null && PREP.left !== undefined && (!isNum(PREP.left) || PREP.left < 0 || PREP.left > Number(PREP.portions))) return toast('Resterende porties moeten tussen 0 en het totaal liggen.');
-  if (PREP.cooked !== null && PREP.cooked !== undefined && (!isNum(PREP.cooked) || PREP.cooked < 0 || PREP.cooked > 100000)) return toast('Controleer het bereid gewicht (0–100.000 g).');
+  if (!Number.isInteger(Number(PREP.portions)) || Number(PREP.portions) < 1 || Number(PREP.portions) > 200) return toast(tr('Kies 1 tot 200 porties.'));
+  if (PREP.left !== null && PREP.left !== undefined && (!isNum(PREP.left) || PREP.left < 0 || PREP.left > Number(PREP.portions))) return toast(tr('Resterende porties moeten tussen 0 en het totaal liggen.'));
+  if (PREP.cooked !== null && PREP.cooked !== undefined && (!isNum(PREP.cooked) || PREP.cooked < 0 || PREP.cooked > 100000)) return toast(tr('Controleer het bereid gewicht (0–100.000 g).'));
   const ingr = PREP.ingredients.filter(g => g.name || isNum(g.grams));
-  if (!ingr.length) return toast('Voeg minstens één ingrediënt toe.');
+  if (!ingr.length) return toast(tr('Voeg minstens één ingrediënt toe.'));
   if (ingr.length > 50) return toast(tr('Een mealprep kan maximaal 50 ingrediënten bevatten.'));
   for (const g of ingr) {
     if ((g.name || '').length > 200) return toast(tr('Een ingrediëntnaam mag maximaal 200 tekens bevatten.'));
-    if (g.grams !== null && g.grams !== undefined && (!isNum(g.grams) || g.grams < 0 || g.grams > 100000)) return toast('Controleer de hoeveelheid van ' + (g.name || 'het ingrediënt') + '.');
-    if (g.mode === 'per100' && g.name && (!isNum(g.grams) || g.grams <= 0)) return toast('Vul een hoeveelheid in voor ' + g.name + '.');
+    if (g.grams !== null && g.grams !== undefined && (!isNum(g.grams) || g.grams < 0 || g.grams > 100000)) return toast(trf('Controleer de hoeveelheid van {name}.', { name: g.name || tr('het ingrediënt') }));
+    if (g.mode === 'per100' && g.name && (!isNum(g.grams) || g.grams <= 0)) return toast(trf('Vul een hoeveelheid in voor {name}.', { name: g.name }));
     for (const n of NUTR) {
       const value = g.per && g.per[n], max = g.mode === 'totaal' ? (n === 'kcal' ? 20000 : 2000) : (n === 'kcal' ? 1000 : 100);
-      if (value !== null && value !== undefined && (!isNum(value) || value < 0 || value > max)) return toast('Controleer de ' + NUTR_LABEL[n] + '-waarde van ' + (g.name || 'het ingrediënt') + '.');
+      if (value !== null && value !== undefined && (!isNum(value) || value < 0 || value > max)) return toast(trf('Controleer de {nutrient}-waarde van {name}.', { nutrient: tr(NUTR_LABEL[n]), name: g.name || tr('het ingrediënt') }));
     }
   }
   PREP.ingredients = ingr;
@@ -975,7 +975,7 @@ ACT.savePrep = () => {
   if (!isNum(PREP.left)) PREP.left = PREP.portions;
   const i = DB.preps.findIndex(p => p.id === PREP.id);
   if (i >= 0) DB.preps[i] = PREP; else DB.preps.push(PREP);
-  save(); toast(isNew ? 'Mealprep bewaard. Je kan hem kiezen bij elke check-in.' : 'Bewaard');
+  save(); toast(tr(isNew ? 'Mealprep bewaard. Je kan hem kiezen bij elke check-in.' : 'Bewaard'));
   const id = PREP.id; PREP = null; go('#/prep/' + id);
 };
 ACT.dupPrep = () => { const c = JSON.parse(JSON.stringify(PREP)); c.id = uid(); c.date = todayKey(); c.left = c.portions; c.isNew = true; PREP = c; go('#/prep/nieuw'); };
@@ -989,7 +989,7 @@ ACT.sharePrep = () => {
 };
 async function shareText(txt, title) {
   if (navigator.share) { try { await navigator.share({ title, text: txt }); return; } catch (e) { if (e.name === 'AbortError') return; } }
-  try { await navigator.clipboard.writeText(txt); toast('Gekopieerd naar het klembord'); } catch (e) { prompt(tr('Kopieer:'), txt); }
+  try { await navigator.clipboard.writeText(txt); toast(tr('Gekopieerd naar het klembord')); } catch (e) { prompt(tr('Kopieer:'), txt); }
 }
 
 /* ================= inzicht ================= */
@@ -1116,9 +1116,9 @@ function installCard() {
     '<div id="diag" class="table small"><p class="muted">' + tr('Controleren…') + '</p></div><button class="btn ghost" data-act="copyDiag">' + tr('Kopieer controle') + '</button></div>';
 }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTALL_EVT = e; if (/^#\/(meer|intake)/.test(location.hash)) render(); });
-window.addEventListener('appinstalled', () => { INSTALL_EVT = null; toast('App geïnstalleerd'); });
+window.addEventListener('appinstalled', () => { INSTALL_EVT = null; toast(tr('App geïnstalleerd')); });
 function isStandalone() { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
-ACT.installApp = async () => { if (!INSTALL_EVT) return; INSTALL_EVT.prompt(); const r = await INSTALL_EVT.userChoice; INSTALL_EVT = null; toast(r.outcome === 'accepted' ? 'Installeren gestart' : 'Installeren geannuleerd'); render(); };
+ACT.installApp = async () => { if (!INSTALL_EVT) return; INSTALL_EVT.prompt(); const r = await INSTALL_EVT.userChoice; INSTALL_EVT = null; toast(tr(r.outcome === 'accepted' ? 'Installeren gestart' : 'Installeren geannuleerd')); render(); };
 ACT.copyDiag = () => shareText(DIAG.map(d => (d[1] ? '✓ ' : '✗ ') + d[0] + (d[2] ? ': ' + d[2] : '')).join('\n'), 'Installatiecontrole');
 async function runDiag() {
   const out = [];
@@ -1189,7 +1189,7 @@ ACT.setG = el => {
     const limit = ({ 'profile.name': 80, 'profile.notes': 4000, 'settings.model': 100, 'settings.apiKey': 512, 'settings.appUrl': 2048 })[el.dataset.p];
     if (limit && v.length > limit) { toast(trf('Tekst mag maximaal {count} tekens bevatten.', { count: limit })); el.value = DB[a][b] || ''; return; }
   }
-  DB[a][b] = v; save(); toast('Bewaard');
+  DB[a][b] = v; save(); toast(tr('Bewaard'));
 };
 ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); refreshWebPushSchedule(true); };
 ACT.remTime = el => { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = DB.reminders[el.dataset.i].time; toast(tr('Voer een geldige tijd in.')); return; } DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
@@ -1219,9 +1219,9 @@ ACT.setAppUrl = el => {
 ACT.setShare = el => { DB.settings.share = el.checked; save(); if (el.checked) cloudSync(false); };
 ACT.setNotify = async el => {
   if (el.checked) {
-    if (!('Notification' in window)) { el.checked = false; return toast('Meldingen niet ondersteund.'); }
+    if (!('Notification' in window)) { el.checked = false; return toast(tr('Meldingen niet ondersteund.')); }
     const p = await Notification.requestPermission();
-    if (p !== 'granted') { el.checked = false; return toast('Meldingen niet toegestaan.'); }
+    if (p !== 'granted') { el.checked = false; return toast(tr('Meldingen niet toegestaan.')); }
   }
   DB.settings.notify = el.checked; save();
 };
@@ -1281,8 +1281,8 @@ ACT.importMd = async el => {
   const f = el.files[0]; if (!f) return;
   if (!DB.settings.apiKey) { el.value = ''; return alert(tr('Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.')); }
   if (f.size > 1024 * 1024) { el.value = ''; return alert(tr('Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.')); }
-  toast('Dagboek wordt ingelezen… (kan een minuut duren)');
-  try { const obj = await aiImportMarkdown(await f.text()); importJSON(obj, 'merge'); toast(Object.keys(obj.days || {}).length + ' dagen ingelezen. Controleer even in het dagboek.'); go('#/dagboek'); }
+  toast(tr('Dagboek wordt ingelezen… (kan een minuut duren)'));
+  try { const obj = await aiImportMarkdown(await f.text()); importJSON(obj, 'merge'); toast(trf('{count} dagen ingelezen. Controleer even in het dagboek.', { count: Object.keys(obj.days || {}).length })); go('#/dagboek'); }
   catch (e) { console.warn('Markdown-import mislukt', e); alert(tr('Inlezen mislukt. Controleer het bestand en probeer opnieuw.')); }
   el.value = '';
 };
@@ -1392,7 +1392,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.96';
+const APP_VERSION = '1.10.97';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

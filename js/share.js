@@ -41,7 +41,7 @@ async function sharePrepOnline(p) {
 ACT.sharePrep = async () => {
   const p = prepById(PREP.id) || PREP;
   let link = null;
-  try { toast(tr('Recept delen…')); link = await sharePrepOnline(p); } catch (e) { toast(e.message); }
+  try { toast(tr('Recept delen…')); link = await sharePrepOnline(p); } catch (e) { toast(trOr(e.message, 'Recept delen is mislukt. Controleer je verbinding en probeer opnieuw.')); }
   const { per } = prepTotals(p);
   const txt = p.name + ' (' + p.portions + ' ' + tr('porties') + ')\n' +
     p.ingredients.map(g => '- ' + g.name + (isNum(g.grams) ? ': ' + g.grams + ' g' : '')).join('\n') +
@@ -85,7 +85,7 @@ function prepPhotoSrc(p) { return p.photo || p.photoUrl || ''; }
 ACT.prepPhoto = async el => {
   const f = el.files[0]; el.value = ''; if (!f) return;
   try { PREP.photo = await compressPhoto(f); PREP.photoDirty = true; const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y); }
-  catch (e) { toast(e.message); }
+  catch (e) { toast(trOr(e.message, 'De foto kan niet worden geopend. Kies een andere foto.')); }
 };
 ACT.prepPhotoDel = () => { delete PREP.photo; delete PREP.photoUrl; PREP.photoDirty = true; const y = scrollY; renderPrep(PREP.isNew ? 'nieuw' : PREP.id); scrollTo(0, y); };
 function prepExtrasHtml(P) {
@@ -139,7 +139,7 @@ function recipeCommunityReviews(r) {
 }
 ACT.saveCommunityName = async () => {
   try { const name = await saveCommunityProfile($('#communityName').value); $('#communityName').value = name; toast(tr('Communitynaam opgeslagen.')); if (location.hash.startsWith('#/community-profiel')) renderCommunityProfile(); }
-  catch (e) { toast(e.message); }
+  catch (e) { toast(trOr(e.message, 'Communitynaam opslaan is mislukt. Probeer opnieuw.')); }
 };
 ACT.saveRecipeCommunityReview = async el => {
   const rating = Number($('#recipeRating').value), comment = $('#recipeCommunityComment').value.trim().slice(0, 600);
@@ -149,7 +149,7 @@ ACT.saveRecipeCommunityReview = async el => {
     await ensureSession();
     await sb('/rest/v1/prep_reviews?on_conflict=shared_id,created_by', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { shared_id: el.dataset.id, rating, community_comment: comment || null, updated_at: new Date().toISOString() } });
     delete RECIPE_CACHE[el.dataset.id]; toast(tr('Je beoordeling staat bij het recept.')); await renderRecipe(el.dataset.id);
-  } catch (e) { toast(tr('Beoordeling opslaan mislukt: ') + e.message); }
+  } catch (e) { toast(trOr(e.message, 'Beoordeling opslaan is mislukt. Probeer het opnieuw.')); }
 };
 async function renderRecipes() {
   let h = header('Gedeelde recepten', 'Mealpreps van andere gebruikers', true);
@@ -166,7 +166,7 @@ async function renderRecipes() {
       communityFilterSelect('communityRecipeFiber', 'Vezels per portie', [['all','Maakt niet uit'],['high','Veel: minstens 8 g'],['low','Weinig: maximaal 3 g']]) +
       communityFilterSelect('communityRecipeCarbs', 'Koolhydraten per portie', [['all','Maakt niet uit'],['high','Veel: minstens 45 g'],['low','Weinig: maximaal 20 g']]) + '</div>' +
       '<small class="muted">' + tr('Alle gekozen filters worden gecombineerd. Voedingswaarden gelden per portie; “veel” en “weinig” zijn zoekfilters, geen gezondheidsnorm. Vlees/vis wordt herkend in de zichtbare ingrediëntenlijst; controleer altijd zelf de ingrediënten.') + ' ' + tr('De zoekopdracht doorzoekt de nieuwste 100 gedeelde recepten.') + '</small></div><div id="communityRecipeResults"></div>';
-  } catch (e) { h += '<p class="note">' + tr('Laden mislukt: ') + esc(e.message) + '</p>'; }
+  } catch (e) { h += '<p class="note">' + trOr(e.message, 'Laden mislukt. Controleer je verbinding en probeer opnieuw.') + '</p>'; }
   view().innerHTML = h;
   if (RECIPE_ROWS.length) renderCommunityRecipes();
 }
