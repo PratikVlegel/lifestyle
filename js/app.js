@@ -698,17 +698,18 @@ function renderDays() {
   else h += '<a class="card diary-wellbeing" href="#/dag/' + todayKey() + '"><span class="pill">' + tr('Dagboek') + '</span><h3>' + tr('Hoe is het met je, los van de cijfers?') + '</h3><p class="small">' + tr('Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Persoonlijke vergelijkingen verschijnen pas als er genoeg stemmingsdagen zijn.') + '</p>' + (DB.settings.moodInsights ? '<p class="small muted">' + trf('{count} van de 14 stemmingsdagen bijgehouden.', { count: readiness.count }) + '</p>' : '') + '<span class="plan-go">' + tr('Dagboek van vandaag aanvullen ›') + '</span></a>';
   const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
-    const wellbeing = [isValidDailyRating(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isValidDailyRating(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isValidDailyRating(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
-    const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.map(v => tr(NICOTINE_LABELS[v] || v)).join(', ') : tr('Geen nicotine')) : d.nicotineForms === null ? '' : d.vape === 'niet' ? tr('Geen nicotine') : Object.hasOwn({ 'paar keer': 1, 'om de 3 u': 1, 'om de 2 u': 1, 'elk uur': 1 }, d.vape) ? tr('Vape') : '';
+    const wellbeing = [isValidDailyRating(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isValidDailyRating(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isValidDailyRating(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean);
+    const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.map(v => tr(NICOTINE_LABELS[v] || String(v))) : [tr('Geen nicotine')]) : d.nicotineForms === null ? '' : d.vape === 'niet' ? tr('Geen nicotine') : Object.hasOwn({ 'paar keer': 1, 'om de 3 u': 1, 'om de 2 u': 1, 'elk uur': 1 }, d.vape) ? tr('Vape') : '';
     const supplements = d.supplementsLogged === true
       ? (Array.isArray(d.supplements) && d.supplements.length
-        ? esc(tr('Supplementen')) + ': ' + d.supplements.slice(0, 2).map(s => esc(String(s && s.name || ''))).filter(Boolean).join(', ') + (d.supplements.length > 2 ? ' +' + (d.supplements.length - 2) : '')
+        ? tr('Supplementen') + ': ' + d.supplements.slice(0, 2).map(s => String(s && s.name || '')).filter(Boolean).join(', ') + (d.supplements.length > 2 ? ' +' + (d.supplements.length - 2) : '')
         : tr('Vandaag geen supplementen'))
       : '';
-    const context = [isNum(d.sleepH) ? d.sleepH + ' ' + tr('u slaap') : '', isNum(d.steps) ? fmtNum(d.steps) + ' ' + tr('stappen') : '', isNum(d.weight) ? d.weight + ' kg' : '', isNum(d.alcohol) ? d.alcohol + ' ' + tr('glazen alcohol') : '', isNum(d.caffeine) ? trf('{count} koffieporties', { count: fmtNum(d.caffeine) }) : '', isNum(d.softDrinkServings) ? trf('{count} frisdrankporties', { count: fmtNum(d.softDrinkServings) }) : '', isNum(d.sweetsServings) ? trf('{count} porties zoetigheid', { count: fmtNum(d.sweetsServings) }) : '', nicotine, supplements].filter(Boolean).join(' · ');
+    const context = [isNum(d.sleepH) ? d.sleepH + ' ' + tr('u slaap') : '', isNum(d.steps) ? fmtNum(d.steps) + ' ' + tr('stappen') : '', isNum(d.weight) ? d.weight + ' kg' : '', isNum(d.alcohol) ? d.alcohol + ' ' + tr('glazen alcohol') : '', isNum(d.caffeine) ? trf('{count} koffieporties', { count: fmtNum(d.caffeine) }) : '', isNum(d.softDrinkServings) ? trf('{count} frisdrankporties', { count: fmtNum(d.softDrinkServings) }) : '', isNum(d.sweetsServings) ? trf('{count} porties zoetigheid', { count: fmtNum(d.sweetsServings) }) : '', nicotine, supplements].flat().filter(Boolean);
+    const summaryChips = values => values.map(value => '<span class="diary-stat">' + esc(String(value)) + '</span>').join('');
     return '<a class="diary-day" href="#/dag/' + k + '"><div class="diary-day-head"><strong>' + fmtDay(k, true) + '</strong><span class="diary-day-kcal">' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('geen dagtotaal')) + '</span></div>' +
-      '<div class="diary-day-section"><span class="diary-day-label">' + tr('Welzijn') + '</span><span class="diary-day-value ' + (wellbeing ? '' : 'muted') + '">' + (wellbeing || tr('Nog geen welzijnsgegevens')) + '</span></div>' +
-      '<div class="diary-day-section"><span class="diary-day-label">' + tr('Gewoontes & lichaam') + '</span><span class="diary-day-value ' + (context ? '' : 'muted') + '">' + (context || tr('Nog geen slaap- of beweeggegevens')) + '</span></div>' +
+      '<div class="diary-day-section"><span class="diary-day-label">' + tr('Welzijn') + '</span><span class="diary-day-value ' + (wellbeing.length ? '' : 'muted') + '">' + (wellbeing.length ? '<span class="diary-day-values">' + summaryChips(wellbeing) + '</span>' : tr('Nog geen welzijnsgegevens')) + '</span></div>' +
+      '<div class="diary-day-section"><span class="diary-day-label">' + tr('Gewoontes & lichaam') + '</span><span class="diary-day-value ' + (context.length ? '' : 'muted') + '">' + (context.length ? '<span class="diary-day-values">' + summaryChips(context) + '</span>' : tr('Nog geen slaap- of beweeggegevens')) + '</span></div>' +
       '<span class="diary-day-link">' + tr('Dag bekijken ›') + '</span></a>';
   };
   const recent = keys.slice(0, 7), older = keys.slice(7);
@@ -1391,7 +1392,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.95';
+const APP_VERSION = '1.10.96';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
