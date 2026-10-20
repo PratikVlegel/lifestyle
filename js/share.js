@@ -72,6 +72,15 @@ async function uploadPrepPhoto(p) {
   if (!r.ok) throw new Error('Foto uploaden mislukt (' + r.status + ')');
   return c.url + '/storage/v1/object/public/prep-photos/' + path + '?v=' + Date.now();
 }
+function sharedRecipePhotoUrl(value) {
+  try {
+    const project = new URL(String((window.VD_CONFIG || {}).supabaseUrl || ''));
+    const photo = new URL(String(value || ''));
+    if (project.protocol !== 'https:' || photo.protocol !== 'https:' || photo.origin !== project.origin || photo.username || photo.password) return '';
+    if (!photo.pathname.startsWith('/storage/v1/object/public/prep-photos/')) return '';
+    return photo.href;
+  } catch (_) { return ''; }
+}
 function prepPhotoSrc(p) { return p.photo || p.photoUrl || ''; }
 ACT.prepPhoto = async el => {
   const f = el.files[0]; el.value = ''; if (!f) return;
@@ -197,9 +206,9 @@ function renderCommunityRecipes() {
     if (!recipeMacroPass(r, carbsFilter, 'carbs', 45, 20)) return false;
     return true;
   });
-  target.innerHTML = rows.length ? rows.map(r => '<a class="card prepc" href="#/recept/' + r.id + '">' + (r.photo_url ? '<img class="prepthumb" src="' + esc(r.photo_url) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' ' + tr('porties') + '</span></div><small class="muted">' + tr('Gedeeld door') + ' ' + esc(r.authorName) + '</small>' +
+  target.innerHTML = rows.length ? rows.map(r => { const photo = sharedRecipePhotoUrl(r.photo_url); return '<a class="card prepc" href="#/recept/' + r.id + '">' + (photo ? '<img class="prepthumb" src="' + esc(photo) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') + '<div class="pc-h"><b>' + esc(r.name) + '</b><span class="pill">' + r.portions + ' ' + tr('porties') + '</span></div><small class="muted">' + tr('Gedeeld door') + ' ' + esc(r.authorName) + '</small>' +
     '<div class="macro">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + tr(NUTR_LABEL[n])) + '</span>').join('') + '</div>' +
-    '<small class="muted">' + tr('per portie') + ' · ' + starLine(r.stats) + '</small></a>').join('') : '<p class="card muted">' + (RECIPE_ROWS.length ? tr('Geen recepten gevonden met deze filters.') : tr('Nog geen gedeelde recepten. Deel er zelf een via een mealprep → Deel.')) + '</p>';
+    '<small class="muted">' + tr('per portie') + ' · ' + starLine(r.stats) + '</small></a>'; }).join('') : '<p class="card muted">' + (RECIPE_ROWS.length ? tr('Geen recepten gevonden met deze filters.') : tr('Nog geen gedeelde recepten. Deel er zelf een via een mealprep → Deel.')) + '</p>';
 }
 async function renderRecipe(id) {
   let h = header('Recept', 'Gedeeld via de app', true);
@@ -207,8 +216,9 @@ async function renderRecipe(id) {
   let r = RECIPE_CACHE[id];
   try { if (!r || !r.stats) { await fetchRecipes(); r = RECIPE_CACHE[id]; } } catch (e) { }
   if (!r) { view().innerHTML = h + '<p class="note">' + tr('Dit recept is niet gevonden') + (navigator.onLine ? '' : ' (' + tr('je bent offline') + ')') + '.</p>'; return; }
+  const photo = sharedRecipePhotoUrl(r.photo_url);
   const mine = DB.preps.find(p => p.sharedId === id);
-  h += '<div class="card">' + (r.photo_url ? '<img class="prepimg" src="' + esc(r.photo_url) + '" alt="' + tr('Foto van') + ' ' + esc(r.name) + '">' : '') + '<h2>' + esc(r.name) + '</h2><p class="muted small">' + tr('Gedeeld door') + ' ' + esc(r.authorName || 'Communitylid') + ' · ' + r.portions + ' ' + tr('porties') + ' · ' + starLine(r.stats) + '</p>' +
+  h += '<div class="card">' + (photo ? '<img class="prepimg" src="' + esc(photo) + '" alt="' + tr('Foto van') + ' ' + esc(r.name) + '" referrerpolicy="no-referrer">' : '') + '<h2>' + esc(r.name) + '</h2><p class="muted small">' + tr('Gedeeld door') + ' ' + esc(r.authorName || 'Communitylid') + ' · ' + r.portions + ' ' + tr('porties') + ' · ' + starLine(r.stats) + '</p>' +
     '<div class="macro big">' + NUTR.map(n => '<span><b>' + (isNum(r.per && r.per[n]) ? fmtNum(r.per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + NUTR_LABEL[n]) + '</span>').join('') + '</div><small class="muted">' + tr('per portie, ruwe schatting') + '</small>' +
     (r.stats && r.stats.big ? '<p class="note small">' + trf('{count} van de {total} vonden de portie te groot of moeilijk op te eten.', { count: r.stats.big, total: r.stats.n }) + '</p>' : '') +
     '<h3>' + tr('Ingrediënten (hele prep)') + '</h3><ul>' + (r.ingredients || []).map(g => '<li>' + esc(g.name) + (isNum(g.grams) ? ' · ' + fmtNum(g.grams) + ' g' : '') + '</li>').join('') + '</ul>' +
@@ -218,7 +228,7 @@ async function renderRecipe(id) {
 }
 ACT.addRecipe = el => {
   const r = RECIPE_CACHE[el.dataset.id]; if (!r) return;
-  const p = { id: uid(), name: r.name, date: todayKey(), portions: r.portions, left: r.portions, plan: '', cooked: null, recipeNote: r.note || '', photoUrl: r.photo_url || undefined, sharedId: r.id, sharedOwn: false,
+  const p = { id: uid(), name: r.name, date: todayKey(), portions: r.portions, left: r.portions, plan: '', cooked: null, recipeNote: r.note || '', photoUrl: sharedRecipePhotoUrl(r.photo_url) || undefined, sharedId: r.id, sharedOwn: false,
     ingredients: (r.ingredients || []).map(g => ({ id: uid(), name: g.name, grams: g.grams, mode: g.mode || 'per100', per: Object.assign({ kcal: null, protein: null, carbs: null, fat: null, fiber: null }, g.per) })) };
   PREP = Object.assign(p, { isNew: true });
   toast(tr('Pas de hoeveelheden aan als je anders kookt, en bewaar.'));
