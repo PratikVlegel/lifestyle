@@ -1211,7 +1211,7 @@ ACT.setAppUrl = el => {
   const value = el.value.trim();
   if (value.length > 2048) { toast(trf('Tekst mag maximaal {count} tekens bevatten.', { count: 2048 })); el.value = DB.settings.appUrl || appBase(); return; }
   if (value) {
-    try { const parsed = new URL(value); if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('protocol'); }
+    try { const parsed = new URL(value); if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error('protocol'); }
     catch (_) { toast(tr('Voer een geldige http(s)-URL in.')); el.value = DB.settings.appUrl || appBase(); return; }
   }
   DB.settings.appUrl = value; save();

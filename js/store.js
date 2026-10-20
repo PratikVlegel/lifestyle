@@ -316,6 +316,14 @@ function validateImportData(obj) {
     for (const [field, limit] of Object.entries({ apiKey: 512, sbUrl: 2048, sbKey: 512, model: 100, appUrl: 2048, communityName: 40 })) {
       if (obj.settings[field] !== undefined && obj.settings[field] !== null && (typeof obj.settings[field] !== 'string' || obj.settings[field].length > limit)) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
     }
+    if (typeof obj.settings.appUrl === 'string' && obj.settings.appUrl.trim()) {
+      let validAppUrl = false;
+      try {
+        const parsed = new URL(obj.settings.appUrl.trim());
+        validAppUrl = ['https:', 'http:'].includes(parsed.protocol) && !parsed.username && !parsed.password;
+      } catch (_) { /* Invalid URLs are rejected below. */ }
+      if (!validAppUrl) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+    }
   }
   for (const field of ['preps', 'foods', 'ai', 'reminders', 'mealPatch']) {
     if (obj[field] !== undefined && obj[field] !== null && !Array.isArray(obj[field])) fail('het veld ' + field + ' moet een lijst zijn.');
