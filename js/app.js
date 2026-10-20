@@ -977,7 +977,7 @@ async function shareText(txt, title) {
 
 /* ================= inzicht ================= */
 function aiDataDisclosure() {
-  return tr('Bij een AI-verzoek stuurt de app rechtstreeks naar Anthropic: je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau, context en doelen), je vraag en maximaal 21 dagen aan geregistreerde gegevens. Dat kan maaltijden en voedingswaarden, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, nicotinevormen, frisdrank, snoep en vrije notities omvatten. Een gekozen etiketfoto wordt meegestuurd; bij Markdown-import worden maximaal 150.000 tekens verstuurd. De stemmingvergelijkingen zelf blijven lokaal en sturen geen notities.') + ' ' + tr('Het optionele cyclusdagboek en supplementlogboek blijven op dit toestel en worden niet meegestuurd met AI-analyses.');
+  return '<div class="muted small ai-disclosure"><p>' + esc(tr('Als je “Analyseer mijn laatste 3 weken” start, stuurt de app je profiel (naam, geslacht, leeftijd, lengte, activiteitsniveau en context), je doelen, je vraag en maximaal 21 dagen aan geregistreerde gegevens rechtstreeks naar Anthropic. Dat omvat maaltijdomschrijvingen en geschatte kcal en eiwitten, gewicht, slaap/CPAP, stemming, energie, stress, stappen, water, cafeïne, alcohol, nicotinevormen, frisdrank, zoetigheden en vrije notities. Activiteitsdetails, het cyclusdagboek en supplementlogs gaan niet mee. De optionele stemmingvergelijkingen zelf blijven lokaal.')) + '</p><p>' + esc(tr('Als je een etiket laat lezen, wordt de door jou gekozen foto naar Anthropic gestuurd.')) + '</p><p>' + esc(tr('Als je Markdown-import start, wordt de door jou gekozen tekst (maximaal 150.000 tekens) naar Anthropic gestuurd om dagboekgegevens om te zetten.')) + '</p><p>' + esc(tr('Gegevens worden alleen verstuurd wanneer je zelf de betreffende AI-functie start. Je API-sleutel staat lokaal in deze browser en zit niet in back-ups. Anthropic rekent per verzoek kosten aan.')) + '</p></div>';
 }
 function insightCard(i) {
   return '<div class="card ins ' + i.tone + '"><div class="ins-h"><span class="tag">' + tr(i.cat) + '</span>' + (i.isNew ? '<span class="tag new">' + tr('nieuw') + '</span>' : '') + '<b>' + esc(tr(i.title)) + '</b></div><p>' + esc(tr(i.text)).replace(/\n/g, '<br>') + '</p><small class="muted">' + tr('Op basis van {evidence}').replace('{evidence}', tr(i.evidence)) + '</small></div>';
@@ -999,7 +999,7 @@ function renderInsights() {
   h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">' + tr('Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.') + '</p>';
   h += '<h2 class="sec">' + tr('Diepere analyse met AI') + '</h2>';
   if (DB.settings.apiKey) {
-    h += '<div class="card"><p class="muted small">' + esc(aiDataDisclosure()) + '</p><label class="fld"><span>' + tr('Vraag (optioneel)') + '</span><textarea id="aiq" rows="2" placeholder="' + tr('bv. Waarom voel ik me op woensdag zo moe?') + '"></textarea></label><button class="btn" data-act="runAI">' + tr('Analyseer mijn laatste 3 weken') + '</button><div id="aiout"></div></div>';
+    h += '<div class="card">' + aiDataDisclosure() + '<label class="fld"><span>' + tr('Vraag (optioneel)') + '</span><textarea id="aiq" rows="2" placeholder="' + tr('bv. Waarom voel ik me op woensdag zo moe?') + '"></textarea></label><button class="btn" data-act="runAI">' + tr('Analyseer mijn laatste 3 weken') + '</button><div id="aiout"></div></div>';
   } else {
     h += '<p class="card muted small">' + tr('Stel een eigen Claude API-sleutel in bij Meer → AI om hier op knop een diepere analyse te vragen. Zonder sleutel kan je de samenvatting delen en in een chat plakken.') + '</p>';
   }
@@ -1063,7 +1063,7 @@ function renderMore(sub) {
   h += '<div class="card"><h3>' + tr('Gedeelde bibliotheek') + '</h3><p class="muted small">' + tr('Producten (naam, merk, barcode, etiketwaarden), gedeelde mealprep-recepten en beoordelingen zijn zichtbaar voor leden van de app. Receptfoto’s staan in openbare opslag en zijn via de afbeeldingslink bereikbaar. Je dagboek staat lokaal in deze browser. Gebruik je AI, dan gaat de invoer voor die actie naar Anthropic.') + '</p>' +
     (cloudReady() ? '<label class="toggle"><input type="checkbox" ' + (DB.settings.share !== false ? 'checked' : '') + ' data-chg="setShare"> ' + tr('Mijn productbibliotheek synchroniseren (producten delen en ophalen)') + '</label><div class="inrow wrap"><a class="btn ghost" href="#/bieb">' + tr('Bibliotheek openen') + '</a><button class="btn ghost" data-act="syncNow">' + tr('Nu bijwerken') + '</button></div>' : '<p class="note">' + tr('Niet ingesteld.') + '</p>') + '</div>';
   h += '<div class="card"><h3>' + tr('Communityprofiel') + '</h3><p class="muted small">' + tr('Kies een nickname die andere leden zien bij schema’s en communitybeoordelingen. Je dagboek, echte naam en andere gezondheidsgegevens worden hiermee niet gedeeld.') + '</p><div class="inrow wrap"><a class="btn ghost" href="#/community-profiel">' + tr(DB.settings.communityName ? 'Communitynaam wijzigen' : 'Communitynaam instellen') + '</a></div></div>';
-  h += '<div class="card"><h3>' + tr('AI (optioneel)') + '</h3><p class="muted small">' + tr('With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.') + ' ' + esc(aiDataDisclosure()) + ' ' + tr('You pay Anthropic for each request. Your key is stored in this browser and is excluded from backups.') + '</p>' +
+  h += '<div class="card"><h3>' + tr('AI (optioneel)') + '</h3><p class="muted small">' + tr('With your own Claude API key (console.anthropic.com), the app can provide deeper analysis, read a food label from a photo, and import a Markdown diary.') + '</p>' + aiDataDisclosure() +
     '<label class="fld"><span>' + tr('API-sleutel') + '</span><input type="password" maxlength="512" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>' + tr('Model') + '</span><input type="text" maxlength="100" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
 
@@ -1365,7 +1365,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.75';
+const APP_VERSION = '1.10.76';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
