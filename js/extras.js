@@ -140,7 +140,7 @@ function reportSubstanceMood(dateKeys) {
   const rows = comparisons.map(({ label, get }) => {
     const yes = [], no = [];
     for (const key of dateKeys) {
-      const d = DB.days[key]; if (!d || !isNum(d.mood) || d.mood < 0 || d.mood > 10) continue;
+      const d = DB.days[key]; if (!d || !isValidDailyRating(d.mood)) continue;
       const present = get(d); if (present === true) yes.push(d.mood); else if (present === false) no.push(d.mood);
     }
     if (yes.length < 5 || no.length < 5) return '<p class="muted small">' + esc(trf('{label}: not enough mood-scored days for a comparison (at least 5 in each group are needed).', { label: tr(label) })) + '</p>';
