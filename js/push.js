@@ -103,4 +103,7 @@ ACT.webPushDisable = async () => {
   toast(tr(cleanupPending ? 'Push is uit op dit toestel. Serveropruiming is nog niet gelukt; probeer het opnieuw zodra je online bent.' : 'Pushherinneringen zijn uitgeschakeld.'));
   render();
 };
-window.addEventListener('online', () => { flushPushCleanup(); });
+window.addEventListener('online', () => { flushPushCleanup(); refreshWebPushSchedule(true); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshWebPushSchedule(true);
+});

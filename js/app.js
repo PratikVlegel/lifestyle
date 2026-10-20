@@ -1194,12 +1194,12 @@ ACT.setG = el => {
   }
   DB[a][b] = v; save(); toast(tr('Bewaard'));
 };
-ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); refreshWebPushSchedule(true); };
-ACT.remTime = el => { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = DB.reminders[el.dataset.i].time; toast(tr('Voer een geldige tijd in.')); return; } DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
+ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); refreshWebPushSchedule(false); };
+ACT.remTime = el => { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = DB.reminders[el.dataset.i].time; toast(tr('Voer een geldige tijd in.')); return; } DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(false); render(); };
 ACT.remLabel = el => { const label = el.value.trim(); if (!label) { el.value = DB.reminders[el.dataset.i].label; toast(tr('Vul een naam in voor deze herinnering.')); return; } DB.reminders[el.dataset.i].label = label.slice(0, 80); save(); };
-ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); refreshWebPushSchedule(true); };
-ACT.remDel = el => { if (!confirm(tr('Herinnering verwijderen?'))) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); refreshWebPushSchedule(true); render(); };
-ACT.remAdd = () => { if (DB.reminders.length >= MAX_REMINDERS) return toast(tr('Je kunt maximaal 20 herinneringen instellen.')); DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
+ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); refreshWebPushSchedule(false); };
+ACT.remDel = el => { if (!confirm(tr('Herinnering verwijderen?'))) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); refreshWebPushSchedule(false); render(); };
+ACT.remAdd = () => { if (DB.reminders.length >= MAX_REMINDERS) return toast(tr('Je kunt maximaal 20 herinneringen instellen.')); DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(false); render(); };
 ACT.language = el => {
   if (!UI_LOCALES.includes(el.value)) { el.value = currentLocale(); return; }
   DB.settings.language = el.value; save(); applyLocale(); refreshWebPushSchedule(true); render();
@@ -1415,7 +1415,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.11.12';
+const APP_VERSION = '1.11.13';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
