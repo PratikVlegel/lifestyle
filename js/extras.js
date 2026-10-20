@@ -243,9 +243,15 @@ function reportHtml(aud, n) {
     if (part === 'slaap') {
       const cp = keys.map(k => DB.days[k].cpap).filter(Boolean);
       const full = cp.filter(c => /hele|ja/.test(c)).length, partial = cp.filter(c => /deel|vanaf/.test(c)).length, no = cp.filter(c => c === 'nee').length;
-      h += sec('Slaap', tbl([row('Slaap (nacht ervoor)', mv('sleepH')), row('Nachten < 6 u', trf('{count} of {total} recorded nights', { count: keys.filter(k => isNum(dv('sleepH', k)) && dv('sleepH', k) < 6).length, total: cntOf('sleepH') })), row('CPAP', cp.length ? trf('CPAP nights: {count}. Full night: {full}; part night: {partial}; none: {no}; other: {unknown}.', { count: cp.length, full, partial, no, unknown: cp.length - full - partial - no }) : '–')]));
+      const sleepDays = cntOf('sleepH');
+      const shortSleep = sleepDays ? trf('{count} of {total} recorded nights', { count: keys.filter(k => isNum(dv('sleepH', k)) && dv('sleepH', k) < 6).length, total: sleepDays }) : tr('No sleep durations were recorded.');
+      h += sec('Slaap', tbl([row('Slaap (nacht ervoor)', mv('sleepH')), row('Nachten < 6 u', shortSleep), row('CPAP', cp.length ? trf('CPAP nights: {count}. Full night: {full}; part night: {partial}; none: {no}; other: {unknown}.', { count: cp.length, full, partial, no, unknown: cp.length - full - partial - no }) : '–')]));
     }
-    if (part === 'stemming') h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', trf('{count} of {total} mood-scored days', { count: keys.filter(k => isValidDailyRating(dv('mood', k)) && dv('mood', k) <= 5).length, total: cntOf('mood') }))]));
+    if (part === 'stemming') {
+      const moodDays = cntOf('mood');
+      const lowMoodDays = moodDays ? trf('{count} of {total} mood-scored days', { count: keys.filter(k => isValidDailyRating(dv('mood', k)) && dv('mood', k) <= 5).length, total: moodDays }) : tr('No mood scores were recorded.');
+      h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', lowMoodDays)]));
+    }
     if (part === 'notities') { const ns = keys.slice().reverse().filter(k => DB.days[k].moodNote || DB.days[k].notes); if (ns.length) h += sec('Notities', '<ul>' + ns.map(k => '<li><b>' + fmtDay(k) + (isValidDailyRating(DB.days[k].mood) ? ' (' + DB.days[k].mood + '/10)' : '') + ':</b> ' + esc([DB.days[k].moodNote, DB.days[k].notes].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>'); }
     if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4><p>' + alcoholReport(periodKeys) + '</p></div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
     if (part === 'supplementen') h += sec('Supplementen', supplementReport(periodKeys));
