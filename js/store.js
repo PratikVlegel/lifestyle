@@ -269,7 +269,11 @@ function dueReminder() {
 }
 
 /* ---------- import / export ---------- */
-function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: Object.assign({}, DB.settings, { apiKey: '', pushEnabled: false }) }), null, 1); }
+function exportJSON() {
+  const settings = Object.assign({}, DB.settings, { apiKey: '', pushEnabled: false });
+  for (const field of ['sbUrl', 'sbKey', 'member', 'admin', 'inviteCode', 'pendingCode']) delete settings[field];
+  return JSON.stringify(Object.assign({}, DB, { settings }), null, 1);
+}
 function validateImportData(obj) {
   const record = v => !!v && typeof v === 'object' && !Array.isArray(v);
   const fail = message => { throw new Error('Ongeldige back-up: ' + message); };
@@ -295,6 +299,22 @@ function validateImportData(obj) {
         if (!validDate(date) || !record(log)) fail('een cyclusregistratie heeft een ongeldige datum of structuur.');
         for (const [field, value] of Object.entries(log)) if (fields[field] && (!Number.isInteger(value) || value < fields[field][0] || value > fields[field][1])) fail('een cyclusregistratie bevat een waarde buiten het toegestane bereik.');
       }
+    }
+  }
+  if (obj.profile) {
+    if (obj.profile.sex !== undefined && !['m', 'v'].includes(obj.profile.sex)) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+    if (obj.profile.activity !== undefined && !['zittend', 'licht', 'matig', 'actief'].includes(obj.profile.activity)) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+  }
+  if (obj.settings) {
+    const choices = {
+      language: ['nl-BE', 'en-GB', 'fr-FR', 'de-DE'], homeFocus: ['balanced', 'food', 'movement', 'wellbeing'],
+      palette: ['forest', 'ocean', 'plum', 'sunset', 'slate', 'berry', 'lavender', 'sand', 'midnight'], textSize: ['compact', 'normal', 'large']
+    };
+    for (const [field, allowed] of Object.entries(choices)) if (obj.settings[field] !== undefined && !allowed.includes(obj.settings[field])) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+    for (const field of ['notify', 'pushEnabled', 'moodInsights', 'share']) if (obj.settings[field] !== undefined && typeof obj.settings[field] !== 'boolean') failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+    if (obj.settings.glassMl !== undefined && (typeof obj.settings.glassMl !== 'number' || !Number.isInteger(obj.settings.glassMl) || obj.settings.glassMl < 1 || obj.settings.glassMl > 10000)) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+    for (const [field, limit] of Object.entries({ apiKey: 512, sbUrl: 2048, sbKey: 512, model: 100, appUrl: 2048, communityName: 40 })) {
+      if (obj.settings[field] !== undefined && obj.settings[field] !== null && (typeof obj.settings[field] !== 'string' || obj.settings[field].length > limit)) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
     }
   }
   for (const field of ['preps', 'foods', 'ai', 'reminders', 'mealPatch']) {
@@ -410,7 +430,7 @@ function validateImportData(obj) {
       }
     }
   }
-  const profileRanges = { age: [0, 120], heightCm: [0, 300], startWeight: [0, 500] };
+  const profileRanges = { age: [1, 120], heightCm: [50, 300], startWeight: [20, 500] };
   const goalRanges = { kcal: [0, 15000], protein: [0, 1000], fiber: [0, 1000], waterMl: [0, 30000], stepsMin: [0, 200000], stepsMax: [0, 200000], sleepH: [0, 24], caffeineMax: [0, 100] };
   for (const [field, limit] of Object.entries({ name: 80, notes: 4000 })) {
     const value = obj.profile && obj.profile[field];
@@ -497,9 +517,13 @@ function importJSON(obj, mode) {
   if (!obj || typeof obj !== 'object' || !(obj.days || obj.preps || obj.foods)) throw new Error('Dit lijkt geen back-up van deze app.');
   obj.days = obj.days || {};
   if (mode === 'replace') {
-    const key = DB.settings.apiKey;
+    const localSettings = DB.settings || {};
+    const trustedSettings = { apiKey: localSettings.apiKey || '', member: localSettings.member === true, admin: localSettings.admin === true };
+    for (const field of ['sbUrl', 'sbKey']) if (typeof localSettings[field] === 'string' && localSettings[field]) trustedSettings[field] = localSettings[field];
     DB = migrate(obj);
-    DB.settings.apiKey = key;
+    for (const field of ['sbUrl', 'sbKey']) if (!Object.hasOwn(trustedSettings, field)) delete DB.settings[field];
+    for (const field of ['inviteCode', 'pendingCode']) delete DB.settings[field];
+    Object.assign(DB.settings, trustedSettings);
     DB.settings.pushEnabled = false;
   } else {
     for (const [k, d] of Object.entries(obj.days)) {

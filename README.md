@@ -49,3 +49,7 @@ De databasebasis staat in `supabase/008_web_push.sql`; de functie en de Supabase
 Het cyclus- en symptoomdagboek is optioneel en blijft in de lokale browseropslag. Het wordt niet gesynchroniseerd met Supabase, niet gedeeld met de community en uitgesloten van AI-verzoeken. Een handmatige JSON-back-up bevat de cyclusgegevens. De app voorspelt geen menstruatie, ovulatie of vruchtbare dagen en geeft geen vaste trainings- of voedingsadviezen per cyclusfase. De persoonlijke samenvatting beschrijft alleen wat iemand zelf heeft geregistreerd.
 
 `supabase/010_private_feedback_notes.sql` is toegepast op het Supabase-project om vrije feedbacknotities uit de selecteerbare communityvelden te halen. Nieuwe vrije notities worden lokaal bewaard; gestructureerde feedback en de expliciet openbare beoordeling/reactie blijven deelbaar.
+
+## Back-up en import
+
+Een JSON-back-up bevat persoonlijke dagboek- en appgegevens. De export laat de Anthropic API-sleutel, pushabonnementen, Supabase-serverinstellingen en communitylidmaatschap/beheerdersstatus weg. Een vervangende import behoudt de vertrouwde instellingen van dit toestel en schakelt push uit; profielkeuzes en numerieke grenzen worden gevalideerd voordat gegevens worden opgeslagen.
