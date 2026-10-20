@@ -2555,3 +2555,71 @@ const TRAINING_PLAN_TRANSLATIONS = {
 };
 for (const [locale, labels] of Object.entries(TRAINING_PLAN_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
 if (currentLocale() === 'nl-BE') applyLocale();
+
+const REPORT_CLARITY_TRANSLATIONS = {
+  'nl-BE': {
+    '{count} day with data': '{count} dag met gegevens', '{count} days with data': '{count} dagen met gegevens',
+    '{count} day with meal entries': '{count} dag met geregistreerde maaltijden', '{count} days with meal entries': '{count} dagen met geregistreerde maaltijden',
+    '{count} logged day': '{count} geregistreerde dag', '{count} logged days': '{count} geregistreerde dagen',
+    '{count} day': '{count} dag', '{count} days': '{count} dagen',
+    '{minutes} min recorded across {count} session': '{minutes} min geregistreerd over {count} sessie', '{minutes} min recorded across {count} sessions': '{minutes} min geregistreerd over {count} sessies',
+    'duration missing for {count} session': 'duur ontbreekt bij {count} sessie', 'duration missing for {count} sessions': 'duur ontbreekt bij {count} sessies',
+    '{count} session; duration not recorded': '{count} sessie; duur niet geregistreerd', '{count} sessions; duration not recorded': '{count} sessies; duur niet geregistreerd',
+    'Average {weight} kg across {count} weigh-in.': 'Gemiddeld {weight} kg over {count} weging.', 'Average {weight} kg across {count} weigh-ins.': 'Gemiddeld {weight} kg over {count} wegingen.',
+    'Review this report before sharing or printing. It includes only the selected sections and period, and may contain personal details, weight, mood, substance use and free-text notes. Nothing is shared until you choose Share.': 'Controleer dit rapport voordat je het deelt of afdrukt. Het bevat alleen de gekozen onderdelen en periode, maar kan persoonsgegevens, gewicht, stemming, middelengebruik en vrije notities bevatten. Er wordt pas iets gedeeld nadat je zelf op Delen tikt.',
+    'Your context note': 'Eigen contextnotitie',
+    'Days with an alcohol entry: {logged}. Average per recorded day: {average} glasses. Entries explicitly marked zero: {zero}. Days unknown or unrecorded: {unknown}.': 'Dagen met een alcoholregistratie: {logged}. Gemiddeld per geregistreerde dag: {average} glazen. Registraties expliciet op nul: {zero}. Dagen onbekend of niet geregistreerd: {unknown}.',
+    'Days with one or more nicotine forms: {used}. Days explicitly marked no nicotine: {none}. Days unknown or unrecorded: {unknown} of {total}.': 'Dagen met een of meer nicotinevormen: {used}. Dagen expliciet gemarkeerd als geen nicotine: {none}. Dagen onbekend of niet geregistreerd: {unknown} van de {total}.',
+    'Supplement logs: {logged} of {total} days. Explicitly marked no use: {none}. Unknown or unrecorded: {unknown}.': 'Supplementen zijn geregistreerd op {logged} van de {total} dagen. Expliciet geen gebruik: {none} dagen. Onbekend of niet geregistreerd: {unknown} dagen.',
+    'CPAP nights: {count}. Full night: {full}; part night: {partial}; none: {no}; other: {unknown}.': 'CPAP-registraties: {count} nachten. Hele nacht: {full}; deel van de nacht: {partial}; geen gebruik: {no}; anders: {unknown}.'
+  },
+  'en-GB': {
+    '{count} day with data': '{count} day with data', '{count} days with data': '{count} days with data',
+    '{count} day with meal entries': '{count} day with meal entries', '{count} days with meal entries': '{count} days with meal entries',
+    '{count} logged day': '{count} logged day', '{count} logged days': '{count} logged days',
+    '{count} day': '{count} day', '{count} days': '{count} days',
+    '{minutes} min recorded across {count} session': '{minutes} min recorded across {count} session', '{minutes} min recorded across {count} sessions': '{minutes} min recorded across {count} sessions',
+    'duration missing for {count} session': 'duration missing for {count} session', 'duration missing for {count} sessions': 'duration missing for {count} sessions',
+    '{count} session; duration not recorded': '{count} session; duration not recorded', '{count} sessions; duration not recorded': '{count} sessions; duration not recorded',
+    'Average {weight} kg across {count} weigh-in.': 'Average {weight} kg across {count} weigh-in.', 'Average {weight} kg across {count} weigh-ins.': 'Average {weight} kg across {count} weigh-ins.',
+    'Review this report before sharing or printing. It includes only the selected sections and period, and may contain personal details, weight, mood, substance use and free-text notes. Nothing is shared until you choose Share.': 'Review this report before sharing or printing. It includes only the selected sections and period, and may contain personal details, weight, mood, substance use and free-text notes. Nothing is shared until you choose Share.',
+    'Your context note': 'Your context note',
+    'Days with an alcohol entry: {logged}. Average per recorded day: {average} glasses. Entries explicitly marked zero: {zero}. Days unknown or unrecorded: {unknown}.': 'Days with an alcohol entry: {logged}. Average per recorded day: {average} glasses. Entries explicitly marked zero: {zero}. Days unknown or unrecorded: {unknown}.',
+    'Days with one or more nicotine forms: {used}. Days explicitly marked no nicotine: {none}. Days unknown or unrecorded: {unknown} of {total}.': 'Days with one or more nicotine forms: {used}. Days explicitly marked no nicotine: {none}. Days unknown or unrecorded: {unknown} of {total}.',
+    'Supplement logs: {logged} of {total} days. Explicitly marked no use: {none}. Unknown or unrecorded: {unknown}.': 'Supplement logs: {logged} of {total} days. Explicitly marked no use: {none}. Unknown or unrecorded: {unknown}.',
+    'CPAP nights: {count}. Full night: {full}; part night: {partial}; none: {no}; other: {unknown}.': 'CPAP nights: {count}. Full night: {full}; part night: {partial}; none: {no}; other: {unknown}.'
+  },
+  'fr-FR': {
+    '{count} day with data': '{count} jour avec des données', '{count} days with data': '{count} jours avec des données',
+    '{count} day with meal entries': '{count} jour avec des repas enregistrés', '{count} days with meal entries': '{count} jours avec des repas enregistrés',
+    '{count} logged day': '{count} jour enregistré', '{count} logged days': '{count} jours enregistrés',
+    '{count} day': '{count} jour', '{count} days': '{count} jours',
+    '{minutes} min recorded across {count} session': '{minutes} min enregistrées sur {count} séance', '{minutes} min recorded across {count} sessions': '{minutes} min enregistrées sur {count} séances',
+    'duration missing for {count} session': 'durée manquante pour {count} séance', 'duration missing for {count} sessions': 'durée manquante pour {count} séances',
+    '{count} session; duration not recorded': '{count} séance ; durée non renseignée', '{count} sessions; duration not recorded': '{count} séances ; durée non renseignée',
+    'Average {weight} kg across {count} weigh-in.': 'Moyenne de {weight} kg sur {count} pesée.', 'Average {weight} kg across {count} weigh-ins.': 'Moyenne de {weight} kg sur {count} pesées.',
+    'Review this report before sharing or printing. It includes only the selected sections and period, and may contain personal details, weight, mood, substance use and free-text notes. Nothing is shared until you choose Share.': 'Vérifiez ce rapport avant de le partager ou de l’imprimer. Il contient uniquement les rubriques et la période choisies, mais peut inclure des données personnelles, le poids, l’humeur, l’usage de substances et des notes libres. Rien n’est partagé avant que vous choisissiez Partager.',
+    'Your context note': 'Votre note de contexte',
+    'Days with an alcohol entry: {logged}. Average per recorded day: {average} glasses. Entries explicitly marked zero: {zero}. Days unknown or unrecorded: {unknown}.': 'Jours avec une donnée sur l’alcool : {logged}. Moyenne par jour renseigné : {average} verre(s). Données explicitement à zéro : {zero}. Jours inconnus ou non renseignés : {unknown}.',
+    'Days with one or more nicotine forms: {used}. Days explicitly marked no nicotine: {none}. Days unknown or unrecorded: {unknown} of {total}.': 'Jours avec une ou plusieurs formes de nicotine : {used}. Jours explicitement indiqués sans nicotine : {none}. Jours inconnus ou non renseignés : {unknown} sur {total}.',
+    'Supplement logs: {logged} of {total} days. Explicitly marked no use: {none}. Unknown or unrecorded: {unknown}.': 'Compléments notés {logged} jour(s) sur {total}. Aucune prise explicitement indiquée : {none}. Inconnus ou non renseignés : {unknown}.',
+    'CPAP nights: {count}. Full night: {full}; part night: {partial}; none: {no}; other: {unknown}.': 'Nuits avec saisie CPAP : {count}. Nuit complète : {full} ; partie de la nuit : {partial} ; aucune : {no} ; autre : {unknown}.'
+  },
+  'de-DE': {
+    '{count} day with data': '{count} Tag mit Daten', '{count} days with data': '{count} Tage mit Daten',
+    '{count} day with meal entries': '{count} Tag mit erfassten Mahlzeiten', '{count} days with meal entries': '{count} Tage mit erfassten Mahlzeiten',
+    '{count} logged day': '{count} erfasster Tag', '{count} logged days': '{count} erfasste Tage',
+    '{count} day': '{count} Tag', '{count} days': '{count} Tage',
+    '{minutes} min recorded across {count} session': '{minutes} Min. in {count} Einheit erfasst', '{minutes} min recorded across {count} sessions': '{minutes} Min. in {count} Einheiten erfasst',
+    'duration missing for {count} session': 'Dauer bei {count} Einheit nicht erfasst', 'duration missing for {count} sessions': 'Dauer bei {count} Einheiten nicht erfasst',
+    '{count} session; duration not recorded': '{count} Einheit; Dauer nicht erfasst', '{count} sessions; duration not recorded': '{count} Einheiten; Dauer nicht erfasst',
+    'Average {weight} kg across {count} weigh-in.': 'Durchschnitt {weight} kg bei {count} Wägung.', 'Average {weight} kg across {count} weigh-ins.': 'Durchschnitt {weight} kg bei {count} Wägungen.',
+    'Review this report before sharing or printing. It includes only the selected sections and period, and may contain personal details, weight, mood, substance use and free-text notes. Nothing is shared until you choose Share.': 'Prüfe diesen Bericht vor dem Teilen oder Drucken. Er enthält nur die ausgewählten Abschnitte und den Zeitraum, kann aber persönliche Angaben, Gewicht, Stimmung, Substanzkonsum und freie Notizen enthalten. Geteilt wird erst, wenn du selbst Teilen auswählst.',
+    'Your context note': 'Deine Kontextnotiz',
+    'Days with an alcohol entry: {logged}. Average per recorded day: {average} glasses. Entries explicitly marked zero: {zero}. Days unknown or unrecorded: {unknown}.': 'Tage mit Alkoholeintrag: {logged}. Durchschnitt pro erfasstem Tag: {average} Gläser. Ausdrücklich mit null erfasst: {zero}. Unbekannte oder nicht erfasste Tage: {unknown}.',
+    'Days with one or more nicotine forms: {used}. Days explicitly marked no nicotine: {none}. Days unknown or unrecorded: {unknown} of {total}.': 'Tage mit mindestens einer Nikotinform: {used}. Ausdrücklich ohne Nikotin erfasst: {none}. Unbekannte oder nicht erfasste Tage: {unknown} von {total}.',
+    'Supplement logs: {logged} of {total} days. Explicitly marked no use: {none}. Unknown or unrecorded: {unknown}.': 'Ergänzungsmittel an {logged} von {total} Tagen erfasst. Ausdrücklich keine Einnahme: {none}. Unbekannt oder nicht erfasst: {unknown}.',
+    'CPAP nights: {count}. Full night: {full}; part night: {partial}; none: {no}; other: {unknown}.': 'CPAP-Angaben: {count} Nächte. Ganze Nacht: {full}; Teil der Nacht: {partial}; keine Nutzung: {no}; sonstige: {unknown}.'
+  }
+};
+for (const [locale, labels] of Object.entries(REPORT_CLARITY_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
