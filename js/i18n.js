@@ -2958,6 +2958,14 @@ const DIARY_MOOD_OPT_IN_COPY = {
   'fr-FR': 'Vous pouvez activer vous-même les comparaisons d’humeur dans Humeur et habitudes. À partir de 14 jours avec une humeur renseignée au cours des 60 derniers jours, l’application affiche uniquement les comparaisons disposant de suffisamment de données.',
   'de-DE': 'Du kannst Stimmungsvergleiche unter Stimmung und Gewohnheiten selbst einschalten. Ab 14 Tagen mit Stimmungsangabe innerhalb der letzten 60 Tage zeigt die App nur Vergleiche mit ausreichend Daten.'
 };
+const COMMUNITY_PLAN_INVALID_COPY = {
+  'en-GB': 'This shared plan contains invalid data and cannot be displayed safely.',
+  'fr-FR': 'Ce programme partagé contient des données invalides et ne peut pas être affiché en toute sécurité.',
+  'de-DE': 'Dieser geteilte Plan enthält ungültige Daten und kann nicht sicher angezeigt werden.'
+};
+for (const [locale, copy] of Object.entries(COMMUNITY_PLAN_INVALID_COPY)) {
+  UI_EXTRA_TRANSLATIONS[locale]['Dit gedeelde schema bevat ongeldige gegevens en kan niet veilig worden getoond.'] = copy;
+}
 for (const [locale, copy] of Object.entries(DIARY_MOOD_OPT_IN_COPY)) {
   UI_EXTRA_TRANSLATIONS[locale]['Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Je kunt stemmingsvergelijkingen zelf inschakelen bij Stemming en gewoontes. Vanaf 14 stemmingsdagen in de laatste 60 dagen toont de app alleen vergelijkingen met voldoende gegevens.'] = copy;
 }

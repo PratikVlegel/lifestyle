@@ -298,6 +298,35 @@ function publicTrainingPlan(p) {
   if (!weeks.length || weeks.some(w => !w.sessions.length)) throw new Error('Dit schema heeft geen volledige weken om te delen.');
   return { title: String(p.name || TRAIN_GOALS[p.goal] || 'Trainingsschema').trim().slice(0, 80), goal: String(TRAIN_GOALS[p.goal] || p.goal || 'Algemeen').slice(0, 40), level: TRAIN_LEVELS.some(([k]) => k === p.level) ? p.level : 'beginner', weeks };
 }
+function normalizeCommunityTrainingPlan(row) {
+  const text = (value, max) => typeof value === 'string' && value.length <= max;
+  const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
+  const optionalNumber = (value, min, max) => value === null || value === undefined || (typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max);
+  if (!row || typeof row !== 'object' || Array.isArray(row) || !text(row.title, 80) || !row.title.trim() ||
+      !text(row.goal, 40) || !row.goal.trim() || !TRAIN_LEVELS.some(([level]) => level === row.level) ||
+      !Array.isArray(row.weeks) || row.weeks.length < 1 || row.weeks.length > 24) return null;
+  const weeks = [];
+  for (const [index, week] of row.weeks.entries()) {
+    if (!week || typeof week !== 'object' || Array.isArray(week) || !integer(week.number, 1, 24) ||
+        !text(week.phase, 80) || !text(week.focus, 300) || !Array.isArray(week.sessions) || week.sessions.length < 1 || week.sessions.length > 7) return null;
+    const sessions = [];
+    for (const session of week.sessions) {
+      if (!session || typeof session !== 'object' || Array.isArray(session) || !text(session.day, 30) ||
+          !text(session.title, 80) || !text(session.detail, 1200) || !Array.isArray(session.exercises) || session.exercises.length > 20) return null;
+      const exercises = [];
+      for (const exercise of session.exercises) {
+        if (!exercise || typeof exercise !== 'object' || Array.isArray(exercise) || !text(exercise.name, 80) ||
+            !text(exercise.focus, 160) || !text(exercise.reps, 16) || !integer(exercise.sets, 1, 10) ||
+            !integer(exercise.rest, 0, 600) || !optionalNumber(exercise.holdSeconds, 0, 60) ||
+            (exercise.holdSeconds != null && !Number.isInteger(exercise.holdSeconds)) || !optionalNumber(exercise.weightKg, 0, 500)) return null;
+        exercises.push(exercise);
+      }
+      sessions.push(session);
+    }
+    weeks.push(week);
+  }
+  return Object.assign({}, row, { weeks });
+}
 ACT.shareTrainingPlan = async el => {
   const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return;
   if (!cloudReady() || !DB.settings.member) return toast(tr('Schema’s delen kan na aanmelden bij de community.'));
@@ -327,10 +356,11 @@ async function renderTrainingCommunity() {
     let names = {}; try { names = await fetchCommunityProfiles(rows.map(x => x.created_by).concat(reviews.map(x => x.created_by))); } catch (e) { }
     const current = (cloudUser() || {}).id;
     TRAINING_COMMUNITY_ROWS = rows.map(r => {
+      const safe = normalizeCommunityTrainingPlan(r); if (!safe) return null;
       const rs = reviews.filter(x => x.plan_id === r.id), stats = { n: rs.length, avg: rs.length ? rs.reduce((a, x) => a + x.rating, 0) / rs.length : null };
-      const plan = Object.assign({}, r, { authorName: names[r.created_by] || 'Communitylid', stats, reviews: rs.map(x => Object.assign({}, x, { authorName: names[x.created_by] || 'Communitylid', mine: x.created_by === current })) });
+      const plan = Object.assign({}, safe, { authorName: names[r.created_by] || 'Communitylid', stats, reviews: rs.map(x => Object.assign({}, x, { authorName: names[x.created_by] || 'Communitylid', mine: x.created_by === current })) });
       TRAINING_COMMUNITY_CACHE[r.id] = plan; return plan;
-    });
+    }).filter(Boolean);
     h += '<div class="card community-guide"><b>' + tr('Zo werkt schema’s delen') + '</b><p class="small">' + tr('Deel een eigen weekplan bewust met leden. Zij kunnen het bekijken, beoordelen en een kopie aan hun eigen schema’s toevoegen. Je trainingsgeschiedenis en voortgang worden niet meegedeeld.') + '</p><a class="link" href="#/community-profiel">' + tr('Communitynaam instellen ›') + '</a></div>' +
       '<div class="card"><label class="fld"><span>' + tr('Zoek op schemanaam of communitynaam') + '</span><input type="search" id="communityPlanSearch" data-community-filter="plans" placeholder="' + tr('Zoek in gedeelde schema’s') + '"></label><div class="grid2"><label class="fld"><span>' + tr('Doel of type') + '</span><select id="communityPlanGoal" data-community-filter="plans"><option value="all">' + tr('Alle doelen') + '</option>' + Object.entries(TRAIN_GOALS).map(([key, label]) => '<option value="' + esc(key) + '">' + esc(tr(label)) + '</option>').join('') + '</select></label><label class="fld"><span>' + tr('Niveau') + '</span><select id="communityPlanLevel" data-community-filter="plans"><option value="all">' + tr('Alle niveaus') + '</option>' + TRAIN_LEVELS.map(([key, label]) => '<option value="' + key + '">' + tr(label) + '</option>').join('') + '</select></label></div><small class="muted">' + tr('Zoekopdracht doorzoekt de nieuwste 100 gedeelde schema’s.') + '</small></div><div id="communityPlanResults"></div>';
     view().innerHTML = h; renderTrainingCommunityList();
@@ -361,11 +391,11 @@ async function renderSharedTraining(id) {
   try {
     let p = TRAINING_COMMUNITY_CACHE[id];
     if (!p) {
-      const rows = await sb('/rest/v1/shared_training_plans?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1', {}); p = rows[0];
+      const rows = await sb('/rest/v1/shared_training_plans?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1', {}); p = normalizeCommunityTrainingPlan(rows[0]);
       if (p) { const reviews = await sb('/rest/v1/shared_training_plan_reviews?select=plan_id,rating,comment,created_by,created_at&plan_id=eq.' + encodeURIComponent(id), {}); let names = {}; try { names = await fetchCommunityProfiles([p.created_by].concat(reviews.map(x => x.created_by))); } catch (e) { } p = Object.assign({}, p, { authorName: names[p.created_by] || 'Communitylid', reviews: reviews.map(x => Object.assign({}, x, { authorName: names[x.created_by] || 'Communitylid', mine: x.created_by === (cloudUser() || {}).id })) }); TRAINING_COMMUNITY_CACHE[id] = p; }
     }
-    if (!p) { view().innerHTML = h + '<div class="card note">' + tr('Dit schema is niet gevonden.') + '</div>'; return; }
-    const weeks = (p.weeks || []).map(w => '<details class="card train-week"><summary><b>' + tr('Week') + ' ' + w.number + ' · ' + esc(tr(w.phase || 'Opbouw')) + '</b><span class="muted small">' + esc(w.focus || '') + '</span></summary>' + (w.sessions || []).map(s => '<div class="train-session"><b>' + esc(tr(s.day)) + ' · ' + esc(s.title === 'Krachttraining' ? tr(s.title) : s.title) + '</b>' + (s.detail ? '<p>' + esc(s.detail) + '</p>' : '') + ((s.exercises || []).length ? '<ul>' + s.exercises.map(x => '<li><b>' + esc(x.name) + '</b> · ' + x.sets + ' ' + tr('sets') + ' × ' + exerciseTargetText(x) + ' · ' + x.rest + ' ' + tr('sec rust') + (x.focus ? '<br><span class="muted small">' + esc(x.focus) + '</span>' : '') + '</li>').join('') + '</ul>' : '') + '</div>').join('') + '</details>').join('');
+    if (!p) { view().innerHTML = h + '<div class="card note">' + tr('Dit gedeelde schema bevat ongeldige gegevens en kan niet veilig worden getoond.') + '</div>'; return; }
+    const weeks = p.weeks.map(w => '<details class="card train-week"><summary><b>' + tr('Week') + ' ' + esc(String(w.number)) + ' · ' + esc(tr(w.phase || 'Opbouw')) + '</b><span class="muted small">' + esc(w.focus || '') + '</span></summary>' + w.sessions.map(s => '<div class="train-session"><b>' + esc(tr(s.day)) + ' · ' + esc(s.title === 'Krachttraining' ? tr(s.title) : s.title) + '</b>' + (s.detail ? '<p>' + esc(s.detail) + '</p>' : '') + (s.exercises.length ? '<ul>' + s.exercises.map(x => '<li><b>' + esc(x.name) + '</b> · ' + esc(String(x.sets)) + ' ' + tr('sets') + ' × ' + exerciseTargetText(x) + ' · ' + esc(String(x.rest)) + ' ' + tr('sec rust') + (x.focus ? '<br><span class="muted small">' + esc(x.focus) + '</span>' : '') + '</li>').join('') + '</ul>' : '') + '</div>').join('') + '</details>').join('');
     const mine = p.reviews.find(x => x.mine), isAuthor = p.created_by && p.created_by === (cloudUser() || {}).id;
     const reviewForm = isAuthor ? '<p class="muted small">' + tr('Dit is jouw schema. Andere communityleden kunnen het beoordelen.') + '</p>' : '<h3>' + tr('Beoordeel dit schema') + '</h3><p class="muted small">' + tr('Deel je indruk met andere leden. Je beoordeling is zichtbaar onder je communitynaam.') + '</p><label class="fld"><span>' + tr('Beoordeling') + '</span><select id="trainingRating"><option value="">' + tr('Kies sterren') + '</option>' + [1, 2, 3, 4, 5].map(n => '<option value="' + n + '"' + (mine && mine.rating === n ? ' selected' : '') + '>' + '★'.repeat(n) + ' · ' + n + '/5</option>').join('') + '</select></label><label class="fld"><span>' + tr('Reactie (optioneel)') + '</span><textarea id="trainingComment" maxlength="600" rows="3" placeholder="' + tr('Wat werkte goed of wat moet iemand weten?') + '">' + esc(mine && mine.comment || '') + '</textarea></label><button class="btn" data-act="saveTrainingReview" data-id="' + esc(id) + '">' + tr('Beoordeling plaatsen') + '</button>';
     const reviewHtml = '<div class="card">' + reviewForm + (p.reviews.length ? '<h3>' + tr('Beoordelingen') + '</h3>' + p.reviews.slice().reverse().slice(0, 15).map(x => '<p class="community-review"><b>' + esc(x.authorName) + '</b> · ' + '★'.repeat(x.rating) + ' ' + x.rating + '/5' + (x.comment ? '<br>' + esc(x.comment) : '') + '</p>').join('') : '<p class="muted small">' + tr('Nog geen beoordelingen.') + '</p>') + '</div>';

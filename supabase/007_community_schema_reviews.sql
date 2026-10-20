@@ -54,7 +54,7 @@ create table if not exists public.shared_training_plans (
   title text not null check (char_length(title) between 1 and 80),
   goal text not null check (char_length(goal) between 1 and 40),
   level text not null check (level in ('beginner','intermediate','advanced','competitive')),
-  weeks jsonb not null check (jsonb_typeof(weeks) = 'array' and jsonb_array_length(weeks) between 1 and 24),
+  weeks jsonb not null check (jsonb_typeof(weeks) = 'array' and jsonb_array_length(weeks) between 1 and 24 and octet_length(weeks::text) <= 4194304),
   created_by uuid not null default auth.uid() references auth.users(id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

@@ -5,7 +5,7 @@ create table if not exists public.shared_preps (
   name        text not null check (char_length(name) between 1 and 200),
   portions    numeric not null default 1 check (portions > 0 and portions <= 100),
   ingredients jsonb not null default '[]'::jsonb,
-  per         jsonb not null default '{}'::jsonb,
+  per         jsonb not null default '{}'::jsonb check (jsonb_typeof(per) = 'object' and octet_length(per::text) <= 2048),
   note        text check (char_length(note) <= 4000),
   photo_url   text check (char_length(photo_url) <= 500),
   created_by  uuid default auth.uid() references auth.users(id) on delete set null,

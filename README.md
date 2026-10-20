@@ -34,6 +34,7 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `supabase/007_community_schema_reviews.sql` | Communitynamen, gedeelde trainingsschema's en openbare beoordelingen/reacties |
 | `supabase/012_community_exercises.sql` | Zoekbare community-oefenbibliotheek met filters, ledenbeoordelingen en lidmaatschapsregels |
 | `supabase/013_exercise_hold_and_weight.sql` | Optionele houdduur en gewicht voor gedeelde oefeningen |
+| `supabase/018_bound_community_json_payloads.sql` | Limieten voor omvang en vorm van gedeelde trainingsschema's, receptwaarden en productbron |
 | `supabase/010_private_feedback_notes.sql` | Houdt vrije mealprep-notities afgeschermd van communityleden |
 | `sw.js` | Service worker (offline). Verhoog `VERSION` bij elke update. |
 | `manifest.webmanifest` | Installatie als app |

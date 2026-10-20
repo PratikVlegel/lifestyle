@@ -16,7 +16,7 @@ create table if not exists public.foods (
     and jsonb_array_length(units) <= 100
     and octet_length(units::text) <= 32768
   ),
-  source      text,
+  source      text check (source is null or char_length(source) <= 200),
   created_by  uuid default auth.uid() references auth.users(id) on delete set null,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
