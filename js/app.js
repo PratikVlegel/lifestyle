@@ -1174,8 +1174,8 @@ ACT.setG = el => {
   DB[a][b] = v; save(); toast('Bewaard');
 };
 ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); refreshWebPushSchedule(true); };
-ACT.remTime = el => { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = DB.reminders[el.dataset.i].time; return; } DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
-ACT.remLabel = el => { DB.reminders[el.dataset.i].label = el.value.trim().slice(0, 80); save(); };
+ACT.remTime = el => { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = DB.reminders[el.dataset.i].time; toast(tr('Voer een geldige tijd in.')); return; } DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
+ACT.remLabel = el => { const label = el.value.trim(); if (!label) { el.value = DB.reminders[el.dataset.i].label; toast(tr('Vul een naam in voor deze herinnering.')); return; } DB.reminders[el.dataset.i].label = label.slice(0, 80); save(); };
 ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); refreshWebPushSchedule(true); };
 ACT.remDel = el => { if (!confirm('Herinnering verwijderen?')) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); refreshWebPushSchedule(true); render(); };
 ACT.remAdd = () => { if (DB.reminders.length >= MAX_REMINDERS) return toast(tr('Je kunt maximaal 20 herinneringen instellen.')); DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
@@ -1332,8 +1332,16 @@ ACT.intakeSet = el => {
   }
   if (parts.length === 1) INTAKE[parts[0]] = v; else INTAKE[parts[0]][parts[1]] = v;
 };
-ACT.intakeRem = el => { const r = INTAKE.reminders[el.dataset.i]; r[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value; };
-ACT.intakeGo = el => go('#/intake/' + el.dataset.s);
+ACT.intakeRem = el => {
+  const r = INTAKE.reminders[el.dataset.i];
+  if (el.type === 'checkbox') r.on = el.checked;
+  else if (el.dataset.f === 'time' && !/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = r.time; toast(tr('Voer een geldige tijd in.')); }
+  else r[el.dataset.f] = el.value;
+};
+ACT.intakeGo = el => {
+  if (el.dataset.s === '5' && INTAKE.reminders.some(r => !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time || ''))) { toast(tr('Voer een geldige tijd in.')); renderIntake('4'); return; }
+  go('#/intake/' + el.dataset.s);
+};
 function mifflin(I) {
   const w = I.weight || I.profile.startWeight, hgt = I.profile.heightCm, a = I.profile.age;
   if (!w || !hgt || !a) return null;
@@ -1342,6 +1350,7 @@ function mifflin(I) {
 }
 ACT.intakePersonalize = el => { INTAKE.settings[el.dataset.p] = el.value; applyPersonalSettings(); };
 ACT.intakeDone = () => {
+  if (!Array.isArray(INTAKE.reminders) || INTAKE.reminders.some(r => !r || !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time || '') || typeof r.label !== 'string' || !r.label.trim())) { toast(tr('Controleer de naam en tijd van elke herinnering.')); go('#/intake/4'); return; }
   DB.profile = INTAKE.profile; DB.goals = INTAKE.goals; DB.reminders = INTAKE.reminders.sort((a, b) => a.time.localeCompare(b.time));
   DB.settings.homeFocus = INTAKE.settings.homeFocus; DB.settings.palette = INTAKE.settings.palette; DB.settings.textSize = INTAKE.settings.textSize;
   if (INTAKE.weight) { DB.profile.startWeight = INTAKE.weight; const d = getDay(todayKey(), true); if (!isNum(d.weight)) d.weight = INTAKE.weight; }
@@ -1365,7 +1374,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.76';
+const APP_VERSION = '1.10.77';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
