@@ -675,7 +675,7 @@ function dayHasDiaryContent(d) {
 }
 function renderDays() {
   const keys = Object.keys(DB.days).filter(k => dayHasDiaryContent(DB.days[k])).sort().reverse();
-  let h = header('Dagboek', keys.length + ' dagen geregistreerd');
+  let h = header('Dagboek', keys.length === 1 ? '1 dag geregistreerd' : keys.length + ' dagen geregistreerd');
   h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><div class="diary-date-control"><button class="btn ghost" data-act="chooseDiaryDate">' + tr('Andere dag') + '</button><input class="diary-date" type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" data-chg="openDate"></div></div>';
   const readiness = moodDiaryReadiness();
   if (DB.settings.moodInsights && readiness.ready) h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">' + tr('Welzijn') + '</span><h3>' + tr('Persoonlijke vergelijkingen staan klaar') + '</h3><p class="small">' + tr('Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.') + '</p><span class="plan-go">' + tr('Stemming en gewoontes bekijken ›') + '</span></a>';
@@ -1365,7 +1365,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.74';
+const APP_VERSION = '1.10.75';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
