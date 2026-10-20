@@ -1068,7 +1068,7 @@ function renderMore(sub) {
     '<label class="fld"><span>' + tr('API-sleutel') + '</span><input type="password" maxlength="512" autocomplete="off" value="' + esc(S.apiKey) + '" data-chg="setG" data-p="settings.apiKey" placeholder="sk-ant-…"></label>' +
     '<label class="fld"><span>' + tr('Model') + '</span><input type="text" maxlength="100" value="' + esc(S.model) + '" data-chg="setG" data-p="settings.model"></label></div>';
 
-  h += '<div class="card"><h3>' + tr('Back-up en import') + '</h3><p class="muted small">' + tr('Je dagboek staat lokaal in deze browser; een back-up maak je zelf. Wie toegang heeft tot dezelfde browseropslag kan de gegevens daar ook openen. Gedeelde bibliotheekgegevens en invoer die je bewust naar AI stuurt, staan buiten die lokale opslag.') + '</p>' +
+  h += '<div class="card"><h3>' + tr('Back-up en import') + '</h3><p class="muted small">' + tr('Je dagboek staat lokaal in deze browser; een back-up maak je zelf. Wie toegang heeft tot dezelfde browseropslag kan de gegevens daar ook openen. Gedeelde bibliotheekgegevens en invoer die je bewust naar AI stuurt, staan buiten die lokale opslag.') + '</p><p class="muted small">' + tr('Een back-up kan je profiel, doelen, herinneringen, dagboeknotities en stemming, cyclus- en supplementregistraties, mealpreps, producten, trainingsschema’s en eerdere AI-antwoorden bevatten. Bewaar het bestand privé; je API-sleutel en pushabonnementen zitten er niet in.') + '</p>' +
     '<div class="inrow wrap"><button class="btn" data-act="exportData">' + tr('Back-up maken') + '</button><label class="btn ghost">' + tr('Back-up of dagboek importeren') + '<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
     '<div class="inrow wrap"><label class="btn ghost">' + tr('Markdown-dagboek inlezen (AI)') + '<input type="file" accept=".md,.txt,text/plain,text/markdown" hidden data-chg="importMd"></label><button class="btn ghost" data-act="shareWeek">' + tr('Weeksamenvatting delen') + '</button></div>' +
     '<div class="inrow wrap"><a class="btn ghost" href="#/rapport">' + tr('Rapport voor diëtist, psycholoog, coach of arts') + '</a></div>' +
@@ -1375,7 +1375,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.79';
+const APP_VERSION = '1.10.80';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

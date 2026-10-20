@@ -2007,6 +2007,21 @@ const BACKUP_VALIDATION_TRANSLATIONS = {
   }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], BACKUP_VALIDATION_TRANSLATIONS[locale]);
+const BACKUP_CONTENT_TRANSLATIONS = {
+  'nl-BE': {
+    'Een back-up kan je profiel, doelen, herinneringen, dagboeknotities en stemming, cyclus- en supplementregistraties, mealpreps, producten, trainingsschema’s en eerdere AI-antwoorden bevatten. Bewaar het bestand privé; je API-sleutel en pushabonnementen zitten er niet in.': 'Een back-up kan je profiel, doelen, herinneringen, dagboeknotities en stemming, cyclus- en supplementregistraties, mealpreps, producten, trainingsschema’s en eerdere AI-antwoorden bevatten. Bewaar het bestand privé; je API-sleutel en pushabonnementen zitten er niet in.'
+  },
+  'en-GB': {
+    'Een back-up kan je profiel, doelen, herinneringen, dagboeknotities en stemming, cyclus- en supplementregistraties, mealpreps, producten, trainingsschema’s en eerdere AI-antwoorden bevatten. Bewaar het bestand privé; je API-sleutel en pushabonnementen zitten er niet in.': 'A backup may contain your profile, goals, reminders, diary notes and mood, cycle and supplement logs, meal preps, products, training plans and previous AI responses. Keep the file private; it does not contain your API key or push subscriptions.'
+  },
+  'fr-FR': {
+    'Een back-up kan je profiel, doelen, herinneringen, dagboeknotities en stemming, cyclus- en supplementregistraties, mealpreps, producten, trainingsschema’s en eerdere AI-antwoorden bevatten. Bewaar het bestand privé; je API-sleutel en pushabonnementen zitten er niet in.': 'Une sauvegarde peut contenir votre profil, vos objectifs, rappels, notes de journal et humeur, relevés du cycle et des compléments, repas préparés, produits, programmes d’entraînement et anciennes réponses de l’IA. Gardez ce fichier privé ; il ne contient ni votre clé API ni vos abonnements aux notifications push.'
+  },
+  'de-DE': {
+    'Een back-up kan je profiel, doelen, herinneringen, dagboeknotities en stemming, cyclus- en supplementregistraties, mealpreps, producten, trainingsschema’s en eerdere AI-antwoorden bevatten. Bewaar het bestand privé; je API-sleutel en pushabonnementen zitten er niet in.': 'Eine Sicherung kann dein Profil, Ziele, Erinnerungen, Tagebuchnotizen und Stimmung, Zyklus- und Supplementeinträge, Meal-Prep-Gerichte, Produkte, Trainingspläne und frühere KI-Antworten enthalten. Bewahre die Datei privat auf; dein API-Schlüssel und deine Push-Abonnements sind nicht enthalten.'
+  }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], BACKUP_CONTENT_TRANSLATIONS[locale]);
 const OCR_AND_REVIEW_TRANSLATIONS = {
   'nl-BE': {
     'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.',
