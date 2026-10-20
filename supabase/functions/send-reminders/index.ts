@@ -14,6 +14,7 @@ type Device = {
 
 const cors = { 'Access-Control-Allow-Origin': 'null', 'Access-Control-Allow-Headers': 'content-type,x-push-cron-secret' };
 const PUSH_TIMEOUT_MS = 10_000;
+const MAX_REMINDER_LATE_MINUTES = 6 * 60;
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'content-type': 'application/json' } });
 
 function safeEqual(a: string, b: string): boolean {
@@ -53,7 +54,7 @@ function scheduledDate(now: Date, timezone: string, reminderTime: string): strin
   const target = Number(m[1]) * 60 + Number(m[2]);
   const here = localParts(now, timezone);
   const lateBy = (here.minute - target + 1440) % 1440;
-  if (lateBy > 10) return null; // recover short cron delays; the delivery ledger still sends once per local date
+  if (lateBy > MAX_REMINDER_LATE_MINUTES) return null; // allow bounded retries, but do not send stale reminders all day
   if (here.minute >= target) return here.date;
   const d = new Date(`${here.date}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() - 1);
