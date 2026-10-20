@@ -1984,6 +1984,29 @@ const REMINDER_LIMIT_TRANSLATIONS = {
   }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], REMINDER_LIMIT_TRANSLATIONS[locale]);
+const BACKUP_VALIDATION_TRANSLATIONS = {
+  'nl-BE': {
+    'Ongeldige back-up: ': 'Ongeldige back-up: ',
+    'AI-analyses zijn ongeldig of te groot.': 'AI-analyses zijn ongeldig of te groot.',
+    'Trainingsschema’s zijn ongeldig of te groot.': 'Trainingsschema’s zijn ongeldig of te groot.'
+  },
+  'en-GB': {
+    'Ongeldige back-up: ': 'Invalid backup: ',
+    'AI-analyses zijn ongeldig of te groot.': 'AI analyses are invalid or too large.',
+    'Trainingsschema’s zijn ongeldig of te groot.': 'Training plans are invalid or too large.'
+  },
+  'fr-FR': {
+    'Ongeldige back-up: ': 'Sauvegarde invalide : ',
+    'AI-analyses zijn ongeldig of te groot.': 'Les analyses IA sont invalides ou trop volumineuses.',
+    'Trainingsschema’s zijn ongeldig of te groot.': 'Les programmes d’entraînement sont invalides ou trop volumineux.'
+  },
+  'de-DE': {
+    'Ongeldige back-up: ': 'Ungültige Sicherung: ',
+    'AI-analyses zijn ongeldig of te groot.': 'KI-Analysen sind ungültig oder zu groß.',
+    'Trainingsschema’s zijn ongeldig of te groot.': 'Trainingspläne sind ungültig oder zu groß.'
+  }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], BACKUP_VALIDATION_TRANSLATIONS[locale]);
 const OCR_AND_REVIEW_TRANSLATIONS = {
   'nl-BE': {
     'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.',

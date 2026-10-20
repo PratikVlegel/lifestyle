@@ -262,6 +262,7 @@ function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: 
 function validateImportData(obj) {
   const record = v => !!v && typeof v === 'object' && !Array.isArray(v);
   const fail = message => { throw new Error('Ongeldige back-up: ' + message); };
+  const failLocalized = message => { throw new Error(tr('Ongeldige back-up: ') + tr(message)); };
   const validDate = value => {
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
     const date = new Date(value + 'T00:00:00Z');
@@ -290,6 +291,9 @@ function validateImportData(obj) {
     if (Array.isArray(obj[field]) && obj[field].length > 10000) fail('de lijst ' + field + ' is te groot.');
     if (Array.isArray(obj[field]) && field !== 'mealPatch' && obj[field].some(item => !record(item))) fail('de lijst ' + field + ' bevat een ongeldig item.');
   }
+  if (Array.isArray(obj.ai)) {
+    if (obj.ai.length > 30 || obj.ai.some(item => !validDate(item.k) || (item.q !== undefined && (typeof item.q !== 'string' || item.q.length > 2000)) || typeof item.text !== 'string' || item.text.length > 50000)) failLocalized('AI-analyses zijn ongeldig of te groot.');
+  }
   if (Array.isArray(obj.reminders)) {
     if (obj.reminders.length > MAX_REMINDERS) fail('herinneringen zijn ongeldig of bevatten meer dan 20 items.');
     const ids = new Set(), kinds = new Set(['ontbijt', 'lunch', 'avond', 'dag', 'vrij']);
@@ -317,6 +321,84 @@ function validateImportData(obj) {
     if (value === undefined || value === null) return;
     if (typeof value !== 'number' || !Number.isFinite(value) || value < bounds[0] || value > bounds[1]) fail(label + ' bevat een waarde buiten het toegestane bereik.');
   };
+  const trainingFail = () => failLocalized('Trainingsschema’s zijn ongeldig of te groot.');
+  const boundedText = (value, limit, _label, required = false) => {
+    if (value === undefined || value === null) { if (required) trainingFail(); return; }
+    if (typeof value !== 'string' || value.length > limit || (required && !value.trim())) trainingFail();
+  };
+  const trainingNumeric = (value, bounds) => { if (value !== undefined && value !== null && (typeof value !== 'number' || !Number.isFinite(value) || value < bounds[0] || value > bounds[1])) trainingFail(); };
+  const validateExercises = (exercises, label, allowBlank = false) => {
+    if (exercises === undefined) return;
+    if (!Array.isArray(exercises) || exercises.length > 20) trainingFail();
+    for (const exercise of exercises) {
+      if (!record(exercise)) trainingFail();
+      boundedText(exercise.name, 80, label + ' · oefeningsnaam', !allowBlank);
+      boundedText(exercise.focus, 160, label + ' · focus');
+      boundedText(exercise.reps, 40, label + ' · herhalingen');
+      trainingNumeric(exercise.sets, [1, 10]);
+      trainingNumeric(exercise.rest, [0, 600]);
+      trainingNumeric(exercise.holdSeconds, [0, 60]);
+      trainingNumeric(exercise.weightKg, [0, 500]);
+      if ((exercise.sets !== undefined && !Number.isInteger(exercise.sets)) || (exercise.rest !== undefined && !Number.isInteger(exercise.rest)) || (exercise.holdSeconds !== undefined && exercise.holdSeconds !== null && !Number.isInteger(exercise.holdSeconds))) trainingFail();
+    }
+  };
+  const validateSessions = (sessions, label) => {
+    if (!Array.isArray(sessions) || sessions.length > 7) trainingFail();
+    for (const session of sessions) {
+      if (!record(session)) trainingFail();
+      boundedText(session.day, 30, label + ' · dag');
+      boundedText(session.title, 80, label + ' · trainingstitel');
+      boundedText(session.detail, 1200, label + ' · uitleg');
+      validateExercises(session.exercises, label + ' · ' + (session.title || 'training'));
+    }
+  };
+  const validateWeeks = (weeks, label) => {
+    if (!Array.isArray(weeks) || !weeks.length || weeks.length > 52) trainingFail();
+    weeks.forEach((week, index) => {
+      if (!record(week) || !Array.isArray(week.sessions)) trainingFail();
+      if (week.number !== undefined && (!Number.isInteger(week.number) || week.number < 1 || week.number > 52)) trainingFail();
+      boundedText(week.phase, 80, label + ' · trainingsfase');
+      boundedText(week.focus, 300, label + ' · weekfocus');
+      validateSessions(week.sessions, label + ' · week ' + (index + 1));
+    });
+  };
+  if (obj.training) {
+    const training = obj.training;
+    if (training.plans !== undefined) {
+      if (!Array.isArray(training.plans) || training.plans.length > 200) trainingFail();
+      training.plans.forEach((plan, index) => {
+        const label = 'trainingsschema ' + (index + 1);
+        if (!record(plan)) trainingFail();
+        boundedText(plan.id, 100, label + ' · id', true);
+        boundedText(plan.name, 100, label + ' · naam');
+        if (plan.weeks !== undefined) validateWeeks(plan.weeks, label);
+        if (plan.currentWeek !== undefined && (!Number.isInteger(plan.currentWeek) || plan.currentWeek < 1 || plan.currentWeek > 52)) trainingFail();
+        if (plan.doneSessions !== undefined && (!Array.isArray(plan.doneSessions) || plan.doneSessions.length > 1000 || plan.doneSessions.some(key => typeof key !== 'string' || key.length > 20))) trainingFail();
+      });
+    }
+    if (training.generated !== undefined && training.generated !== null) {
+      const generated = training.generated;
+      if (!record(generated)) trainingFail();
+      if (generated.weeks !== undefined) validateWeeks(generated.weeks, 'gegenereerd trainingsschema');
+      else if (generated.sessions !== undefined) validateSessions(generated.sessions, 'gegenereerd trainingsschema');
+    }
+    if (training.customDraft !== undefined && training.customDraft !== null) {
+      const draft = training.customDraft;
+      if (!record(draft)) trainingFail();
+      boundedText(draft.name, 100, 'eigen schema · naam');
+      if (draft.weeks !== undefined && (!Number.isInteger(draft.weeks) || draft.weeks < 1 || draft.weeks > 24)) trainingFail();
+      if (draft.days !== undefined && (!Array.isArray(draft.days) || draft.days.length > 7 || draft.days.some(day => !['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'].includes(day)))) trainingFail();
+      if (draft.sessions !== undefined) {
+        if (!record(draft.sessions) || Object.keys(draft.sessions).length > 7) trainingFail();
+        for (const [day, session] of Object.entries(draft.sessions)) {
+          if (!['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'].includes(day) || !record(session)) trainingFail();
+          boundedText(session.title, 80, 'eigen schema · trainingstitel');
+          boundedText(session.detail, 1200, 'eigen schema · uitleg');
+          validateExercises(session.exercises, 'eigen schema · oefeningen', true);
+        }
+      }
+    }
+  }
   const profileRanges = { age: [0, 120], heightCm: [0, 300], startWeight: [0, 500] };
   const goalRanges = { kcal: [0, 15000], protein: [0, 1000], fiber: [0, 1000], waterMl: [0, 30000], stepsMin: [0, 200000], stepsMax: [0, 200000], sleepH: [0, 24], caffeineMax: [0, 100] };
   for (const [field, limit] of Object.entries({ name: 80, notes: 4000 })) {
