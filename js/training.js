@@ -303,17 +303,17 @@ ACT.shareTrainingPlan = async el => {
   if (!cloudReady() || !DB.settings.member) return toast('Schema’s delen kan na aanmelden bij de community.');
   if (!navigator.onLine) return toast('Schema’s delen kan alleen met internet.');
   let profileName = DB.settings.communityName;
-  if (!profileName) { profileName = prompt('Welke communitynaam mogen andere leden bij dit schema zien?'); if (!profileName) return; }
+  if (!profileName) { profileName = prompt(tr('Welke communitynaam mogen andere leden bij dit schema zien?')); if (!profileName) return; }
   try {
     profileName = await saveCommunityProfile(profileName);
-    if (!confirm('Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.')) return;
+    if (!confirm(tr('Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.'))) return;
     const body = publicTrainingPlan(p); await ensureSession();
     let id = p.sharedId;
     if (id) await sb('/rest/v1/shared_training_plans?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: Object.assign({}, body, { updated_at: new Date().toISOString() }) });
     else { const rows = await sb('/rest/v1/shared_training_plans', { method: 'POST', headers: { Prefer: 'return=representation' }, body }); id = rows[0].id; p.sharedId = id; save(); }
     const url = appBase() + '#/train-shared/' + id;
     try { if (navigator.share) await navigator.share({ title: body.title, text: 'Trainingsschema van ' + profileName, url }); else { await navigator.clipboard.writeText(url); toast('Link gekopieerd.'); } }
-    catch (e) { if (e.name !== 'AbortError') { try { await navigator.clipboard.writeText(url); toast('Link gekopieerd.'); } catch (_) { prompt('Deel deze link:', url); } } }
+    catch (e) { if (e.name !== 'AbortError') { try { await navigator.clipboard.writeText(url); toast('Link gekopieerd.'); } catch (_) { prompt(tr('Deel deze link:'), url); } } }
   } catch (e) { toast('Schema delen mislukt: ' + e.message); }
 };
 async function renderTrainingCommunity() {
@@ -377,7 +377,7 @@ ACT.saveTrainingReview = async el => {
   const rating = Number($('#trainingRating').value), comment = $('#trainingComment').value.trim().slice(0, 600);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) return toast('Kies eerst een beoordeling van 1 tot 5 sterren.');
   try {
-    if (!DB.settings.communityName) { const name = prompt('Kies een communitynaam. Die is zichtbaar bij je beoordeling, niet je echte accountgegevens.'); if (!name) return; await saveCommunityProfile(name); }
+    if (!DB.settings.communityName) { const name = prompt(tr('Kies een communitynaam. Die is zichtbaar bij je beoordeling, niet je echte accountgegevens.')); if (!name) return; await saveCommunityProfile(name); }
     await ensureSession();
     await sb('/rest/v1/shared_training_plan_reviews?on_conflict=plan_id,created_by', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: { plan_id: el.dataset.id, rating, comment: comment || null, updated_at: new Date().toISOString() } });
     delete TRAINING_COMMUNITY_CACHE[el.dataset.id]; toast('Je beoordeling staat bij het schema.'); await renderSharedTraining(el.dataset.id);
@@ -408,10 +408,10 @@ ACT.startTrainingPlan = () => {
   plans.unshift(p); DB.training.activePlanId = p.id; save(); toast(old ? 'Nieuwe schema gestart; je vorige staat op pauze.' : 'Schema gestart. Je voortgang staat op Vandaag en Schema’s.'); go('#/schemas');
 };
 ACT.pauseTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'paused'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
-ACT.stopTrainingPlan = el => { if (!confirm('Dit schema stopzetten? Je voortgang blijft bewaard.')) return; const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'stopped'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
+ACT.stopTrainingPlan = el => { if (!confirm(tr('Dit schema stopzetten? Je voortgang blijft bewaard.'))) return; const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.status = 'stopped'; DB.training.activePlanId = null; save(); renderTrainingHub(); };
 ACT.resumeTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; const old = activeTrainingPlan(); if (old && old.id !== p.id) old.status = 'paused'; p.status = 'active'; DB.training.activePlanId = p.id; save(); renderTrainingHub(); };
 ACT.restartTrainingPlan = el => { const p = savedTrainingPlans().find(x => x.id === el.dataset.id); if (!p) return; p.currentWeek = 1; p.doneSessions = []; p.status = 'active'; const old = activeTrainingPlan(); if (old && old.id !== p.id) old.status = 'paused'; DB.training.activePlanId = p.id; save(); renderTrainingHub(); };
-ACT.deleteTrainingPlan = el => { if (!confirm('Schema en opgeslagen voortgang verwijderen?')) return; DB.training.plans = savedTrainingPlans().filter(p => p.id !== el.dataset.id); if (DB.training.activePlanId === el.dataset.id) DB.training.activePlanId = null; save(); renderTrainingHub(); };
+ACT.deleteTrainingPlan = el => { if (!confirm(tr('Schema en opgeslagen voortgang verwijderen?'))) return; DB.training.plans = savedTrainingPlans().filter(p => p.id !== el.dataset.id); if (DB.training.activePlanId === el.dataset.id) DB.training.activePlanId = null; save(); renderTrainingHub(); };
 ACT.togglePlanSession = el => {
   const p = activeTrainingPlan(); if (!p || p.id !== el.dataset.id || p.status !== 'active') return;
   const week = p.weeks.find(w => w.number === Number(el.dataset.week)); if (!week || week.number !== p.currentWeek) return;

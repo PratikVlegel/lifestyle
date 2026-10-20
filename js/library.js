@@ -157,7 +157,10 @@ ACT.pedSave = () => {
 };
 ACT.pedDelete = async () => {
   const P = PED;
-  if (!confirm('"' + P.name + '" verwijderen uit je bibliotheek?' + (P.rid && P.own ? ' Het verdwijnt ook uit de gedeelde bibliotheek.' : ''))) return;
+  const confirmText = P.rid && P.own
+    ? trf('“{name}” verwijderen uit je bibliotheek en de gedeelde bibliotheek?', { name: P.name })
+    : trf('“{name}” verwijderen uit je bibliotheek?', { name: P.name });
+  if (!confirm(confirmText)) return;
   if (P.rid && P.own) { try { await deleteRemote(P); } catch (e) { toast('Kon niet uit de gedeelde bibliotheek verwijderen: ' + e.message); return; } }
   DB.foods = DB.foods.filter(f => f.id !== P.id);
   if (P.rid && !P.own) { DB.settings.hidden = (DB.settings.hidden || []).concat(P.rid); }

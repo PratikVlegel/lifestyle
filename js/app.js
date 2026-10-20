@@ -544,7 +544,7 @@ ACT.ciSave = () => {
   if (CI.rid !== 'vrij') d.done[CI.rid] = true;
   save();
   const kc = dayNutr(d, 'kcal');
-  toast('Bewaard.' + (kc ? ' Vandaag ' + (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal (ruwe schatting).' : ''));
+  toast(kc ? trf('Bewaard. Vandaag {sign}{kcal} kcal (ruwe schatting).', { sign: kc.lb ? '≥ ' : '≈ ', kcal: fmtNum(kc.v) }) : tr('Bewaard.'));
   CI = null;
   go('#/');
 };
@@ -978,7 +978,7 @@ ACT.savePrep = () => {
   const id = PREP.id; PREP = null; go('#/prep/' + id);
 };
 ACT.dupPrep = () => { const c = JSON.parse(JSON.stringify(PREP)); c.id = uid(); c.date = todayKey(); c.left = c.portions; c.isNew = true; PREP = c; go('#/prep/nieuw'); };
-ACT.delPrep = () => { if (!confirm('Mealprep verwijderen? Wat je al at, blijft in je dagboek.')) return; DB.preps = DB.preps.filter(p => p.id !== PREP.id); save(); PREP = null; go('#/preps'); };
+ACT.delPrep = () => { if (!confirm(tr('Mealprep verwijderen? Wat je al at, blijft in je dagboek.'))) return; DB.preps = DB.preps.filter(p => p.id !== PREP.id); save(); PREP = null; go('#/preps'); };
 ACT.sharePrep = () => {
   const { per, tot } = prepTotals(PREP);
   const txt = PREP.name + ' (' + PREP.portions + ' porties, gemaakt ' + fmtDay(PREP.date || todayKey()) + ')\n' +
@@ -988,7 +988,7 @@ ACT.sharePrep = () => {
 };
 async function shareText(txt, title) {
   if (navigator.share) { try { await navigator.share({ title, text: txt }); return; } catch (e) { if (e.name === 'AbortError') return; } }
-  try { await navigator.clipboard.writeText(txt); toast('Gekopieerd naar het klembord'); } catch (e) { prompt('Kopieer:', txt); }
+  try { await navigator.clipboard.writeText(txt); toast('Gekopieerd naar het klembord'); } catch (e) { prompt(tr('Kopieer:'), txt); }
 }
 
 /* ================= inzicht ================= */
@@ -1194,7 +1194,7 @@ ACT.remOn = el => { DB.reminders[el.dataset.i].on = el.checked; save(); refreshW
 ACT.remTime = el => { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(el.value)) { el.value = DB.reminders[el.dataset.i].time; toast(tr('Voer een geldige tijd in.')); return; } DB.reminders[el.dataset.i].time = el.value; DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
 ACT.remLabel = el => { const label = el.value.trim(); if (!label) { el.value = DB.reminders[el.dataset.i].label; toast(tr('Vul een naam in voor deze herinnering.')); return; } DB.reminders[el.dataset.i].label = label.slice(0, 80); save(); };
 ACT.remKind = el => { DB.reminders[el.dataset.i].kind = el.value; save(); refreshWebPushSchedule(true); };
-ACT.remDel = el => { if (!confirm('Herinnering verwijderen?')) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); refreshWebPushSchedule(true); render(); };
+ACT.remDel = el => { if (!confirm(tr('Herinnering verwijderen?'))) return; DB.reminders.splice(Number(el.dataset.i), 1); save(); refreshWebPushSchedule(true); render(); };
 ACT.remAdd = () => { if (DB.reminders.length >= MAX_REMINDERS) return toast(tr('Je kunt maximaal 20 herinneringen instellen.')); DB.reminders.push({ id: 'r' + uid(), label: 'Tussendoor', time: '16:00', kind: 'vrij', on: true }); DB.reminders.sort((a, b) => a.time.localeCompare(b.time)); save(); refreshWebPushSchedule(true); render(); };
 ACT.language = el => {
   if (!UI_LOCALES.includes(el.value)) { el.value = currentLocale(); return; }
@@ -1267,9 +1267,9 @@ ACT.importFile = async el => {
     if (f.size > 20 * 1024 * 1024) throw new Error(tr('Het bestand is groter dan 20 MB.'));
     const obj = JSON.parse(await f.text());
     const n = Object.keys(obj.days || {}).length;
-    const mode = obj.kind === 'prep-update' ? 'merge' : Object.keys(DB.days).length && !confirm(n + ' dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.') ? 'replace' : 'merge';
-    if (mode === 'replace' && !confirm('Zeker? Alles op deze gsm wordt vervangen.')) return;
-    importJSON(obj, mode); runMigrations(); toast(obj.kind === 'prep-update' ? (importJSON.lastUpdated || 0) + ' mealpreps bijgewerkt.' : n + ' dagen ingelezen.'); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
+    const mode = obj.kind === 'prep-update' ? 'merge' : Object.keys(DB.days).length && !confirm(trf('{count} dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.', { count: n })) ? 'replace' : 'merge';
+    if (mode === 'replace' && !confirm(tr('Zeker? Alles op deze gsm wordt vervangen.'))) return;
+    importJSON(obj, mode); runMigrations(); toast(obj.kind === 'prep-update' ? trf('{count} mealpreps bijgewerkt.', { count: importJSON.lastUpdated || 0 }) : trf('{count} dagen ingelezen. Controleer even in het dagboek.', { count: n })); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
   } catch (e) {
     console.warn('Import mislukt', e);
     alert(e && e.code === 'storage_quota' ? tr('Er is onvoldoende lokale opslagruimte voor deze import. Maak ruimte vrij of kies een kleinere back-up; je huidige dagboek is behouden.') : e && e.code === 'backup_validation' ? e.message : tr('Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.'));
@@ -1278,15 +1278,15 @@ ACT.importFile = async el => {
 };
 ACT.importMd = async el => {
   const f = el.files[0]; if (!f) return;
-  if (!DB.settings.apiKey) { el.value = ''; return alert('Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.'); }
+  if (!DB.settings.apiKey) { el.value = ''; return alert(tr('Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.')); }
   if (f.size > 1024 * 1024) { el.value = ''; return alert(tr('Dit bestand is groter dan 1 MB. Splits het dagboek of gebruik een .json-back-up.')); }
   toast('Dagboek wordt ingelezen… (kan een minuut duren)');
   try { const obj = await aiImportMarkdown(await f.text()); importJSON(obj, 'merge'); toast(Object.keys(obj.days || {}).length + ' dagen ingelezen. Controleer even in het dagboek.'); go('#/dagboek'); }
-  catch (e) { alert('Inlezen mislukt: ' + e.message); }
+  catch (e) { console.warn('Markdown-import mislukt', e); alert(tr('Inlezen mislukt. Controleer het bestand en probeer opnieuw.')); }
   el.value = '';
 };
 ACT.redoIntake = () => go('#/intake/2');
-ACT.wipe = async () => { if (!confirm('Alles op deze gsm wissen? Maak eerst een back-up.')) return; if (!confirm('Echt alles wissen?')) return; if (DB.settings.pushEnabled && ACT.webPushDisable) await ACT.webPushDisable(); localStorage.removeItem(STORE_KEY); DB = defaultData(); go('#/intake'); };
+ACT.wipe = async () => { if (!confirm(tr('Alles op deze gsm wissen? Maak eerst een back-up.'))) return; if (!confirm(tr('Echt alles wissen?'))) return; if (DB.settings.pushEnabled && ACT.webPushDisable) await ACT.webPushDisable(); localStorage.removeItem(STORE_KEY); DB = defaultData(); go('#/intake'); };
 
 /* ================= intake ================= */
 let INTAKE = null;
@@ -1391,7 +1391,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.91';
+const APP_VERSION = '1.10.92';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

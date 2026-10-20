@@ -2679,3 +2679,119 @@ const QUICK_ENTRY_LIMIT_TRANSLATIONS = {
   }
 };
 for (const [locale, labels] of Object.entries(QUICK_ENTRY_LIMIT_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+
+const OPERATIONAL_FEEDBACK_TRANSLATIONS = {
+  'nl-BE': {
+    'Mealprep verwijderen? Wat je al at, blijft in je dagboek.': 'Mealprep verwijderen? Wat je al at, blijft in je dagboek.',
+    'Herinnering verwijderen?': 'Herinnering verwijderen?',
+    'Zeker? Alles op deze gsm wordt vervangen.': 'Zeker? Alles op deze gsm wordt vervangen.',
+    'Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.': 'Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.',
+    'Dagboek wordt ingelezen… (kan een minuut duren)': 'Dagboek wordt ingelezen… (kan een minuut duren)',
+    'Alles op deze gsm wissen? Maak eerst een back-up.': 'Alles op deze gsm wissen? Maak eerst een back-up.',
+    'Echt alles wissen?': 'Echt alles wissen?',
+    'Geef het product een naam.': 'Geef het product een naam.',
+    'Vul minstens de kcal per 100 g in.': 'Vul minstens de kcal per 100 g in.',
+    'De barcode bestaat alleen uit cijfers.': 'De barcode bestaat alleen uit cijfers.',
+    'Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.': 'Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.',
+    'Dit schema stopzetten? Je voortgang blijft bewaard.': 'Dit schema stopzetten? Je voortgang blijft bewaard.',
+    'Schema en opgeslagen voortgang verwijderen?': 'Schema en opgeslagen voortgang verwijderen?',
+    'Welke communitynaam mogen andere leden bij dit schema zien?': 'Welke communitynaam mogen andere leden bij dit schema zien?',
+    'Deel deze link:': 'Deel deze link:'
+  },
+  'en-GB': {
+    'Mealprep verwijderen? Wat je al at, blijft in je dagboek.': 'Delete this meal prep? Anything you have already logged will stay in your diary.',
+    'Herinnering verwijderen?': 'Delete this reminder?',
+    'Zeker? Alles op deze gsm wordt vervangen.': 'Are you sure? Everything on this phone will be replaced.',
+    'Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.': 'An API key is required (More → AI). Without one, import a .json file instead.',
+    'Dagboek wordt ingelezen… (kan een minuut duren)': 'Importing diary… this may take a minute.',
+    'Alles op deze gsm wissen? Maak eerst een back-up.': 'Erase everything on this phone? Make a backup first.',
+    'Echt alles wissen?': 'Really erase everything?',
+    'Geef het product een naam.': 'Give the food a name.',
+    'Vul minstens de kcal per 100 g in.': 'Enter at least the calories per 100 g.',
+    'De barcode bestaat alleen uit cijfers.': 'A barcode can contain digits only.',
+    'Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.': 'This plan will be visible to all members. Share only exercises and notes you are comfortable making public; your training history will not be shared.',
+    'Dit schema stopzetten? Je voortgang blijft bewaard.': 'Stop this plan? Your progress will be kept.',
+    'Schema en opgeslagen voortgang verwijderen?': 'Delete this plan and its saved progress?',
+    'Welke communitynaam mogen andere leden bij dit schema zien?': 'What community name should other members see with this plan?',
+    'Deel deze link:': 'Share this link:'
+  },
+  'fr-FR': {
+    'Mealprep verwijderen? Wat je al at, blijft in je dagboek.': 'Supprimer ce repas préparé ? Les éléments déjà notés resteront dans votre journal.',
+    'Herinnering verwijderen?': 'Supprimer ce rappel ?',
+    'Zeker? Alles op deze gsm wordt vervangen.': 'Voulez-vous vraiment remplacer toutes les données de ce téléphone ?',
+    'Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.': 'Une clé API est nécessaire (Plus → IA). Sans clé, importez plutôt un fichier .json.',
+    'Dagboek wordt ingelezen… (kan een minuut duren)': 'Importation du journal… cela peut prendre une minute.',
+    'Alles op deze gsm wissen? Maak eerst een back-up.': 'Effacer toutes les données de ce téléphone ? Faites d’abord une sauvegarde.',
+    'Echt alles wissen?': 'Tout effacer, vraiment ?',
+    'Geef het product een naam.': 'Nommez cet aliment.',
+    'Vul minstens de kcal per 100 g in.': 'Saisissez au moins les calories pour 100 g.',
+    'De barcode bestaat alleen uit cijfers.': 'Le code-barres ne peut contenir que des chiffres.',
+    'Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.': 'Ce programme sera visible par tous les membres. Ne partagez que les exercices et notes que vous souhaitez rendre publics ; votre historique d’entraînement ne sera pas partagé.',
+    'Dit schema stopzetten? Je voortgang blijft bewaard.': 'Arrêter ce programme ? Votre progression sera conservée.',
+    'Schema en opgeslagen voortgang verwijderen?': 'Supprimer ce programme et la progression enregistrée ?',
+    'Welke communitynaam mogen andere leden bij dit schema zien?': 'Quel nom de communauté les autres membres verront-ils avec ce programme ?',
+    'Deel deze link:': 'Partager ce lien :'
+  },
+  'de-DE': {
+    'Mealprep verwijderen? Wat je al at, blijft in je dagboek.': 'Dieses Meal-Prep-Gericht löschen? Bereits eingetragene Mahlzeiten bleiben im Tagebuch.',
+    'Herinnering verwijderen?': 'Diese Erinnerung löschen?',
+    'Zeker? Alles op deze gsm wordt vervangen.': 'Wirklich alles auf diesem Gerät ersetzen?',
+    'Hiervoor is een API-sleutel nodig (Meer → AI). Zonder sleutel: importeer een .json-bestand.': 'Dafür ist ein API-Schlüssel nötig (Mehr → KI). Ohne Schlüssel kannst du stattdessen eine .json-Datei importieren.',
+    'Dagboek wordt ingelezen… (kan een minuut duren)': 'Tagebuch wird importiert … das kann eine Minute dauern.',
+    'Alles op deze gsm wissen? Maak eerst een back-up.': 'Alles auf diesem Gerät löschen? Erstelle vorher eine Sicherung.',
+    'Echt alles wissen?': 'Wirklich alles löschen?',
+    'Geef het product een naam.': 'Gib dem Lebensmittel einen Namen.',
+    'Vul minstens de kcal per 100 g in.': 'Gib mindestens die Kalorien pro 100 g ein.',
+    'De barcode bestaat alleen uit cijfers.': 'Der Barcode darf nur Ziffern enthalten.',
+    'Dit schema wordt zichtbaar voor alle leden. Deel alleen oefeningen en notities die je openbaar wilt maken; je trainingsgeschiedenis wordt niet gedeeld.': 'Dieser Trainingsplan ist für alle Mitglieder sichtbar. Teile nur Übungen und Notizen, die du öffentlich machen möchtest; dein Trainingsverlauf wird nicht geteilt.',
+    'Dit schema stopzetten? Je voortgang blijft bewaard.': 'Diesen Trainingsplan beenden? Dein Fortschritt bleibt erhalten.',
+    'Schema en opgeslagen voortgang verwijderen?': 'Trainingsplan und gespeicherten Fortschritt löschen?',
+    'Welke communitynaam mogen andere leden bij dit schema zien?': 'Welchen Community-Namen sollen andere Mitglieder bei diesem Trainingsplan sehen?',
+    'Deel deze link:': 'Diesen Link teilen:'
+  }
+};
+for (const [locale, labels] of Object.entries(OPERATIONAL_FEEDBACK_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+
+const OPERATIONAL_DYNAMIC_TRANSLATIONS = {
+  'nl-BE': {
+    'Bewaard. Vandaag {sign}{kcal} kcal (ruwe schatting).': 'Bewaard. Vandaag {sign}{kcal} kcal (ruwe schatting).',
+    '{count} dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.': '{count} dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.',
+    '{count} mealpreps bijgewerkt.': '{count} mealpreps bijgewerkt.',
+    '{count} dagen ingelezen. Controleer even in het dagboek.': '{count} dagen ingelezen. Controleer even in het dagboek.',
+    'Inlezen mislukt. Controleer het bestand en probeer opnieuw.': 'Inlezen mislukt. Controleer het bestand en probeer opnieuw.',
+    'Opslaan mislukt. Maak een back-up via Meer → Back-up.': 'Opslaan mislukt. Maak een back-up via Meer → Back-up.',
+    '“{name}” verwijderen uit je bibliotheek?': '“{name}” verwijderen uit je bibliotheek?',
+    '“{name}” verwijderen uit je bibliotheek en de gedeelde bibliotheek?': '“{name}” verwijderen uit je bibliotheek en de gedeelde bibliotheek?'
+  },
+  'en-GB': {
+    'Bewaard. Vandaag {sign}{kcal} kcal (ruwe schatting).': 'Saved. Today: {sign}{kcal} kcal (rough estimate).',
+    '{count} dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.': '{count} days found. Select OK to merge them with your current data, or Cancel to replace everything.',
+    '{count} mealpreps bijgewerkt.': '{count} meal prep meals updated.',
+    '{count} dagen ingelezen. Controleer even in het dagboek.': '{count} days imported. Check your diary.',
+    'Inlezen mislukt. Controleer het bestand en probeer opnieuw.': 'Import failed. Check the file and try again.',
+    'Opslaan mislukt. Maak een back-up via Meer → Back-up.': 'Saving failed. Create a backup via More → Backup.',
+    '“{name}” verwijderen uit je bibliotheek?': 'Delete “{name}” from your library?',
+    '“{name}” verwijderen uit je bibliotheek en de gedeelde bibliotheek?': 'Delete “{name}” from your library and the shared library?'
+  },
+  'fr-FR': {
+    'Bewaard. Vandaag {sign}{kcal} kcal (ruwe schatting).': 'Enregistré. Aujourd’hui : {sign}{kcal} kcal (estimation approximative).',
+    '{count} dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.': '{count} jours trouvés. Choisissez OK pour fusionner avec vos données ou Annuler pour tout remplacer.',
+    '{count} mealpreps bijgewerkt.': '{count} repas préparés mis à jour.',
+    '{count} dagen ingelezen. Controleer even in het dagboek.': '{count} jours importés. Vérifiez votre journal.',
+    'Inlezen mislukt. Controleer het bestand en probeer opnieuw.': 'Échec de l’importation. Vérifiez le fichier et réessayez.',
+    'Opslaan mislukt. Maak een back-up via Meer → Back-up.': 'Échec de l’enregistrement. Créez une sauvegarde via Plus → Sauvegarde.',
+    '“{name}” verwijderen uit je bibliotheek?': 'Supprimer « {name} » de votre bibliothèque ?',
+    '“{name}” verwijderen uit je bibliotheek en de gedeelde bibliotheek?': 'Supprimer « {name} » de votre bibliothèque et de la bibliothèque partagée ?'
+  },
+  'de-DE': {
+    'Bewaard. Vandaag {sign}{kcal} kcal (ruwe schatting).': 'Gespeichert. Heute: {sign}{kcal} kcal (grobe Schätzung).',
+    '{count} dagen gevonden. OK = samenvoegen met wat er al staat, Annuleren = alles vervangen.': '{count} Tage gefunden. Wähle OK, um sie mit deinen Daten zusammenzuführen, oder Abbrechen, um alles zu ersetzen.',
+    '{count} mealpreps bijgewerkt.': '{count} Meal-Prep-Gerichte aktualisiert.',
+    '{count} dagen ingelezen. Controleer even in het dagboek.': '{count} Tage importiert. Prüfe dein Tagebuch.',
+    'Inlezen mislukt. Controleer het bestand en probeer opnieuw.': 'Import fehlgeschlagen. Prüfe die Datei und versuche es erneut.',
+    'Opslaan mislukt. Maak een back-up via Meer → Back-up.': 'Speichern fehlgeschlagen. Erstelle unter Mehr → Sicherung ein Backup.',
+    '“{name}” verwijderen uit je bibliotheek?': '„{name}“ aus deiner Bibliothek löschen?',
+    '“{name}” verwijderen uit je bibliotheek en de gedeelde bibliotheek?': '„{name}“ aus deiner Bibliothek und der geteilten Bibliothek löschen?'
+  }
+};
+for (const [locale, labels] of Object.entries(OPERATIONAL_DYNAMIC_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);

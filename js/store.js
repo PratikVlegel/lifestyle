@@ -109,7 +109,7 @@ function migrate(d) {
 }
 function save(quiet) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); return true; }
-  catch (e) { if (!quiet) alert('Opslaan mislukt: ' + e.message + '. Maak een back-up via Meer → Back-up.'); return false; }
+  catch (e) { if (!quiet) alert(tr('Opslaan mislukt. Maak een back-up via Meer → Back-up.')); console.warn('lokale opslag mislukt', e); return false; }
 }
 
 /* ---------- datums ---------- */
