@@ -13,6 +13,7 @@ type Device = {
 };
 
 const cors = { 'Access-Control-Allow-Origin': 'null', 'Access-Control-Allow-Headers': 'content-type,x-push-cron-secret' };
+const PUSH_TIMEOUT_MS = 10_000;
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'content-type': 'application/json' } });
 
 function safeEqual(a: string, b: string): boolean {
@@ -124,13 +125,13 @@ Deno.serve(async req => {
           const [title, body] = notificationText(d.language);
           const appUrl = Deno.env.get('APP_URL') || 'https://pratikvlegel.github.io/lifestyle/';
           const payload = await buildPushPayload({ data: JSON.stringify({ title, body, url: `${appUrl}#/checkin/${encodeURIComponent(r.id)}` }), options: { ttl: 120 } }, subscription, vapid);
-          const response = await fetch(d.endpoint, { ...payload, redirect: 'manual' });
+          const response = await fetch(d.endpoint, { ...payload, redirect: 'manual', signal: AbortSignal.timeout(PUSH_TIMEOUT_MS) });
           if (response.status === 404 || response.status === 410) {
             await admin.from('webpush_subscriptions').delete().eq('id', d.id);
             errText = `subscription_gone_${response.status}`;
           } else if (response.ok) ok = true;
           else errText = `push_service_${response.status}`;
-        } catch (e) { errText = e instanceof Error ? e.message.slice(0, 200) : 'send_failed'; }
+        } catch (e) { errText = e instanceof Error && e.name === 'TimeoutError' ? 'push_timeout' : e instanceof Error ? e.message.slice(0, 200) : 'send_failed'; }
 
         await admin.rpc('finish_webpush_delivery', {
           p_subscription_id: d.id, p_reminder_id: r.id, p_local_date: localDate,
