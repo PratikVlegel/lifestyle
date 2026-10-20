@@ -1148,7 +1148,7 @@ const NUM_LIMITS = {
   caffeine: [0, 100], alcohol: [0, 50], softDrinkServings: [0, 100], sweetsServings: [0, 100], mood: [1, 10], energy: [1, 10], stress: [1, 10],
   kcal: [0, 20000], protein: [0, 1000], carbs: [0, 1000], fat: [0, 1000], fiber: [0, 1000]
 };
-const NUM_INTEGERS = new Set(['profile.age', 'goals.kcal', 'goals.waterMl', 'goals.stepsMin', 'goals.stepsMax', 'goals.caffeineMax', 'settings.glassMl', 'steps', 'caffeine', 'alcohol']);
+const NUM_INTEGERS = new Set(['profile.age', 'goals.kcal', 'goals.waterMl', 'goals.stepsMin', 'goals.stepsMax', 'goals.caffeineMax', 'settings.glassMl', 'steps', 'caffeine', 'alcohol', 'mood', 'energy', 'stress']);
 function numericValue(el) { return el.value === '' ? null : Number(String(el.value).replace(',', '.')); }
 function numericError(path, value, data) {
   if (value === null) return '';
@@ -1365,7 +1365,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.70';
+const APP_VERSION = '1.10.71';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });

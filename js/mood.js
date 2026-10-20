@@ -5,7 +5,7 @@ const MOOD_VAPE = { 'niet': 0, 'paar keer': 1, 'om de 3 u': 2, 'om de 2 u': 3, '
 function moodDiaryReadiness() {
   const count = rangeKeys(todayKey(), 60).filter(k => {
     const value = DB.days[k] && DB.days[k].mood;
-    return isNum(value) && value >= 0 && value <= 10;
+    return isValidDailyRating(value);
   }).length;
   return { count, ready: count >= 14 };
 }
@@ -54,7 +54,7 @@ function supplementMoodPatterns(records) {
     const evidence = supplementEvidence(name, false);
     let body = '<div class="card mood-factor"><div class="mood-factor-head"><h3>' + esc(name) + '</h3><span class="pill">' + tr('Vergelijking') + '</span></div>';
     for (const [key, label] of [['mood', 'Stemming'], ['energy', 'Energie']]) {
-      const a = yes.filter(x => isNum(x.d[key])).map(x => x.d[key]), b = no.filter(x => isNum(x.d[key])).map(x => x.d[key]);
+      const a = yes.filter(x => isValidDailyRating(x.d[key])).map(x => x.d[key]), b = no.filter(x => isValidDailyRating(x.d[key])).map(x => x.d[key]);
       if (a.length < 5 || b.length < 5) {
         body += '<p class="muted small">' + trf('{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.', { metric: tr(label), withCount: a.length, withoutCount: b.length }) + '</p>';
         continue;
@@ -79,7 +79,7 @@ function renderMoodModule() {
     h += '<div class="card muted">' + tr('Je stemming wordt niet met andere gewoontes vergeleken. Schakel de optie hierboven in als je dat zelf wilt.') + '</div>';
     view().innerHTML = h; return;
   }
-  const keys = rangeKeys(todayKey(), 60), records = keys.map(k => ({ k, d: DB.days[k] })).filter(x => x.d && isNum(x.d.mood) && x.d.mood >= 0 && x.d.mood <= 10);
+  const keys = rangeKeys(todayKey(), 60), records = keys.map(k => ({ k, d: DB.days[k] })).filter(x => x.d && isValidDailyRating(x.d.mood));
   h += '<div class="card"><b>' + tr('Laatste 60 dagen') + '</b><p class="muted small">' + records.length + ' ' + tr('dagen met een stemmingsscore. Een score zegt alleen hoe jij die dag je stemming hebt ingeschat.') + '</p></div>';
   if (records.length < 14) {
     h += '<div class="card note"><b>' + tr('Nog te weinig registraties voor een zinvolle vergelijking') + '</b><p class="small">' + tr('Er zijn minstens 14 stemmingsdagen nodig, en minstens 5 dagen per kant van elke vergelijking. Je hoeft niet elke dag in te vullen.') + '</p></div>';

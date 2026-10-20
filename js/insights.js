@@ -115,7 +115,7 @@ function buildInsights(n) {
     }
   }
   if (DB.settings.moodInsights === true) {
-    const stMood = pairs(n, d => d.steps, d => d.mood);
+    const stMood = pairs(n, d => d.steps, d => isValidDailyRating(d.mood) ? d.mood : null);
     const rs = pearson(stMood);
     if (rs !== null && rs > 0.35 && stMood.length >= 14) add('stemming', 'Bewegen en stemming', tr('Op dagen met meer stappen lag je stemmingsscore gemiddeld samen hoger. Dit beschrijft je registraties en zegt niet wat de oorzaak is.'), stMood.length + ' dagen', 'info');
   }
@@ -126,7 +126,7 @@ function buildInsights(n) {
   if (se && Math.abs(se.hi - se.lo) >= 0.7) add('slaap', 'Slaap en energie',
     trf('Na nachten van {threshold} uur of meer was je energie gemiddeld {long}/10. Na kortere nachten was die {short}/10. Dit zijn persoonlijke registraties; slaap en energie kunnen ook door andere omstandigheden veranderen.', { threshold: fmtNum(G.sleepH - 0.5, 1), long: fmtNum(se.hi, 1), short: fmtNum(se.lo, 1) }), se.nhi + ' + ' + se.nlo + ' dagen', se.hi > se.lo ? 'tip' : 'info');
   if (DB.settings.moodInsights === true) {
-    const slMood = pairs(n, d => d.sleepH, d => d.mood);
+    const slMood = pairs(n, d => d.sleepH, d => isValidDailyRating(d.mood) ? d.mood : null);
     const sm = pearson(slMood);
     if (sm !== null && Math.abs(sm) > 0.3 && slMood.length >= 14) add('stemming', 'Slaap en stemming', tr('Slaapduur en je stemmingsscore bewogen in deze registraties samen. Dit is een beschrijving, geen aanwijzing voor oorzaak.'), slMood.length + ' dagen', 'info');
   }

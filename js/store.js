@@ -126,6 +126,7 @@ function getDay(k, create) {
   return d;
 }
 const isNum = v => typeof v === 'number' && isFinite(v);
+function isValidDailyRating(v) { return Number.isInteger(v) && v >= 1 && v <= 10; }
 
 /* Voedingssom van een dag. lb = ondergrens (een deel onbekend). */
 function dayNutr(day, key) {
@@ -350,6 +351,7 @@ function validateImportData(obj) {
     }
     if (day.done !== undefined && day.done !== null && !record(day.done)) fail('de herinneringen van ' + key + ' hebben een ongeldig formaat.');
     for (const [field, bounds] of Object.entries(ranges)) numeric(day[field], bounds, key + ' · ' + field);
+    for (const field of ['mood', 'energy', 'stress']) if (day[field] !== undefined && day[field] !== null && !Number.isInteger(day[field])) fail(key + ' · ' + field + ' moet een geheel getal van 1 tot 10 zijn.');
     if (day.nicotineForms !== undefined && day.nicotineForms !== null && (!Array.isArray(day.nicotineForms) || day.nicotineForms.length > 7 || day.nicotineForms.some(v => !['cigarette', 'vape', 'nicotineGum', 'nicotinePouch', 'nicotinePatch', 'heatedTobacco', 'otherNicotine'].includes(v)) || new Set(day.nicotineForms).size !== day.nicotineForms.length)) fail(key + ' · nicotineForms bevat een ongeldige keuze.');
     if (day.weight !== undefined && day.weight !== null && day.weight !== '?' && (typeof day.weight !== 'number' || !Number.isFinite(day.weight) || day.weight < 20 || day.weight > 500)) fail(key + ' · gewicht bevat een ongeldige waarde.');
     if (day.kcalOverride !== undefined && day.kcalOverride !== null) {
