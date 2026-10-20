@@ -142,24 +142,31 @@ function cycleSupplementPatterns(entries) {
   let shown = 0;
   for (const [id, name] of [...names.entries()].slice(0, 6)) {
     const yes = known.filter(([k]) => (DB.days[k].supplements || []).some(s => s.name.trim().toLocaleLowerCase('nl-BE') === id));
-    const no = known.filter(([k]) => !(DB.days[k].supplements || []).some(s => s.name.trim().toLocaleLowerCase('nl-BE') === id));
+    // Compare against days explicitly logged as supplement-free. Days with another
+    // supplement are not a clean "without this supplement" comparison.
+    const no = known.filter(([k]) => Array.isArray(DB.days[k].supplements) && DB.days[k].supplements.length === 0);
     const metrics = CYCLE_SYMPTOMS.filter(([key]) => ['mood', 'energy', 'pain', 'cravings', 'sleep', 'bloating', 'headache'].includes(key));
-    const comparable = metrics.map(([key, label]) => ({ key, label,
+    const comparisons = metrics.map(([key, label]) => ({ key, label,
       a: yes.filter(([, x]) => Number.isInteger(x[key])).map(([, x]) => x[key]),
       b: no.filter(([, x]) => Number.isInteger(x[key])).map(([, x]) => x[key])
-    })).filter(x => x.a.length >= 5 && x.b.length >= 5);
+    }));
+    const comparable = comparisons.filter(x => x.a.length >= 5 && x.b.length >= 5);
     h += '<article class="card mood-factor"><div class="mood-factor-head"><h4>' + esc(name) + '</h4><span class="pill">' + tr('Cycluslog') + '</span></div>';
-    if (!comparable.length) h += '<p class="muted small">' + trf('Nog onvoldoende gegevens: {withCount} dagen met dit supplement en {withoutCount} dagen waarop dit supplement niet is geregistreerd, met een geregistreerd symptoom.', { withCount: yes.length, withoutCount: no.length }) + '</p>';
+    if (!comparable.length) {
+      h += '<p class="muted small">' + tr('Een vergelijking verschijnt pas bij minstens vijf ingevulde scores per groep. Ontbrekende scores tellen niet als nul.') + '</p>';
+      const observed = comparisons.filter(x => x.a.length || x.b.length);
+      if (observed.length) h += '<div class="small">' + observed.map(x => '<p>' + trf('{metric}: {withCount} dagen met dit supplement en score, {withoutCount} dagen zonder supplementen en score; minstens vijf per groep nodig.', { metric: tr(x.label), withCount: x.a.length, withoutCount: x.b.length }) + '</p>').join('') + '</div>';
+    }
     else {
       for (const x of comparable) {
         const a = moodMedian(x.a), b = moodMedian(x.b), delta = a - b;
-        h += '<div class="cycle-mood"><b>' + tr(x.label) + '</b><p>' + tr('Met dit supplement') + ': ' + fmtNum(a, 1) + '/3 (' + x.a.length + ' ' + tr('dagen') + '); ' + tr('Zonder dit supplement') + ': ' + fmtNum(b, 1) + '/3 (' + x.b.length + ' ' + tr('dagen') + ').</p>';
+        h += '<div class="cycle-mood"><b>' + tr(x.label) + '</b><p>' + tr('Met dit supplement') + ': ' + fmtNum(a, 1) + '/3 (' + x.a.length + ' ' + tr('dagen') + '); ' + tr('Zonder supplementen geregistreerd') + ': ' + fmtNum(b, 1) + '/3 (' + x.b.length + ' ' + tr('dagen') + ').</p>';
         if (Math.abs(delta) >= 1) h += '<p><b>' + tr('Mogelijke vervolgstap') + '</b><br>' + tr('Je eigen registratie toont een verschil van minstens één symptoomniveau. Dat kan samenhangen met de reden waarom je het supplement nam, andere gewoontes of toeval. Verander niets op basis hiervan. Als klachten terugkeren of je supplement voor klachten gebruikt, bespreek je log en het etiket met je huisarts, gynaecoloog of apotheker.') + '</p>';
         h += '</div>';
       }
     }
     const evidence = supplementEvidence(name, true);
-    h += '<details class="supplement-evidence"><summary>' + tr('Waarom zie ik dit? Onderzoek en uitleg') + '</summary><p>' + tr(evidence.text) + '</p><p class="muted small">' + tr('PMS-beoordeling steunt op terugkerende klachten over meerdere maanden. Een klein persoonlijk logboek stelt geen diagnose en test geen behandeling. De grens van 1 symptoomniveau is alleen een weergavedrempel, geen klinische grens. Andere supplementen kunnen op vergelijkingsdagen ook voorkomen; de invloed van één ingrediënt is niet apart gemeten.') + '</p><a href="' + evidence.url + '" target="_blank" rel="noopener">' + tr('Bekijk de bron') + ' ↗</a> · <a href="https://www.acog.org/womens-health/faqs/premenstrual-syndrome" target="_blank" rel="noopener">ACOG: symptoomdagboek en PMS ↗</a></details></article>';
+    h += '<details class="supplement-evidence"><summary>' + tr('Waarom zie ik dit? Onderzoek en uitleg') + '</summary><p>' + tr(evidence.text) + '</p><p class="muted small">' + tr('PMS-beoordeling steunt op terugkerende klachten over meerdere maanden. Een klein persoonlijk logboek stelt geen diagnose en test geen behandeling. De grens van 1 symptoomniveau is alleen een weergavedrempel, geen klinische grens. De groep zonder supplementen bevat alleen expliciet als supplementvrij geregistreerde dagen. Op dagen met dit supplement kunnen andere supplementen voorkomen; deze vergelijking kan de bijdrage van één ingrediënt dus niet afzonderlijk vaststellen.') + '</p><a href="' + evidence.url + '" target="_blank" rel="noopener">' + tr('Bekijk de bron') + ' ↗</a> · <a href="https://www.acog.org/womens-health/faqs/premenstrual-syndrome" target="_blank" rel="noopener">ACOG: symptoomdagboek en PMS ↗</a></details></article>';
     shown++;
   }
   if (!shown) h += '<p class="muted small">' + tr('Nog geen supplementen in je cycluslog geregistreerd.') + '</p>';
