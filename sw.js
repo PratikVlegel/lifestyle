@@ -1,6 +1,6 @@
 /* Service worker: houdt de app offline beschikbaar. Verhoog VERSION bij elke update. */
-const VERSION = 'vd-1.11.5';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js?v=1.11.0', 'js/i18n.js?v=1.11.5', 'js/ocr.js', 'js/cloud.js', 'js/library.js?v=1.11.3', 'js/migrate.js', 'js/activity.js?v=1.11.1', 'js/share.js?v=1.11.5', 'js/insights2.js?v=1.10.73', 'js/mood.js?v=1.10.94', 'js/cycle.js?v=1.10.95', 'js/week.js', 'js/extras.js?v=1.11.2', 'js/invite.js', 'js/admin.js', 'js/training.js?v=1.10.92', 'js/community-exercises.js?v=1.10.43', 'js/community-kpi.js', 'js/charts.js', 'js/insights.js?v=1.10.93', 'js/app.js?v=1.11.5', 'js/push.js?v=1.10.74', 'icons/icon-192.png', 'icons/icon-512.png'];
+const VERSION = 'vd-1.11.6';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js?v=1.11.0', 'js/i18n.js?v=1.11.5', 'js/ocr.js', 'js/cloud.js', 'js/library.js?v=1.11.3', 'js/migrate.js', 'js/activity.js?v=1.11.1', 'js/share.js?v=1.11.5', 'js/insights2.js?v=1.10.73', 'js/mood.js?v=1.10.94', 'js/cycle.js?v=1.11.6', 'js/week.js', 'js/extras.js?v=1.11.2', 'js/invite.js', 'js/admin.js', 'js/training.js?v=1.10.92', 'js/community-exercises.js?v=1.10.43', 'js/community-kpi.js', 'js/charts.js', 'js/insights.js?v=1.10.93', 'js/app.js?v=1.11.6', 'js/push.js?v=1.10.74', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   // Elk bestand apart: één ontbrekend bestand mag de installatie van de worker niet laten mislukken.
