@@ -699,7 +699,7 @@ function renderDays() {
   const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
     const wellbeing = [isValidDailyRating(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isValidDailyRating(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isValidDailyRating(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean);
-    const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.map(v => tr(NICOTINE_LABELS[v] || String(v))) : [tr('Geen nicotine')]) : d.nicotineForms === null ? '' : d.vape === 'niet' ? tr('Geen nicotine') : Object.hasOwn({ 'paar keer': 1, 'om de 3 u': 1, 'om de 2 u': 1, 'elk uur': 1 }, d.vape) ? tr('Vape') : '';
+    const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.map(v => tr(NICOTINE_LABELS[v] || String(v))) : [tr('Geen nicotine')]) : d.nicotineForms === null ? tr('Nicotine') + ': ' + tr('onbekend') : d.vape === 'niet' ? tr('Geen nicotine') : Object.hasOwn({ 'paar keer': 1, 'om de 3 u': 1, 'om de 2 u': 1, 'elk uur': 1 }, d.vape) ? tr('Vape') : '';
     const supplements = d.supplementsLogged === true
       ? (Array.isArray(d.supplements) && d.supplements.length
         ? tr('Supplementen') + ': ' + d.supplements.slice(0, 2).map(s => String(s && s.name || '')).filter(Boolean).join(', ') + (d.supplements.length > 2 ? ' +' + (d.supplements.length - 2) : '')
@@ -1415,7 +1415,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.11.6';
+const APP_VERSION = '1.11.7';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
