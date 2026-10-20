@@ -37,6 +37,16 @@ function defaultData() {
   };
 }
 
+const UNKNOWN_NUMERIC_DAY_FIELDS = ['sleepH', 'energy', 'mood', 'stress', 'steps', 'waterMl', 'caffeine', 'alcohol', 'softDrinkServings', 'sweetsServings'];
+function normalizeUnknownDailyValues(data) {
+  if (!data || !data.days || typeof data.days !== 'object' || Array.isArray(data.days)) return data;
+  for (const day of Object.values(data.days)) {
+    if (!day || typeof day !== 'object' || Array.isArray(day)) continue;
+    for (const field of UNKNOWN_NUMERIC_DAY_FIELDS) if (day[field] === '?') day[field] = null;
+  }
+  return data;
+}
+
 let DB = load();
 
 function load() {
@@ -47,6 +57,7 @@ function load() {
   return defaultData();
 }
 function migrate(d) {
+  normalizeUnknownDailyValues(d);
   const base = defaultData();
   const out = Object.assign(base, d);
   out.profile = Object.assign(defaultData().profile, d.profile || {});
@@ -479,6 +490,7 @@ function validateImportData(obj) {
   return obj;
 }
 function importJSON(obj, mode) {
+  normalizeUnknownDailyValues(obj);
   validateImportData(obj);
   const previousState = JSON.stringify(DB);
   try {

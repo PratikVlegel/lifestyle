@@ -533,8 +533,9 @@ ACT.ciSave = () => {
     d.meals.push(a === 'niets' ? { id: uid(), slot, nothing: true } : { id: uid(), slot, desc: 'onbekend (niet meer geweten)', kcal: null });
   }
   if (CI.kind === 'dag') {
-    for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'nicotineForms', 'softDrinkServings', 'sweetsServings', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (f[x] !== undefined) d[x] = x === 'nicotineForms' && f[x] === '?' ? null : f[x];
-    if (f.waterL !== undefined) d.waterMl = f.waterL === '?' ? (isNum(d.waterMl) ? d.waterMl : '?') : Math.round(f.waterL * 1000);
+    const numericFields = new Set(['sleepH', 'energy', 'mood', 'stress', 'steps', 'softDrinkServings', 'sweetsServings', 'alcohol', 'caffeine']);
+    for (const x of ['sleepH', 'sleepQ', 'cpap', 'energy', 'mood', 'stress', 'moodNote', 'steps', 'vape', 'nicotineForms', 'softDrinkServings', 'sweetsServings', 'alcohol', 'alcoholNote', 'notes', 'caffeine']) if (f[x] !== undefined) d[x] = (x === 'nicotineForms' || numericFields.has(x)) && f[x] === '?' ? null : f[x];
+    if (f.waterL !== undefined) d.waterMl = f.waterL === '?' ? null : Math.round(f.waterL * 1000);
   } else {
     if (CI.glasses) d.waterMl = (isNum(d.waterMl) ? d.waterMl : 0) + CI.glasses * DB.settings.glassMl;
     if (CI.shots) d.caffeine = (isNum(d.caffeine) ? d.caffeine : 0) + CI.shots;
@@ -1390,7 +1391,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.90';
+const APP_VERSION = '1.10.91';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
