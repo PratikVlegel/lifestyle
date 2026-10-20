@@ -154,8 +154,8 @@ const METRICS = {
   water: { label: 'Water', unit: 'l', chart: 'bar', dec: 1, get: d => d && isNum(d.waterMl) ? d.waterMl / 1000 : null, goal: () => DB.goals.waterMl / 1000 },
   steps: { label: 'Stappen', unit: '', chart: 'bar', dec: 0, get: d => d && isNum(d.steps) ? d.steps : null, goal: () => DB.goals.stepsMin, goal2: () => DB.goals.stepsMax },
   sleep: { label: 'Slaap', unit: 'u', chart: 'bar', dec: 1, get: d => d && isNum(d.sleepH) ? d.sleepH : null, goal: () => DB.goals.sleepH },
-  mood: { label: 'Stemming', unit: '/10', chart: 'line', dec: 1, get: d => d && isNum(d.mood) ? d.mood : null, min: 0, max: 10 },
-  energy: { label: 'Energie', unit: '/10', chart: 'line', dec: 1, get: d => d && isNum(d.energy) ? d.energy : null, min: 0, max: 10 },
+  mood: { label: 'Stemming', unit: '/10', chart: 'line', dec: 0, get: d => d && isValidDailyRating(d.mood) ? d.mood : null, min: 1, max: 10 },
+  energy: { label: 'Energie', unit: '/10', chart: 'line', dec: 0, get: d => d && isValidDailyRating(d.energy) ? d.energy : null, min: 1, max: 10 },
   weight: { label: 'Gewicht', unit: 'kg', chart: 'line', dec: 1, get: d => d && isNum(d.weight) ? d.weight : null, ma: true },
   caffeine: { label: 'Cafeïne', unit: 'shots', chart: 'bar', dec: 0, get: d => d && isNum(d.caffeine) ? d.caffeine : null, goal: () => DB.goals.caffeineMax, goalIsMax: true }
 };

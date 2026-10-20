@@ -89,7 +89,7 @@ function buildInsights(n) {
   const cs = splitCompare(cafSleep, 3);
   if (cs && cs.hi < cs.lo - 0.4) add('slaap', 'Cafeïne en de nacht erna',
     trf('Na dagen met 3 of meer cafeïneporties sliep je gemiddeld {higher} uur; na dagen met minder porties {lower} uur. Cafeïne kan nog uren doorwerken. Als jij een verband vermoedt, probeer dan eens je laatste portie eerder te nemen.', { higher: fmtNum(cs.hi, 1), lower: fmtNum(cs.lo, 1) }), cs.nhi + ' + ' + cs.nlo + ' dagen', 'tip');
-  const alcNext = pairs(n, d => d.alcohol, d => d.energy, 1);
+  const alcNext = pairs(n, d => d.alcohol, d => isValidDailyRating(d.energy) ? d.energy : null, 1);
   const ae = splitCompare(alcNext, 1);
   if (ae && ae.hi < ae.lo - 0.5) add('stemming', 'Alcohol en de dag erna',
     trf('De dag na een dag met alcoholregistratie was je energie gemiddeld {after}/10, tegenover {without}/10 na dagen met expliciet nul alcohol. Dit laat samen voorkomen zien, geen oorzaak.', { after: fmtNum(ae.hi, 1), without: fmtNum(ae.lo, 1) }), ae.nhi + ' + ' + ae.nlo + ' dagen', 'info');
@@ -121,7 +121,7 @@ function buildInsights(n) {
   }
 
   /* --- Slaap en stemming --- */
-  const slEn = pairs(n, d => d.sleepH, d => d.energy);
+  const slEn = pairs(n, d => d.sleepH, d => isValidDailyRating(d.energy) ? d.energy : null);
   const se = splitCompare(slEn, G.sleepH - 0.5);
   if (se && Math.abs(se.hi - se.lo) >= 0.7) add('slaap', 'Slaap en energie',
     trf('Na nachten van {threshold} uur of meer was je energie gemiddeld {long}/10. Na kortere nachten was die {short}/10. Dit zijn persoonlijke registraties; slaap en energie kunnen ook door andere omstandigheden veranderen.', { threshold: fmtNum(G.sleepH - 0.5, 1), long: fmtNum(se.hi, 1), short: fmtNum(se.lo, 1) }), se.nhi + ' + ' + se.nlo + ' dagen', se.hi > se.lo ? 'tip' : 'info');
@@ -130,7 +130,7 @@ function buildInsights(n) {
     const sm = pearson(slMood);
     if (sm !== null && Math.abs(sm) > 0.3 && slMood.length >= 14) add('stemming', 'Slaap en stemming', tr('Slaapduur en je stemmingsscore bewogen in deze registraties samen. Dit is een beschrijving, geen aanwijzing voor oorzaak.'), slMood.length + ' dagen', 'info');
   }
-  const cp = recent.filter(x => x.d.cpap && isNum(x.d.energy));
+  const cp = recent.filter(x => x.d.cpap && isValidDailyRating(x.d.energy));
   const cpFull = cp.filter(x => /hele|ja/i.test(x.d.cpap) && !/deels|vanaf|nee/i.test(x.d.cpap)).map(x => x.d.energy);
   const cpNot = cp.filter(x => /nee|deels|vanaf/i.test(x.d.cpap)).map(x => x.d.energy);
   if (cpFull.length >= 2 && cpNot.length >= 2) add('slaap', 'CPAP', trf('Op dagen waarop je CPAP de hele nacht gebruikte, was je energie gemiddeld {full}/10. Zonder CPAP of bij gebruik gedurende een deel van de nacht was dit {partial}/10. Volg het plan van je slaapteam en pas de instellingen niet zelf aan.', { full: fmtNum(avg(cpFull), 1), partial: fmtNum(avg(cpNot), 1) }), cpFull.length + ' + ' + cpNot.length + ' dagen', 'info');
@@ -181,7 +181,7 @@ function aiContext(n) {
     const kc = dayNutr(d, 'kcal'), pr = dayNutr(d, 'protein');
     const meals = (d.meals || []).map(m => SLOTS[m.slot] + ': ' + (m.nothing ? 'niets' : m.desc) + (isNum(m.kcal) ? ' (≈' + Math.round(m.kcal) + ' kcal)' : ' (kcal onbekend)')).join('; ');
     const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.join(',') : 'geen nicotine') : d.nicotineForms === null ? '?' : d.vape ?? '?';
-    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', d.energy ?? '?', d.mood ?? '?', d.stress ?? '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', nicotine, d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', (d.moodNote || '') + ' ' + (d.notes || ''), meals].join(' | ');
+    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', isValidDailyRating(d.energy) ? d.energy : '?', isValidDailyRating(d.mood) ? d.mood : '?', isValidDailyRating(d.stress) ? d.stress : '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', nicotine, d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', (d.moodNote || '') + ' ' + (d.notes || ''), meals].join(' | ');
   }).filter(Boolean);
   const P = DB.profile, G = DB.goals;
   return 'PROFIEL: ' + [P.name, P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : '', P.activity].filter(Boolean).join(', ') +
@@ -279,7 +279,7 @@ function weekSummaryText(n) {
     const d = DB.days[k]; if (!d) { lines.push(fmtDay(k, true) + ': ' + tr('Geen registratie')); continue; }
     const kc = dayNutr(d, 'kcal');
     lines.push(fmtDay(k, true) + ': ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('Kcal onbekend')) +
-      ' · ' + tr('Slaap') + ' ' + (d.sleepH ?? '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (d.energy ?? '?') + ' · ' + tr('Stemming') + ' ' + (d.mood ?? '?') + ' · ' + (d.steps ?? '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + d.weight + ' kg' : ''));
+      ' · ' + tr('Slaap') + ' ' + (d.sleepH ?? '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (isValidDailyRating(d.energy) ? d.energy : '?') + ' · ' + tr('Stemming') + ' ' + (isValidDailyRating(d.mood) ? d.mood : '?') + ' · ' + (d.steps ?? '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + d.weight + ' kg' : ''));
     if (d.supplementsLogged) lines.push('   ' + tr('Supplementen') + ': ' + ((d.supplements || []).length ? d.supplements.map(s => s.name + (s.dose ? ' (' + s.dose + ')' : '')).join(', ') : tr('geen supplementen genomen')));
     for (const s of SLOT_ORDER) for (const m of (d.meals || []).filter(m => m.slot === s)) lines.push('   ' + tr(SLOTS[s]) + (m.time ? ' ' + m.time : '') + ': ' + (m.nothing ? tr('niets') : m.desc) + (isNum(m.kcal) ? ' (≈ ' + Math.round(m.kcal) + ' kcal)' : ''));
     if (d.notes || d.moodNote) lines.push('   ' + tr('Notitie:') + ' ' + [d.moodNote, d.notes].filter(Boolean).join(' · '));

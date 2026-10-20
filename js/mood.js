@@ -89,7 +89,7 @@ function renderMoodModule() {
     const underSleep = v => v < Number(DB.goals.sleepH || 7.5), enoughSleep = v => !underSleep(v);
     underSleep.label = 'Onder je slaaprichtpunt'; enoughSleep.label = 'Op/boven je slaaprichtpunt';
     cards += moodComparison('Slaap', 'Slaap is de nacht vóór de stemmingsscore. Een persoonlijk slaaprichtpunt is geen klinische grens.', sleepRows, underSleep, enoughSleep);
-    const stressRows = records.filter(x => isNum(x.d.stress) && x.d.stress >= 1 && x.d.stress <= 10).map(x => ({ x: x.d.stress, y: x.d.mood }));
+    const stressRows = records.filter(x => isValidDailyRating(x.d.stress)).map(x => ({ x: x.d.stress, y: x.d.mood }));
     const moreStress = v => v >= 6, lessStress = v => v < 6; moreStress.label = 'Meer spanning (6–10)'; lessStress.label = 'Minder spanning (1–5)';
     cards += moodComparison('Stress en spanning', 'Je eigen score van 1–10 is een korte dagreflectie, geen gevalideerde psychologische test. De vergelijking laat alleen zien wat in jouw ingevulde dagen samen voorkwam.', stressRows, moreStress, lessStress);
     const alcRows = records.filter(x => isNum(x.d.alcohol) && x.d.alcohol >= 0).map(x => ({ x: x.d.alcohol, y: x.d.mood }));

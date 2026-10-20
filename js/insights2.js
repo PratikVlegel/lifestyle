@@ -22,9 +22,9 @@ const DVARS = {
   eveKcal: { l: 'kcal vanaf het avondeten', u: 'kcal', d: 0, f: d => hasMeals(d) ? slotKcal(d, ['avond', 'na']) : null },
   hungerEve: { l: 'trek \'s avonds', u: '/5', d: 1, f: d => d.hunger && isNum(d.hunger.na) ? d.hunger.na : null },
   hungerDinner: { l: 'honger vóór het avondeten', u: '/5', d: 1, f: d => d.hunger && isNum(d.hunger.avond) ? d.hunger.avond : null },
-  energy: { l: 'energie', u: '/10', d: 1, f: d => isNum(d.energy) ? d.energy : null },
-  mood: { l: 'stemming', u: '/10', d: 1, f: d => isNum(d.mood) ? d.mood : null },
-  stress: { l: 'stress', u: '/10', d: 1, f: d => isNum(d.stress) ? d.stress : null }
+  energy: { l: 'energie', u: '/10', d: 0, f: d => isValidDailyRating(d.energy) ? d.energy : null },
+  mood: { l: 'stemming', u: '/10', d: 0, f: d => isValidDailyRating(d.mood) ? d.mood : null },
+  stress: { l: 'stress', u: '/10', d: 0, f: d => isValidDailyRating(d.stress) ? d.stress : null }
 };
 function hasMeals(d) { return (d.meals || []).some(m => isNum(m.kcal)) && !d.kcalOverride; }
 function dv(name, k) { const d = DB.days[k]; return d ? DVARS[name].f(d, k) : null; }
@@ -128,7 +128,7 @@ function moreInsights(n, recent, add) {
   if (actDays.length) {
     const types = {};
     actDays.forEach(x => x.d.activities.forEach(a => { types[a.type] = (types[a.type] || 0) + a.min; }));
-    const e1 = avg(actDays.map(x => x.d.energy).filter(isNum)), e0 = avg(recent.filter(x => !(x.d.activities || []).length).map(x => x.d.energy).filter(isNum));
+    const e1 = avg(actDays.map(x => x.d.energy).filter(isValidDailyRating)), e0 = avg(recent.filter(x => !(x.d.activities || []).length).map(x => x.d.energy).filter(isValidDailyRating));
     add('activiteit', 'Sporten en bewegen', trf('Op {days} dagen registreerde je extra beweging: {activities}.{energy}', {
       days: actDays.length,
       activities: Object.entries(types).map(([t, m]) => tr(ACTIVITIES[t] || ACTIVITIES.anders).toLocaleLowerCase(currentLocale()) + ' ' + m + ' ' + tr('min')).join(', '),
@@ -138,7 +138,7 @@ function moreInsights(n, recent, add) {
 }
 function dayComplete(d) {
   const slots = new Set((d.meals || []).map(m => m.slot));
-  return ['ontbijt', 'lunch', 'avond'].every(s => slots.has(s)) && isNum(d.mood) && isNum(d.sleepH);
+  return ['ontbijt', 'lunch', 'avond'].every(s => slots.has(s)) && isValidDailyRating(d.mood) && isNum(d.sleepH);
 }
 
 /* Tip van de dag: wisselt dagelijks, en kiest bij voorkeur iets dat bij je cijfers past. */

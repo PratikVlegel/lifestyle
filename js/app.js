@@ -168,7 +168,7 @@ function diaryLoggedSections(d) {
   let n = 0;
   if ((d.meals || []).length) n++;
   if ((d.activities || []).length) n++;
-  if (['weight', 'mood', 'energy', 'stress', 'sleepH', 'steps', 'waterMl', 'caffeine', 'alcohol', 'softDrinkServings', 'sweetsServings'].some(k => isNum(d[k]))) n++;
+  if (['weight', 'sleepH', 'steps', 'waterMl', 'caffeine', 'alcohol', 'softDrinkServings', 'sweetsServings'].some(k => isNum(d[k])) || ['mood', 'energy', 'stress'].some(k => isValidDailyRating(d[k]))) n++;
   if (Object.hasOwn(d, 'nicotineForms') || Object.hasOwn(d, 'vape')) n++;
   if (d.supplementsLogged || (d.supplements || []).length) n++;
   return n;
@@ -682,7 +682,7 @@ function renderDays() {
   else h += '<a class="card diary-wellbeing" href="#/dag/' + todayKey() + '"><span class="pill">' + tr('Dagboek') + '</span><h3>' + tr('Hoe is het met je, los van de cijfers?') + '</h3><p class="small">' + tr('Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Persoonlijke vergelijkingen verschijnen pas als er genoeg stemmingsdagen zijn.') + '</p>' + (DB.settings.moodInsights ? '<p class="small muted">' + trf('{count} van de 14 stemmingsdagen bijgehouden.', { count: readiness.count }) + '</p>' : '') + '<span class="plan-go">' + tr('Dagboek van vandaag aanvullen ›') + '</span></a>';
   const dayRow = k => {
     const d = DB.days[k], kc = dayNutr(d, 'kcal');
-    const wellbeing = [isNum(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isNum(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isNum(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
+    const wellbeing = [isValidDailyRating(d.mood) ? tr('Stemming') + ' ' + d.mood + '/10' : '', isValidDailyRating(d.energy) ? tr('Energie') + ' ' + d.energy + '/10' : '', isValidDailyRating(d.stress) ? tr('Stress / spanning') + ' ' + d.stress + '/10' : ''].filter(Boolean).join(' · ');
     const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.map(v => tr(NICOTINE_LABELS[v] || v)).join(', ') : tr('Geen nicotine')) : d.nicotineForms === null ? '' : d.vape === 'niet' ? tr('Geen nicotine') : Object.hasOwn({ 'paar keer': 1, 'om de 3 u': 1, 'om de 2 u': 1, 'elk uur': 1 }, d.vape) ? tr('Vape') : '';
     const supplements = d.supplementsLogged === true
       ? (Array.isArray(d.supplements) && d.supplements.length
@@ -1365,7 +1365,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.72';
+const APP_VERSION = '1.10.73';
 function boot() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
