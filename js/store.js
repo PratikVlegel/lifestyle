@@ -262,7 +262,7 @@ function exportJSON() { return JSON.stringify(Object.assign({}, DB, { settings: 
 function validateImportData(obj) {
   const record = v => !!v && typeof v === 'object' && !Array.isArray(v);
   const fail = message => { throw new Error('Ongeldige back-up: ' + message); };
-  const failLocalized = message => { throw new Error(tr('Ongeldige back-up: ') + tr(message)); };
+  const failLocalized = message => { const error = new Error(tr('Ongeldige back-up: ') + tr(message)); error.code = 'backup_validation'; throw error; };
   const validDate = value => {
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
     const date = new Date(value + 'T00:00:00Z');

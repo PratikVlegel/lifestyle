@@ -1256,7 +1256,7 @@ ACT.importFile = async el => {
     importJSON(obj, mode); runMigrations(); toast(obj.kind === 'prep-update' ? (importJSON.lastUpdated || 0) + ' mealpreps bijgewerkt.' : n + ' dagen ingelezen.'); go(obj.kind === 'prep-update' ? '#/preps' : '#/');
   } catch (e) {
     console.warn('Import mislukt', e);
-    alert(e && e.code === 'storage_quota' ? tr('Er is onvoldoende lokale opslagruimte voor deze import. Maak ruimte vrij of kies een kleinere back-up; je huidige dagboek is behouden.') : tr('Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.'));
+    alert(e && e.code === 'storage_quota' ? tr('Er is onvoldoende lokale opslagruimte voor deze import. Maak ruimte vrij of kies een kleinere back-up; je huidige dagboek is behouden.') : e && e.code === 'backup_validation' ? e.message : tr('Import mislukt. De back-up is ongeldig of bevat waarden buiten het toegestane bereik.'));
   }
   el.value = '';
 };
@@ -1375,7 +1375,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.10.80';
+const APP_VERSION = '1.10.81';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
