@@ -55,22 +55,24 @@ function supplementMoodPatterns(records) {
   let shown = 0;
   for (const [id, name] of [...names.entries()].sort((a, b) => b[0].length - a[0].length).slice(0, 6)) {
     const yes = known.filter(x => (x.d.supplements || []).some(s => s.name.trim().toLocaleLowerCase('nl-BE') === id));
-    const no = known.filter(x => !(x.d.supplements || []).some(s => s.name.trim().toLocaleLowerCase('nl-BE') === id));
+    // Use only explicitly logged supplement-free days as the comparison group.
+    // Days with another supplement are not a clean "without this supplement" comparison.
+    const no = known.filter(x => Array.isArray(x.d.supplements) && x.d.supplements.length === 0);
     const evidence = supplementEvidence(name, false);
     let body = '<div class="card mood-factor"><div class="mood-factor-head"><h3>' + esc(name) + '</h3><span class="pill">' + tr('Vergelijking') + '</span></div>';
     for (const [key, label] of [['mood', 'Stemming'], ['energy', 'Energie']]) {
       const a = yes.filter(x => isValidDailyRating(x.d[key])).map(x => x.d[key]), b = no.filter(x => isValidDailyRating(x.d[key])).map(x => x.d[key]);
       if (a.length < 5 || b.length < 5) {
-        body += '<p class="muted small">' + trf('{metric}: {withCount} dagen met supplement en score, {withoutCount} dagen zonder supplement en score; minstens vijf per groep nodig.', { metric: tr(label), withCount: a.length, withoutCount: b.length }) + '</p>';
+        body += '<p class="muted small">' + trf('{metric}: {withCount} dagen met dit supplement en score, {withoutCount} dagen zonder supplementen en score; minstens vijf per groep nodig.', { metric: tr(label), withCount: a.length, withoutCount: b.length }) + '</p>';
         continue;
       }
       const delta = moodMedian(a) - moodMedian(b);
-      body += '<div class="cycle-mood"><b>' + tr(label) + '</b><p>' + tr('Met dit supplement') + ': ' + fmtNum(moodMedian(a), 1) + '/10 (' + a.length + ' ' + tr('dagen') + '); ' + tr('Zonder dit supplement') + ': ' + fmtNum(moodMedian(b), 1) + '/10 (' + b.length + ' ' + tr('dagen') + ').</p>';
+      body += '<div class="cycle-mood"><b>' + tr(label) + '</b><p>' + tr('Met dit supplement') + ': ' + fmtNum(moodMedian(a), 1) + '/10 (' + a.length + ' ' + tr('dagen') + '); ' + tr('Zonder supplementen geregistreerd') + ': ' + fmtNum(moodMedian(b), 1) + '/10 (' + b.length + ' ' + tr('dagen') + ').</p>';
       if (Math.abs(delta) >= 1) body += '<p><b>' + tr('Mogelijke vervolgstap') + '</b><br>' + tr('Je ziet hier een verschil van minstens 1 punt in de middelste score. Houd rekening met slaap, stress, reden van gebruik en andere verschillen tussen dagen. Verander niets aan je supplement op basis van deze vergelijking; bespreek het etiket en je ervaring met arts of apotheker als je het voor stemming gebruikt.') + '</p>';
       body += '</div>';
     }
     const sources = evidence.sources || [{ label: 'Bekijk de bron', url: evidence.url }];
-    body += '<details class="supplement-evidence"><summary>' + tr('Waarom zie ik dit? Onderzoek en uitleg') + '</summary><p>' + tr(evidence.text) + '</p><p class="muted small">' + tr('De app vergelijkt alleen jouw eigen ingevulde dagen. Dit is geen behandeladvies; hoeveelheid, tekort, andere gewoontes en medicatie zijn niet beoordeeld. De grens van 1 punt is alleen een weergavedrempel, geen klinische grens. Andere supplementen kunnen op vergelijkingsdagen ook voorkomen; de invloed van één ingrediënt is niet apart gemeten.') + '</p><p>' + sources.map(source => '<a href="' + source.url + '" target="_blank" rel="noopener">' + esc(tr(source.label)) + ' ↗</a>').join(' · ') + '</p></details></div>';
+    body += '<details class="supplement-evidence"><summary>' + tr('Waarom zie ik dit? Onderzoek en uitleg') + '</summary><p>' + tr(evidence.text) + '</p><p class="muted small">' + tr('De app vergelijkt alleen jouw eigen ingevulde dagen. Dit is geen behandeladvies; hoeveelheid, tekort, andere gewoontes en medicatie zijn niet beoordeeld. De grens van 1 punt is alleen een weergavedrempel, geen klinische grens. De groep zonder supplementen bevat alleen expliciet als supplementvrij geregistreerde dagen. Op dagen met dit supplement kunnen andere supplementen voorkomen; deze vergelijking kan de bijdrage van één ingrediënt dus niet afzonderlijk vaststellen.') + '</p><p>' + sources.map(source => '<a href="' + source.url + '" target="_blank" rel="noopener">' + esc(tr(source.label)) + ' ↗</a>').join(' · ') + '</p></details></div>';
     h += body; shown++;
   }
   if (!shown) h += '<div class="card muted">' + tr('Nog geen supplementen geregistreerd in deze periode.') + '</div>';
