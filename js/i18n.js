@@ -2969,3 +2969,18 @@ for (const [locale, copy] of Object.entries(COMMUNITY_PLAN_INVALID_COPY)) {
 for (const [locale, copy] of Object.entries(DIARY_MOOD_OPT_IN_COPY)) {
   UI_EXTRA_TRANSLATIONS[locale]['Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Je kunt stemmingsvergelijkingen zelf inschakelen bij Stemming en gewoontes. Vanaf 14 stemmingsdagen in de laatste 60 dagen toont de app alleen vergelijkingen met voldoende gegevens.'] = copy;
 }
+const DIETITIAN_REPORT_DATA_COPY = {
+  'en-GB': {
+    'Voedingsgemiddelden uit geregistreerde gegevens': 'Nutrition averages from logged data',
+    'Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.': 'Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.'
+  },
+  'fr-FR': {
+    'Voedingsgemiddelden uit geregistreerde gegevens': 'Moyennes nutritionnelles à partir des données renseignées',
+    'Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.': 'Les moyennes nutritionnelles utilisent uniquement les données renseignées et calculables. Les repas non renseignés sont exclus et peuvent faire paraître les totaux inférieurs aux apports réels. Une estimation quotidienne des calories peut être saisie par la personne ; ces chiffres ne constituent pas une évaluation nutritionnelle clinique.'
+  },
+  'de-DE': {
+    'Voedingsgemiddelden uit geregistreerde gegevens': 'Nährwertdurchschnitte aus erfassten Daten',
+    'Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.': 'Nährwertdurchschnitte beruhen nur auf erfassten, berechenbaren Daten. Nicht erfasste Mahlzeiten werden nicht berücksichtigt und können die Summen niedriger erscheinen lassen als die tatsächliche Aufnahme. Eine tägliche Kalorienschätzung kann selbst eingetragen sein; diese Zahlen sind keine klinische Ernährungsbeurteilung.'
+  }
+};
+for (const [locale, labels] of Object.entries(DIETITIAN_REPORT_DATA_COPY)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
