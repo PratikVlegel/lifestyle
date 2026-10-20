@@ -184,7 +184,7 @@ function aiContext(n) {
     return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', isValidDailyRating(d.energy) ? d.energy : '?', isValidDailyRating(d.mood) ? d.mood : '?', isValidDailyRating(d.stress) ? d.stress : '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', nicotine, d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', (d.moodNote || '') + ' ' + (d.notes || ''), meals].join(' | ');
   }).filter(Boolean);
   const P = DB.profile, G = DB.goals;
-  return 'PROFIEL: ' + [P.name, P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : '', P.activity].filter(Boolean).join(', ') +
+  return 'PROFIEL: ' + [P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : '', P.activity].filter(Boolean).join(', ') +
     '\nCONTEXT: ' + (P.notes || '-') +
     '\nDOELEN: ' + G.kcal + ' kcal, ' + G.protein + ' g eiwit, ' + G.fiber + ' g vezels, ' + G.waterMl + ' ml water, ' + G.stepsMin + '–' + G.stepsMax + ' stappen, ' + G.sleepH + ' u slaap' +
     '\nDAGEN (datum | kcal | eiwit g | slaap u (nacht ervoor) | CPAP | energie/10 | stemming/10 | stress/10 | stappen | water ml | cafeïne shots | alcohol glazen | nicotinevormen | suikerhoudende frisdrank porties | snoep/zoetigheden porties | gewicht kg | notities | maaltijden):\n' + rows.join('\n');
