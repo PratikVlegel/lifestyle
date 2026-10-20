@@ -2952,3 +2952,12 @@ const SMALL_UI_COPY_TRANSLATIONS = {
   'de-DE': { 'Voedingsdagboek': 'Ernährungstagebuch', 'werkt offline': 'funktioniert offline', 'versie': 'Version' }
 };
 for (const [locale, labels] of Object.entries(SMALL_UI_COPY_TRANSLATIONS)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+
+const DIARY_MOOD_OPT_IN_COPY = {
+  'en-GB': 'You can turn mood comparisons on yourself under Mood and habits. From 14 mood-scored days in the last 60 days, the app shows only comparisons with enough data.',
+  'fr-FR': 'Vous pouvez activer vous-même les comparaisons d’humeur dans Humeur et habitudes. À partir de 14 jours avec une humeur renseignée au cours des 60 derniers jours, l’application affiche uniquement les comparaisons disposant de suffisamment de données.',
+  'de-DE': 'Du kannst Stimmungsvergleiche unter Stimmung und Gewohnheiten selbst einschalten. Ab 14 Tagen mit Stimmungsangabe innerhalb der letzten 60 Tage zeigt die App nur Vergleiche mit ausreichend Daten.'
+};
+for (const [locale, copy] of Object.entries(DIARY_MOOD_OPT_IN_COPY)) {
+  UI_EXTRA_TRANSLATIONS[locale]['Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Je kunt stemmingsvergelijkingen zelf inschakelen bij Stemming en gewoontes. Vanaf 14 stemmingsdagen in de laatste 60 dagen toont de app alleen vergelijkingen met voldoende gegevens.'] = copy;
+}
