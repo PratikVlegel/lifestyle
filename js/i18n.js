@@ -1387,7 +1387,9 @@ Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
   'Je hebt geen toestemming gegeven voor pushmeldingen.': 'You did not allow push notifications.',
   'Pushherinneringen staan aan op dit toestel.': 'Push reminders are enabled on this device.',
   'Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.': 'Could not set up push. Your existing calendar export is still available.',
-  'Pushherinneringen zijn uitgeschakeld.': 'Push reminders are disabled.'
+  'Pushherinneringen zijn uitgeschakeld.': 'Push reminders are disabled.',
+  'Push is uit op dit toestel. Serveropruiming is nog niet gelukt; probeer het opnieuw zodra je online bent.': 'Push is off on this device. Server cleanup has not succeeded yet; try again when you are online.',
+  'Verbind met internet om de oude pushregistratie te verwijderen voordat je meldingen opnieuw inschakelt.': 'Connect to the internet to remove the old push subscription before enabling notifications again.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
   'Pushherinnering bijwerken mislukt. Je agenda-export blijft beschikbaar.': 'Impossible de mettre à jour le rappel push. L’export du calendrier reste disponible.',
@@ -1397,7 +1399,9 @@ Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
   'Je hebt geen toestemming gegeven voor pushmeldingen.': 'Vous n’avez pas autorisé les notifications push.',
   'Pushherinneringen staan aan op dit toestel.': 'Les rappels push sont activés sur cet appareil.',
   'Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.': 'Impossible de configurer les notifications push. Votre export du calendrier reste disponible.',
-  'Pushherinneringen zijn uitgeschakeld.': 'Les rappels push sont désactivés.'
+  'Pushherinneringen zijn uitgeschakeld.': 'Les rappels push sont désactivés.',
+  'Push is uit op dit toestel. Serveropruiming is nog niet gelukt; probeer het opnieuw zodra je online bent.': 'Les notifications push sont désactivées sur cet appareil. Le nettoyage du serveur n’a pas encore abouti ; réessayez lorsque vous serez en ligne.',
+  'Verbind met internet om de oude pushregistratie te verwijderen voordat je meldingen opnieuw inschakelt.': 'Connectez-vous à Internet pour supprimer l’ancien abonnement push avant de réactiver les notifications.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Pushherinnering bijwerken mislukt. Je agenda-export blijft beschikbaar.': 'Die Push-Erinnerung konnte nicht aktualisiert werden. Der Kalenderexport ist weiterhin verfügbar.',
@@ -1407,7 +1411,9 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Je hebt geen toestemming gegeven voor pushmeldingen.': 'Du hast Push-Benachrichtigungen nicht erlaubt.',
   'Pushherinneringen staan aan op dit toestel.': 'Push-Erinnerungen sind auf diesem Gerät aktiviert.',
   'Push instellen lukte niet. Je bestaande agenda-export blijft beschikbaar.': 'Push konnte nicht eingerichtet werden. Dein bisheriger Kalenderexport ist weiterhin verfügbar.',
-  'Pushherinneringen zijn uitgeschakeld.': 'Push-Erinnerungen sind deaktiviert.'
+  'Pushherinneringen zijn uitgeschakeld.': 'Push-Erinnerungen sind deaktiviert.',
+  'Push is uit op dit toestel. Serveropruiming is nog niet gelukt; probeer het opnieuw zodra je online bent.': 'Push ist auf diesem Gerät ausgeschaltet. Die Bereinigung auf dem Server war noch nicht erfolgreich; versuche es erneut, sobald du online bist.',
+  'Verbind met internet om de oude pushregistratie te verwijderen voordat je meldingen opnieuw inschakelt.': 'Stelle eine Internetverbindung her, um das alte Push-Abo zu entfernen, bevor du Benachrichtigungen wieder aktivierst.'
 });
 
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
