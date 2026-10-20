@@ -9,17 +9,17 @@ let PED_CB = null;     // wat er na bewaren gebeurt
 function renderLibrary() {
   const list = libSearch(LIBQ, 300);
   const shared = cloudReady() && DB.settings.share !== false;
-  let h = header('Bibliotheek', DB.foods.length + ' producten · waarden per 100 g', true);
-  h += '<div class="inrow wrap"><button class="btn" data-act="newFood">+ Nieuw product</button><button class="btn ghost" data-act="libScan">Scan barcode</button><label class="btn ghost">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="libPhoto"></label></div>';
-  h += '<input type="search" id="bibq" placeholder="Zoek op naam, merk of barcode" value="' + esc(LIBQ) + '">';
-  h += '<p class="muted small">' + (shared ? 'Gedeelde bibliotheek staat aan: producten die je toevoegt, kan iedereen met de app gebruiken. ' + (DB.settings.libSyncAt ? 'Laatst bijgewerkt ' + new Date(DB.settings.libSyncAt).toLocaleString('nl-BE', { dateStyle: 'short', timeStyle: 'short' }) + '.' : '') + ' <button class="link" data-act="syncNow">Nu bijwerken</button>' : 'Producten staan alleen op dit toestel.') + '</p>';
+  let h = header('Bibliotheek', trf('{count} producten · waarden per 100 g', { count: DB.foods.length }), true);
+  h += '<div class="inrow wrap"><button class="btn" data-act="newFood">' + tr('+ Nieuw product') + '</button><button class="btn ghost" data-act="libScan">' + tr('Scan barcode') + '</button><label class="btn ghost">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="libPhoto"></label></div>';
+  h += '<input type="search" id="bibq" placeholder="' + esc(tr('Zoek op naam, merk of barcode')) + '" value="' + esc(LIBQ) + '">';
+  h += '<p class="muted small">' + (shared ? tr('Gedeelde bibliotheek staat aan: producten die je toevoegt, kan iedereen met de app gebruiken.') + ' ' + (DB.settings.libSyncAt ? trf('Laatst bijgewerkt {date}.', { date: new Date(DB.settings.libSyncAt).toLocaleString(currentLocale(), { dateStyle: 'short', timeStyle: 'short' }) }) : '') + ' <button class="link" data-act="syncNow">' + tr('Nu bijwerken') + '</button>' : tr('Producten staan alleen op dit toestel.')) + '</p>';
   h += '<div class="card table" id="biblist">' + libRows(list) + '</div>';
   view().innerHTML = h;
 }
 function libRows(list) {
-  if (!list.length) return '<p class="muted">Niets gevonden.</p>';
+  if (!list.length) return '<p class="muted">' + tr('Niets gevonden.') + '</p>';
   return list.map(f => '<a class="tr" href="#" data-act="editFood" data-id="' + f.id + '"><span>' + esc(f.name) + (f.brand ? ' <span class="muted">· ' + esc(f.brand) + '</span>' : '') + '</span><b>' + fmtNum(f.per.kcal) + ' kcal</b><small>' +
-    [isNum(f.per.protein) ? fmtNum(f.per.protein, 1) + ' g eiwit' : '', (f.units || []).map(u => '1 ' + u.n + ' = ' + fmtNum(u.g, 1) + ' g').join(', '), f.rid ? (f.own ? 'gedeeld door jou' : 'gedeeld') : 'alleen op dit toestel', f.barcode ? '▮' + f.barcode : ''].filter(Boolean).join(' · ') + '</small></a>').join('');
+    [isNum(f.per.protein) ? fmtNum(f.per.protein, 1) + ' g ' + tr('eiwit') : '', (f.units || []).map(u => '1 ' + u.n + ' = ' + fmtNum(u.g, 1) + ' g').join(', '), f.rid ? (f.own ? tr('Gedeeld door jou') : tr('Gedeeld')) : tr('Alleen op dit toestel'), f.barcode ? '▮' + f.barcode : ''].filter(Boolean).join(' · ') + '</small></a>').join('');
 }
 function libSearch(q, max) {
   q = (q || '').toLowerCase().trim();
@@ -52,27 +52,27 @@ function openFoodEditor(food, cb, photo) {
 function renderFoodEditor(note) {
   const P = PED;
   const locked = P.rid && !P.own;
-  let h = '<div class="sheet-h"><h2>' + (P.isNew ? 'Nieuw product' : 'Product') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="Sluiten">✕</button></div>';
+  let h = '<div class="sheet-h"><h2>' + tr(P.isNew ? 'Nieuw product' : 'Product') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>';
   if (note) h += '<p class="note">' + esc(tr(note)) + '</p>';
-  if (locked) h += '<p class="muted small">Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.</p>';
-  h += '<div class="chips"><button class="chip" data-act="pedScan">Scan barcode</button><label class="chip">Foto etiket<input type="file" accept="image/*" capture="environment" hidden data-chg="pedPhoto"></label></div><div id="ocrstat"></div>';
-  h += '<label class="fld"><span>Naam</span><input maxlength="200" data-pf="name" value="' + esc(P.name) + '" placeholder="bv. Kipfilet"></label>';
-  h += '<div class="grid2"><label class="fld"><span>Merk (optioneel)</span><input maxlength="120" data-pf="brand" value="' + esc(P.brand || '') + '"></label><label class="fld"><span>Barcode</span><input maxlength="14" data-pf="barcode" inputmode="numeric" value="' + esc(P.barcode || '') + '"></label></div>';
-  h += '<p class="muted small">Waarden per 100 g (of 100 ml), zoals op het etiket.</p><div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + NUTR_LABEL[n] + '</span><input type="number" inputmode="decimal" data-pf="per.' + n + '" value="' + (isNum(P.per[n]) ? P.per[n] : '') + '"' + (P.uncertain && P.uncertain.includes(n) ? ' class="check"' : '') + '></label>').join('') + '</div>';
-  if (P.uncertain && P.uncertain.length) h += '<p class="muted small">Oranje velden: de tekstherkenning twijfelde. Kijk ze na op het etiket.</p>';
+  if (locked) h += '<p class="muted small">' + tr('Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.') + '</p>';
+  h += '<div class="chips"><button class="chip" data-act="pedScan">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="pedPhoto"></label></div><div id="ocrstat"></div>';
+  h += '<label class="fld"><span>' + tr('Naam') + '</span><input maxlength="200" data-pf="name" value="' + esc(P.name) + '" placeholder="' + esc(tr('bv. Kipfilet')) + '"></label>';
+  h += '<div class="grid2"><label class="fld"><span>' + tr('Merk (optioneel)') + '</span><input maxlength="120" data-pf="brand" value="' + esc(P.brand || '') + '"></label><label class="fld"><span>' + tr('Barcode') + '</span><input maxlength="14" data-pf="barcode" inputmode="numeric" value="' + esc(P.barcode || '') + '"></label></div>';
+  h += '<p class="muted small">' + tr('Waarden per 100 g (of 100 ml), zoals op het etiket.') + '</p><div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + tr(NUTR_LABEL[n]) + '</span><input type="number" inputmode="decimal" data-pf="per.' + n + '" value="' + (isNum(P.per[n]) ? P.per[n] : '') + '"' + (P.uncertain && P.uncertain.includes(n) ? ' class="check"' : '') + '></label>').join('') + '</div>';
+  if (P.uncertain && P.uncertain.length) h += '<p class="muted small">' + tr('Oranje velden: de tekstherkenning twijfelde. Kijk ze na op het etiket.') + '</p>';
   const chk = energyCheck(P.per);
   if (chk) h += '<p class="muted small">' + chk + '</p>';
-  h += '<h3>Eenheden</h3><p class="muted small">Handig voor dingen die je per stuk of per lepel gebruikt, bv. 1 wafel = 12,5 g of 1 el = 15 g.</p><div id="units">' + P.units.map((u, i) => '<div class="inrow"><span>1</span><input maxlength="100" data-pu="' + i + '.n" value="' + esc(u.n) + '" placeholder="stuk"><span>=</span><input type="number" inputmode="decimal" min="0.01" max="100000" data-pu="' + i + '.g" value="' + (isNum(u.g) ? u.g : '') + '" style="max-width:90px"><em>g</em><button class="iconbtn sm" data-act="pedDelUnit" data-i="' + i + '">✕</button></div>').join('') + '</div>' +
-    '<div class="chips"><button class="chip add" data-act="pedAddUnit">+ eenheid</button>' + ['stuk', 'portie', 'el', 'tl', 'snee', 'kopje'].filter(n => !P.units.some(u => u.n === n)).map(n => '<button class="chip sm" data-act="pedAddUnit" data-n="' + n + '">' + n + '</button>').join('') + '</div>';
-  h += '<button class="btn big" data-act="pedSave">Bewaren</button>';
-  if (!P.isNew) h += '<button class="link danger" data-act="pedDelete">Product verwijderen</button>';
+  h += '<h3>' + tr('Eenheden') + '</h3><p class="muted small">' + tr('Handig voor dingen die je per stuk of per lepel gebruikt, bv. 1 wafel = 12,5 g of 1 el = 15 g.') + '</p><div id="units">' + P.units.map((u, i) => '<div class="inrow"><span>1</span><input maxlength="100" data-pu="' + i + '.n" value="' + esc(u.n) + '" placeholder="' + esc(tr('stuk')) + '"><span>=</span><input type="number" inputmode="decimal" min="0.01" max="100000" data-pu="' + i + '.g" value="' + (isNum(u.g) ? u.g : '') + '" style="max-width:90px"><em>g</em><button class="iconbtn sm" data-act="pedDelUnit" data-i="' + i + '">✕</button></div>').join('') + '</div>' +
+    '<div class="chips"><button class="chip add" data-act="pedAddUnit">' + tr('+ eenheid') + '</button>' + ['stuk', 'portie', 'el', 'tl', 'snee', 'kopje'].filter(n => !P.units.some(u => u.n === n)).map(n => '<button class="chip sm" data-act="pedAddUnit" data-n="' + n + '">' + tr(n) + '</button>').join('') + '</div>';
+  h += '<button class="btn big" data-act="pedSave">' + tr('Bewaren') + '</button>';
+  if (!P.isNew) h += '<button class="link danger" data-act="pedDelete">' + tr('Product verwijderen') + '</button>';
   $('#sheet .sheet-in').innerHTML = h;
 }
 function energyCheck(per) {
   if (![per.kcal, per.protein, per.carbs, per.fat].every(isNum) || !per.kcal) return '';
   const calc = 4 * per.protein + 4 * per.carbs + 9 * per.fat + 2 * (per.fiber || 0);
   const d = Math.abs(calc - per.kcal) / per.kcal;
-  return d > 0.15 ? '⚠ Controle: eiwit, koolhydraten en vet geven samen ≈ ' + fmtNum(calc) + ' kcal, het etiket zegt ' + fmtNum(per.kcal) + '. Klopt er een getal niet?' : '✓ De waarden kloppen met de energie (≈ ' + fmtNum(calc) + ' kcal).';
+  return d > 0.15 ? '⚠ ' + trf('Controle: eiwit, koolhydraten en vet geven samen ≈ {calculated} kcal, het etiket zegt {label}. Klopt er een getal niet?', { calculated: fmtNum(calc), label: fmtNum(per.kcal) }) : '✓ ' + trf('De waarden kloppen met de energie (≈ {calculated} kcal).', { calculated: fmtNum(calc) });
 }
 document.addEventListener('input', e => {
   const el = e.target;
@@ -102,7 +102,7 @@ ACT.pedScan = () => {
     if (food.rid) { PED.rid = food.rid; PED.own = food.own; }
     renderFoodEditor(food.per && isNum(food.per.kcal)
       ? trf('Product gevonden: {name}. Controleer de waarden.', { name: food.name })
-      : 'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.');
+    : tr('Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.'));
   }, code => { PED = keep; PED_CB = cb; PED.barcode = code; renderFoodEditor(trf('Barcode {code} is nog niet bekend. Scan het etiket of vul de waarden zelf in.', { code })); });
 };
 ACT.pedPhoto = el => { const f = el.files[0]; el.value = ''; if (f) runOcr(f); };
@@ -119,7 +119,7 @@ async function runOcr(file) {
     if (found.length) {
       const missing = NUTR.filter(n => !found.includes(n)).map(n => tr(NUTR_LABEL[n])).join(', ');
       renderFoodEditor(found.length < 5
-        ? trf('{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.', { count: found.length, missing })
+      ? trf('{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.', { count: found.length, missing })
         : tr('Alle 5 waarden gelezen. Controleer ze met het etiket.'));
     } else renderFoodEditor('Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.');
   } catch (e) { console.error('Etiket lezen mislukt', e); show('Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.'); }
@@ -170,12 +170,12 @@ ACT.pedDelete = async () => {
 /* ---------- barcode: eigen bibliotheek → gedeelde bibliotheek → Open Food Facts ---------- */
 function findByBarcode(onFood, onUnknown) {
   scanBarcode(async code => {
-    const m = $('#scanmsg'); if (m) m.innerHTML = '<p class="muted">Zoeken…</p>';
+    const m = $('#scanmsg'); if (m) m.innerHTML = '<p class="muted">' + tr('Zoeken…') + '</p>';
     const local = DB.foods.find(f => f.barcode === code);
     if (local) return onFood(local);
     const shared = await cloudBarcode(code);
     if (shared) { DB.foods.push(shared); save(); return onFood(shared); }
-    if (!navigator.onLine) { if (onUnknown) return onUnknown(code); if (m) m.innerHTML = '<p class="note">Offline: opzoeken kan niet.</p>'; return; }
+    if (!navigator.onLine) { if (onUnknown) return onUnknown(code); if (m) m.innerHTML = '<p class="note">' + tr('Offline: opzoeken kan niet.') + '</p>'; return; }
     try {
       const r = await fetch('https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(code) + '.json?fields=product_name,product_name_nl,product_name_fr,brands,nutriments,serving_quantity');
       const j = await r.json();
@@ -185,7 +185,7 @@ function findByBarcode(onFood, onUnknown) {
       const kcal = nv(n['energy-kcal_100g']) ?? Math.round(nv(n['energy_100g']) / 4.184);
       const food = { id: uid(), barcode: code, name: j.product.product_name_nl || j.product.product_name || j.product.product_name_fr || code, brand: (j.product.brands || '').split(',')[0].trim(), source: 'openfoodfacts',
         per: { kcal, protein: nv(n.proteins_100g), carbs: nv(n.carbohydrates_100g), fat: nv(n.fat_100g), fiber: nv(n.fiber_100g) }, units: [] };
-      const sq = nv(j.product.serving_quantity); if (sq) food.units.push({ n: 'portie', g: sq });
+      const sq = nv(j.product.serving_quantity); if (sq) food.units.push({ n: tr('portie'), g: sq });
       onFood(food);
     } catch (e) {
       if (onUnknown) onUnknown(code);
@@ -214,9 +214,9 @@ function amountRow(f, prefix) {
     '<div class="amt-sum" id="s_' + id + '">' + amtSummary(f, q * first.g) + '</div></div>';
 }
 function amtSummary(f, g) {
-  if (!(g > 0)) return 'Vul een hoeveelheid in.';
+  if (!(g > 0)) return tr('Vul een hoeveelheid in.');
   const p = f.per || {};
-  return '= ' + fmtNum(g, g % 1 ? 1 : 0) + ' g · ≈ ' + fmtNum((p.kcal || 0) * g / 100) + ' kcal' + (isNum(p.protein) ? ' · ' + fmtNum(p.protein * g / 100, 1) + ' g eiwit' : '');
+  return '= ' + fmtNum(g, g % 1 ? 1 : 0) + ' g · ≈ ' + fmtNum((p.kcal || 0) * g / 100) + ' kcal' + (isNum(p.protein) ? ' · ' + fmtNum(p.protein * g / 100, 1) + ' g ' + tr('eiwit') : '');
 }
 function amtUpdate(id) {
   const box = $('#amt_' + id); if (!box) return;
@@ -248,7 +248,7 @@ function readAmount(f, prefix) {
   const per = Number(box.dataset.g);
   if (!(q > 0)) return null;
   const btn = box.querySelector('.amt-u button.on');
-  const unitName = btn ? btn.firstChild.textContent.trim() : 'gram';
+  const unitName = btn ? btn.firstChild.textContent.trim() : tr('gram');
   const g = Math.round(q * per * 10) / 10;
   if (per === 1) f.lastG = g;
   return { g, label: per !== 1 ? fmtNum(q, q % 1 ? 1 : 0) + ' × ' + unitName : null };

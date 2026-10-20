@@ -620,11 +620,11 @@ async function zxingReader() {
   ZX = r; return r;
 }
 async function scanBarcode(onCode) {
-  let h = '<div class="sheet-h"><h2>Barcode scannen</h2><button class="iconbtn" data-act="closeSheet">✕</button></div>';
+  let h = '<div class="sheet-h"><h2>' + tr('Barcode scannen') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>';
   const native = 'BarcodeDetector' in window;
   const camera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-  h += camera ? '<div class="scanbox"><video id="scanv" playsinline muted autoplay></video><i class="scanline"></i></div><p class="muted small">Richt de camera op de barcode en hou hem rustig, op ±15 cm.</p>' : '<p class="note">Je toestel geeft geen toegang tot de camera. Typ de barcode in.</p>';
-  h += '<div class="inrow"><input id="bcode" type="text" inputmode="numeric" placeholder="of typ de cijfers onder de barcode"><button class="btn ghost" data-act="lookupCode">Zoek</button></div><div id="scanmsg"></div>';
+  h += camera ? '<div class="scanbox"><video id="scanv" playsinline muted autoplay></video><i class="scanline"></i></div><p class="muted small">' + tr('Richt de camera op de barcode en hou hem rustig, op ±15 cm.') + '</p>' : '<p class="note">' + tr('Je toestel geeft geen toegang tot de camera. Typ de barcode in.') + '</p>';
+  h += '<div class="inrow"><input id="bcode" type="text" inputmode="numeric" placeholder="' + esc(tr('Of typ de cijfers onder de barcode')) + '"><button class="btn ghost" data-act="lookupCode">' + tr('Zoek') + '</button></div><div id="scanmsg"></div>';
   $('#sheet .sheet-in').innerHTML = h; $('#sheet').hidden = false;
   SCAN = { onCode };
   if (!camera) return;
@@ -1412,7 +1412,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.11.2';
+const APP_VERSION = '1.11.3';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

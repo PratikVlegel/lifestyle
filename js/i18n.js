@@ -2841,3 +2841,58 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Back-up bevat ongeldige profiel
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { 'Supabase-configuratie, communitylidmaatschap en beheerdersrechten worden ook niet in de back-up opgeslagen.': 'Supabase configuration, community membership and administrator privileges are also excluded from the backup.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { 'Supabase-configuratie, communitylidmaatschap en beheerdersrechten worden ook niet in de back-up opgeslagen.': 'La configuration Supabase, l’adhésion à la communauté et les droits d’administration ne sont pas non plus inclus dans la sauvegarde.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { 'Supabase-configuratie, communitylidmaatschap en beheerdersrechten worden ook niet in de back-up opgeslagen.': 'Supabase-Konfiguration, Community-Mitgliedschaft und Administratorrechte sind ebenfalls nicht im Backup enthalten.' });
+
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  '{count} producten · waarden per 100 g': '{count} products · values per 100 g', '+ Nieuw product': '+ New product', 'bv. Kipfilet': 'e.g. chicken breast', 'Barcode': 'Barcode', 'Product verwijderen': 'Delete product',
+  'Zoek op naam, merk of barcode': 'Search by name, brand or barcode', 'Gedeelde bibliotheek staat aan: producten die je toevoegt, kan iedereen met de app gebruiken.': 'The shared library is on: products you add are available to everyone using the app.',
+  'Laatst bijgewerkt {date}.': 'Last updated {date}.', 'Producten staan alleen op dit toestel.': 'Products are stored on this device only.', 'Niets gevonden.': 'Nothing found.',
+  'Gedeeld door jou': 'Shared by you', 'Gedeeld': 'Shared', 'Alleen op dit toestel': 'On this device only', 'Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.': 'This product is from the shared library. Your changes stay on this device.',
+  'Naam': 'Name', 'Merk (optioneel)': 'Brand (optional)', 'Waarden per 100 g (of 100 ml), zoals op het etiket.': 'Values per 100 g (or 100 ml), as shown on the label.',
+  'Oranje velden: de tekstherkenning twijfelde. Kijk ze na op het etiket.': 'Orange fields are uncertain OCR results. Check them against the label.', 'Eenheden': 'Units',
+  'Handig voor dingen die je per stuk of per lepel gebruikt, bv. 1 wafel = 12,5 g of 1 el = 15 g.': 'Useful for items measured by piece or spoon, e.g. 1 waffle = 12.5 g or 1 tbsp = 15 g.',
+  'stuk': 'piece', 'portie': 'serving', 'el': 'tbsp', 'tl': 'tsp', 'snee': 'slice', 'kopje': 'cup', '+ eenheid': '+ unit',
+  'Controle: eiwit, koolhydraten en vet geven samen ≈ {calculated} kcal, het etiket zegt {label}. Klopt er een getal niet?': 'Check: protein, carbohydrates and fat add up to about {calculated} kcal; the label says {label}. Could a value be wrong?',
+  'De waarden kloppen met de energie (≈ {calculated} kcal).': 'The values are consistent with the energy (≈ {calculated} kcal).',
+  'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.': 'Barcode added. This product is not in the database yet: scan the label or enter the values yourself.',
+  'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Reading label… The text recognition loads the first time (about 7 MB), then works offline.',
+  'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.': 'I could not read the nutrition values. Take a closer, straight-on photo without glare, or enter the values yourself.',
+  'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.': 'Could not read the label. Try a sharper photo or enter the values yourself.',
+  'Vul een hoeveelheid in.': 'Enter an amount.', 'Barcode scannen': 'Scan barcode', 'Richt de camera op de barcode en hou hem rustig, op ±15 cm.': 'Point the camera at the barcode and hold it steady, about 15 cm away.',
+  'Je toestel geeft geen toegang tot de camera. Typ de barcode in.': 'Your device cannot access the camera. Enter the barcode manually.', 'Of typ de cijfers onder de barcode': 'Or enter the digits below the barcode', 'Zoek': 'Search', 'Zoeken…': 'Searching…', 'Offline: opzoeken kan niet.': 'Offline: lookup is unavailable.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  '{count} producten · waarden per 100 g': '{count} produits · valeurs pour 100 g', '+ Nieuw product': '+ Nouveau produit', 'bv. Kipfilet': 'ex. blanc de poulet', 'Barcode': 'Code-barres', 'Product verwijderen': 'Supprimer le produit',
+  'Zoek op naam, merk of barcode': 'Rechercher par nom, marque ou code-barres', 'Gedeelde bibliotheek staat aan: producten die je toevoegt, kan iedereen met de app gebruiken.': 'La bibliothèque partagée est activée : les produits que vous ajoutez sont accessibles aux autres utilisateurs de l’application.',
+  'Laatst bijgewerkt {date}.': 'Dernière mise à jour : {date}.', 'Producten staan alleen op dit toestel.': 'Les produits sont enregistrés uniquement sur cet appareil.', 'Niets gevonden.': 'Aucun résultat.',
+  'Gedeeld door jou': 'Partagé par vous', 'Gedeeld': 'Partagé', 'Alleen op dit toestel': 'Sur cet appareil uniquement', 'Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.': 'Ce produit provient de la bibliothèque partagée. Vos modifications restent sur cet appareil.',
+  'Naam': 'Nom', 'Merk (optioneel)': 'Marque (facultatif)', 'Waarden per 100 g (of 100 ml), zoals op het etiket.': 'Valeurs pour 100 g (ou 100 ml), comme indiqué sur l’étiquette.',
+  'Oranje velden: de tekstherkenning twijfelde. Kijk ze na op het etiket.': 'Les champs orange sont incertains après la reconnaissance. Vérifiez-les sur l’étiquette.', 'Eenheden': 'Unités',
+  'Handig voor dingen die je per stuk of per lepel gebruikt, bv. 1 wafel = 12,5 g of 1 el = 15 g.': 'Utile pour les aliments mesurés à la pièce ou à la cuillère, p. ex. 1 gaufre = 12,5 g ou 1 c. à soupe = 15 g.',
+  'stuk': 'pièce', 'portie': 'portion', 'el': 'c. à soupe', 'tl': 'c. à café', 'snee': 'tranche', 'kopje': 'tasse', '+ eenheid': '+ unité',
+  'Controle: eiwit, koolhydraten en vet geven samen ≈ {calculated} kcal, het etiket zegt {label}. Klopt er een getal niet?': 'Vérification : les protéines, glucides et lipides totalisent environ {calculated} kcal ; l’étiquette indique {label}. Une valeur est peut-être incorrecte.',
+  'De waarden kloppen met de energie (≈ {calculated} kcal).': 'Les valeurs sont cohérentes avec l’énergie (≈ {calculated} kcal).',
+  'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.': 'Code-barres ajouté. Ce produit est encore inconnu : scannez l’étiquette ou saisissez les valeurs vous-même.',
+  'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Lecture de l’étiquette… La reconnaissance de texte se charge la première fois (environ 7 Mo), puis fonctionne hors ligne.',
+  'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.': 'Impossible de lire les valeurs nutritionnelles. Prenez une photo plus proche, de face et sans reflet, ou saisissez les valeurs vous-même.',
+  'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.': 'La lecture de l’étiquette a échoué. Essayez une photo plus nette ou saisissez les valeurs vous-même.',
+  'Vul een hoeveelheid in.': 'Saisissez une quantité.', 'Barcode scannen': 'Scanner le code-barres', 'Richt de camera op de barcode en hou hem rustig, op ±15 cm.': 'Placez le code-barres devant la caméra et gardez-la stable, à environ 15 cm.',
+  'Je toestel geeft geen toegang tot de camera. Typ de barcode in.': 'Votre appareil ne permet pas d’accéder à la caméra. Saisissez le code-barres manuellement.', 'Of typ de cijfers onder de barcode': 'Ou saisissez les chiffres sous le code-barres', 'Zoek': 'Rechercher', 'Zoeken…': 'Recherche…', 'Offline: opzoeken kan niet.': 'Hors ligne : la recherche est indisponible.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  '{count} producten · waarden per 100 g': '{count} Produkte · Werte pro 100 g', '+ Nieuw product': '+ Neues Produkt', 'bv. Kipfilet': 'z. B. Hähnchenbrust', 'Barcode': 'Barcode', 'Product verwijderen': 'Produkt löschen',
+  'Zoek op naam, merk of barcode': 'Nach Name, Marke oder Barcode suchen', 'Gedeelde bibliotheek staat aan: producten die je toevoegt, kan iedereen met de app gebruiken.': 'Die gemeinsame Bibliothek ist aktiviert: Produkte, die du hinzufügst, sind für alle App-Nutzer verfügbar.',
+  'Laatst bijgewerkt {date}.': 'Zuletzt aktualisiert: {date}.', 'Producten staan alleen op dit toestel.': 'Produkte werden nur auf diesem Gerät gespeichert.', 'Niets gevonden.': 'Nichts gefunden.',
+  'Gedeeld door jou': 'Von dir geteilt', 'Gedeeld': 'Geteilt', 'Alleen op dit toestel': 'Nur auf diesem Gerät', 'Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.': 'Dieses Produkt stammt aus der gemeinsamen Bibliothek. Deine Änderungen bleiben auf diesem Gerät.',
+  'Naam': 'Name', 'Merk (optioneel)': 'Marke (optional)', 'Waarden per 100 g (of 100 ml), zoals op het etiket.': 'Werte pro 100 g (oder 100 ml), wie auf dem Etikett angegeben.',
+  'Oranje velden: de tekstherkenning twijfelde. Kijk ze na op het etiket.': 'Orange Felder sind unsichere OCR-Ergebnisse. Prüfe sie auf dem Etikett.', 'Eenheden': 'Einheiten',
+  'Handig voor dingen die je per stuk of per lepel gebruikt, bv. 1 wafel = 12,5 g of 1 el = 15 g.': 'Praktisch für Lebensmittel, die pro Stück oder Löffel verwendet werden, z. B. 1 Waffel = 12,5 g oder 1 EL = 15 g.',
+  'stuk': 'Stück', 'portie': 'Portion', 'el': 'EL', 'tl': 'TL', 'snee': 'Scheibe', 'kopje': 'Tasse', '+ eenheid': '+ Einheit',
+  'Controle: eiwit, koolhydraten en vet geven samen ≈ {calculated} kcal, het etiket zegt {label}. Klopt er een getal niet?': 'Prüfung: Eiweiß, Kohlenhydrate und Fett ergeben zusammen etwa {calculated} kcal; das Etikett nennt {label}. Ist vielleicht ein Wert falsch?',
+  'De waarden kloppen met de energie (≈ {calculated} kcal).': 'Die Werte passen zum Energiegehalt (≈ {calculated} kcal).',
+  'Barcode ingevuld. Dit product is nog niet bekend: scan het etiket of vul de waarden zelf in.': 'Barcode eingetragen. Dieses Produkt ist noch unbekannt: Scanne das Etikett oder gib die Werte selbst ein.',
+  'Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.': 'Etikett wird gelesen … Die Texterkennung wird beim ersten Mal geladen (ca. 7 MB) und funktioniert danach offline.',
+  'Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.': 'Nährwerte konnten nicht erkannt werden. Fotografiere das Etikett näher, gerade und ohne Spiegelung oder gib die Werte selbst ein.',
+  'Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.': 'Das Etikett konnte nicht gelesen werden. Versuche ein schärferes Foto oder gib die Werte selbst ein.',
+  'Vul een hoeveelheid in.': 'Gib eine Menge ein.', 'Barcode scannen': 'Barcode scannen', 'Richt de camera op de barcode en hou hem rustig, op ±15 cm.': 'Richte die Kamera auf den Barcode und halte sie ruhig, etwa 15 cm entfernt.',
+  'Je toestel geeft geen toegang tot de camera. Typ de barcode in.': 'Dein Gerät kann nicht auf die Kamera zugreifen. Gib den Barcode manuell ein.', 'Of typ de cijfers onder de barcode': 'Oder gib die Ziffern unter dem Barcode ein', 'Zoek': 'Suchen', 'Zoeken…': 'Suche läuft …', 'Offline: opzoeken kan niet.': 'Offline: Die Suche ist nicht verfügbar.'
+});
