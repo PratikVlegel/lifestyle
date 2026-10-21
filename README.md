@@ -23,6 +23,7 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `js/mood.js` | Opt-in, lokale vergelijkingen van stemming met geregistreerde gewoontes en bronnen voor onderbouwde adviezen |
 | `js/cycle.js` | Optioneel lokaal cyclus- en symptoomdagboek met persoonlijke terugblik en ondersteunende adviezen; geen fase- of ovulatievoorspellingen |
 | `js/app.js` | Schermen, check-ins, mealprep, instellingen |
+| `js/home-setup.js` | Startscherm op maat: bij de intake (of later via Meer) kies je waarvoor je de app gebruikt; dat bepaalt welke kaarten, kerncijfers, snelknoppen en check-ins op Vandaag staan |
 | `js/training.js` | Offline trainingsplanner: afvallen/conditie, kracht/spiermassa, lopen, terugkeer na revalidatie, marathon en HYROX |
 | `js/community-exercises.js` | Gedeelde oefenbibliotheek met zoekfilters, communityreviews en toevoegen aan eigen schema's |
 | `js/library.js` | Productenbibliotheek, producteditor, eenheden, barcode |
