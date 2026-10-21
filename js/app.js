@@ -32,6 +32,7 @@ function render() {
     switch (page || 'home') {
       case 'home': return renderHome();
       case 'ontdek': return renderDiscoveryGuide();
+      case 'startscherm': return renderHomeSetup();
       case 'community-profiel': return renderCommunityProfile();
       case 'kpi': return renderKpi(a);
       case 'checkin': return renderCheckin(a, b);
@@ -133,24 +134,25 @@ function renderHome() {
   const due = dueReminder();
   const st = reminderStatus(k);
   let h = '<div class="home-heading">' + header('Vandaag', fmtDay(k, true)) + '<a class="iconbtn guide-button" href="#/ontdek" aria-label="' + esc(tr('Ontdek wat je met de app kunt doen')) + '" title="' + esc(tr('Ontdek de app')) + '">?</a></div>';
-  if (due) {
+  if (due && homeSectionOn('checkins')) {
     h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(reminderDisplayLabel(due.label)) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
   }
-  h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
-  const cards = [activeTrainingHomeCard(), weekCard(), feedbackCard()].filter(Boolean);
+  if (st.length && homeSectionOn('checkins')) h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
+  const cards = [purposePromptCard(), homeSectionOn('training') ? activeTrainingHomeCard() : '', homeSectionOn('week') ? weekCard() : '', homeSectionOn('prepFeedback') ? feedbackCard() : ''].filter(Boolean);
   if (cards.length) h += '<div class="home-focus-list">' + cards.join('') + '</div>';
-  h += '<div class="quick q4"><button class="btn ghost" data-act="quickEat">' + tr('+ eten') + '</button><button class="btn ghost" data-act="quickAct">' + tr('+ activiteit') + '</button><button class="btn ghost" data-act="quickWater">' + tr('+ glas water') + '</button><button class="btn ghost" data-act="quickCoffee">' + tr('+ koffie') + '</button></div>';
+  const quick = homeSectionOn('quick') ? homeQuickButtons() : [];
+  if (quick.length) h += '<div class="quick' + (quick.length === 4 ? ' q4' : '') + '"' + (quick.length < 3 ? ' style="grid-template-columns:repeat(' + quick.length + ',1fr)"' : '') + '>' + quick.map(([act, label]) => '<button class="btn ghost" data-act="' + act + '">' + tr(label) + '</button>').join('') + '</div>';
   const visibleKpis = homeKpiKeys();
-  h += '<h2 class="sec home-kpi-heading">' + tr('Kerncijfers') + '<a class="link" href="#/ontdek">' + tr('Aanpassen') + '</a></h2>' + (visibleKpis.length ? '<div class="kpis">' + visibleKpis.map(k => k === 'diary' ? diaryKpiTile() : kpiTile(k)).join('') + '</div>' : '<p class="small muted">' + tr('Er zijn geen kerncijfers gekozen.') + '</p>');
+  h += '<h2 class="sec home-kpi-heading">' + tr('Kerncijfers') + '<a class="link" href="#/startscherm">' + tr('Aanpassen') + '</a></h2>' + (visibleKpis.length ? '<div class="kpis">' + visibleKpis.map(k => k === 'diary' ? diaryKpiTile() : kpiTile(k)).join('') + '</div>' : '<p class="small muted">' + tr('Er zijn geen kerncijfers gekozen.') + '</p>');
   const day = getDay(k);
-  h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
-  h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
+  if (homeSectionOn('meals')) h += '<h2 class="sec">' + tr('Gegeten vandaag') + '</h2>' + mealsList(day, k, false);
+  if (homeSectionOn('tip')) h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tipOfDay()) + '</p></div>';
   view().innerHTML = h;
 }
 function renderDiscoveryGuide() {
   const readiness = moodDiaryReadiness();
   let h = header('Ontdek de app', 'Snel naar logboek, inzichten, community en instellingen', true);
-  h += homeKpiSettingsCard();
+  h += '<a class="card fb wk" href="#/startscherm"><b>' + tr('Startscherm op maat') + '</b><p class="small">' + tr('Kies waarvoor je de app gebruikt en welke kaarten en kerncijfers je op Vandaag ziet.') + '</p></a>';
   h += '<section class="card guide-card"><span class="pill">' + tr('Begin hier') + '</span><h2>' + tr('Je dagboek is het vertrekpunt') + '</h2><p>' + tr('Je kunt per dag niet alleen maaltijden noteren, maar ook slaap, stemming, energie, stress, beweging, cafeïne, alcohol, nicotinevormen, frisdrank, zoetigheden en supplementen. Alleen ingevulde gegevens tellen mee.') + '</p><a class="btn" href="#/dag/' + todayKey() + '">' + tr('Vandaag aanvullen') + '</a><a class="link" href="#/dagboek">' + tr('Alle dagen bekijken ›') + '</a></section>';
   h += '<section class="card guide-card"><span class="pill">' + tr('Persoonlijk welzijn') + '</span><h2>' + tr('Inzichten groeien mee met je dagboek') + '</h2><p>' + trf('Je hebt {count} stemmingsdagen genoteerd in de laatste 60 dagen. Voor persoonlijke vergelijkingen zijn minstens 14 stemmingsdagen nodig; daarna vergelijkt de app alleen dagen waarop beide waarden bekend zijn.', { count: readiness.count }) + '</p><a class="btn ghost" href="#/stemming">' + tr(readiness.ready ? 'Persoonlijke vergelijkingen bekijken' : 'Uitleg over stemming en gewoontes') + '</a></section>';
   h += '<section class="card guide-card"><span class="pill">' + tr('Community') + '</span><h2>' + tr('Recepten, plannen en ervaringen') + '</h2><p>' + tr('Deel een mealprep met voedingswaarden per portie, zoek recepten en geef sterren of een reactie. Je kunt ook trainingsschema’s delen, door anderen laten beoordelen en een kopie bewaren.') + '</p><p class="small muted">' + tr('Communityrangschikkingen tonen op dit moment alleen vrijwillig gedeelde stappen en beweegminuten. Voedingswaarden en macro’s worden niet gedeeld.') + '</p><a class="link" href="#/recepten">' + tr('Gedeelde recepten ›') + '</a> · <a class="link" href="#/train-community">' + tr('Communityschema’s ›') + '</a> · <a class="link" href="#/community-kpi/weekly">' + tr('Communitycijfers ›') + '</a></section>';
@@ -176,7 +178,7 @@ function diaryLoggedSections(d) {
 function homeKpiSettingsCard() {
   const selected = homeKpiKeys();
   const labels = { diary: 'Dagboek' };
-  let h = '<section class="card guide-card home-kpi-settings"><span class="pill">' + tr('Startscherm') + '</span><h2>' + tr('Kies je kerncijfers') + '</h2><p>' + tr('Open deze instelling via het vraagteken rechtsboven op Vandaag. Kies zelf welke tegels je wilt tonen; je kunt er zoveel of zo weinig kiezen als je wilt.') + '</p><div class="home-kpi-options">';
+  let h = '<section class="card guide-card home-kpi-settings"><span class="pill">' + tr('Startscherm') + '</span><h2>' + tr('Kies je kerncijfers') + '</h2><p>' + tr('Kies zelf welke tegels je wilt tonen; je kunt er zoveel of zo weinig kiezen als je wilt.') + '</p><div class="home-kpi-options">';
   for (const key of HOME_KPI_CHOICES) {
     const label = key === 'diary' ? labels.diary : METRICS[key].label;
     h += '<label class="toggle"><input type="checkbox" data-chg="homeKpiToggle" data-k="' + key + '" ' + (selected.includes(key) ? 'checked' : '') + '> ' + esc(tr(label)) + '</label>';
@@ -186,7 +188,7 @@ function homeKpiSettingsCard() {
 ACT.homeKpiToggle = el => {
   const selected = homeKpiKeys();
   const next = el.checked ? [...selected, el.dataset.k] : selected.filter(k => k !== el.dataset.k);
-  DB.settings.homeKpis = next; save(); renderDiscoveryGuide();
+  DB.settings.homeKpis = next; DB.settings.purposePromptDone = true; save();
 };
 function renderCommunityProfile() {
   let h = header('Communityprofiel', 'Kies de naam die andere leden zien', true);
@@ -1100,8 +1102,8 @@ function renderMore(sub) {
 }
 function personalizationCard(S) {
   const options = (current, values) => values.map(([v, l]) => '<option value="' + v + '"' + (current === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('');
-  return '<div class="card"><h3>' + tr('Maak de app persoonlijk') + '</h3><p class="muted small">' + tr('Je focus bepaalt welke kaarten en kerncijfers bovenaan Vandaag staan. Kleur en tekstgrootte werken door in de hele app.') + '</p>' +
-    '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="personalize" data-p="homeFocus">' + options(S.homeFocus || 'balanced', [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']]) + '</select></label>' +
+  return '<div class="card"><h3>' + tr('Maak de app persoonlijk') + '</h3><p class="muted small">' + tr('Kies via Startscherm op maat welke kaarten en kerncijfers op Vandaag staan. Kleur en tekstgrootte werken door in de hele app.') + '</p>' +
+    '<a class="btn ghost" href="#/startscherm">' + tr('Startscherm op maat ›') + '</a>' +
     '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="personalize" data-p="palette">' + options(S.palette || 'forest', [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen'], ['berry', 'Bes'], ['lavender', 'Lavendel'], ['sand', 'Zand'], ['midnight', 'Middernachtblauw']]) + '</select></label>' +
     '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="personalize" data-p="textSize">' + options(S.textSize || 'normal', [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']]) + '</select></label>' +
     '<small class="muted">' + tr('Je keuze verandert alleen de weergave op dit toestel.') + '</small></div>';
@@ -1309,13 +1311,13 @@ ACT.importMd = async el => {
   catch (e) { console.warn('Markdown-import mislukt', e); alert(tr('Inlezen mislukt. Controleer het bestand en probeer opnieuw.')); }
   el.value = '';
 };
-ACT.redoIntake = () => go('#/intake/2');
+ACT.redoIntake = () => go('#/intake/doel');
 ACT.wipe = async () => { if (!confirm(tr('Alles op deze gsm wissen? Maak eerst een back-up.'))) return; if (!confirm(tr('Echt alles wissen?'))) return; if (DB.settings.pushEnabled && ACT.webPushDisable) await ACT.webPushDisable(); localStorage.removeItem(STORE_KEY); DB = defaultData(); go('#/intake'); };
 
 /* ================= intake ================= */
 let INTAKE = null;
 function renderIntake(step) {
-  if (!INTAKE) INTAKE = { profile: Object.assign({}, DB.profile), goals: Object.assign({}, DB.goals), reminders: JSON.parse(JSON.stringify(DB.reminders)), settings: { homeFocus: DB.settings.homeFocus || 'balanced', palette: DB.settings.palette || 'forest', textSize: DB.settings.textSize || 'normal' }, weight: null };
+  if (!INTAKE) INTAKE = { profile: Object.assign({}, DB.profile), goals: Object.assign({}, DB.goals), reminders: JSON.parse(JSON.stringify(DB.reminders)), settings: { purposes: selectedPurposes() || [], homeFocus: DB.settings.homeFocus || 'balanced', palette: DB.settings.palette || 'forest', textSize: DB.settings.textSize || 'normal' }, weight: null };
   const I = INTAKE;
   let h = '';
   if (step === '1') {
@@ -1323,9 +1325,12 @@ function renderIntake(step) {
     h = '<div class="card intake-language"><label class="fld"><span>' + tr('Kies eerst je taal') + '</span><select data-chg="language" aria-label="' + esc(tr('Taal')) + '"><option value="nl-BE"' + (lang === 'nl-BE' ? ' selected' : '') + '>' + tr('Nederlands') + '</option><option value="en-GB"' + (lang === 'en-GB' ? ' selected' : '') + '>' + tr('Engels') + '</option><option value="fr-FR"' + (lang === 'fr-FR' ? ' selected' : '') + '>' + tr('Frans') + '</option><option value="de-DE"' + (lang === 'de-DE' ? ' selected' : '') + '>' + tr('Duits') + '</option></select></label></div>' +
       '<div class="hero"><h1>' + tr('Voedingsdagboek') + '</h1><p>' + tr('Je persoonlijke dagboek wordt lokaal in deze browser bewaard en werkt ook offline. Delen met de community of AI gebeurt alleen wanneer je daar zelf voor kiest.') + '</p></div>' +
       '<div class="card"><h3>' + tr('Heb je al een dagboek?') + '</h3><p class="muted small">' + tr('Importeer het bestand dat je kreeg (.json). Dan staan je dagen, mealpreps, doelen en check-in-tijden er meteen in.') + '</p><label class="btn">' + tr('Dagboek importeren') + '<input type="file" accept=".json,application/json" hidden data-chg="importFile"></label></div>' +
-      '<div class="card"><h3>' + tr('Nieuw beginnen') + '</h3><p class="muted small">' + tr('Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.') + '</p><button class="btn ghost" data-act="intakeGo" data-s="2">' + tr('Start intake') + '</button></div>' + installCard();
+      '<div class="card"><h3>' + tr('Nieuw beginnen') + '</h3><p class="muted small">' + tr('Een korte intake van 1 minuut: wie je bent, je doelen en wanneer je herinneringen wil.') + '</p><button class="btn ghost" data-act="intakeGo" data-s="doel">' + tr('Start intake') + '</button></div>' + installCard();
+  } else if (step === 'doel') {
+    h = header('Waarvoor gebruik je de app?', trf('Stap {n} van {total}', { n: 1, total: 5 })) + '<div class="card"><p class="small muted">' + tr('Vink aan wat voor jou belangrijk is. Vandaag toont dan alleen wat daarbij past. Je kunt dit later altijd aanpassen via Meer.') + '</p>' + purposeOptionsHtml(I.settings.purposes, 'intakePurpose') + '</div>' +
+      '<button class="btn big" data-act="intakeGo" data-s="2">' + tr('Verder') + '</button><button class="link" data-act="intakeAllPurposes">' + tr('Ik weet het nog niet, toon alles') + '</button>';
   } else if (step === '2') {
-    h = header('Over jou', 'Stap 1 van 4') + '<div class="card"><div class="grid2">' +
+    h = header('Over jou', trf('Stap {n} van {total}', { n: 2, total: 5 })) + '<div class="card"><div class="grid2">' +
       ifield('profile.name', 'Naam', I.profile.name, 'text') +
       '<label class="fld"><span>' + tr('Geslacht') + '</span><select data-chg="intakeSet" data-p="profile.sex"><option value="m"' + (I.profile.sex === 'm' ? ' selected' : '') + '>' + tr('man') + '</option><option value="v"' + (I.profile.sex === 'v' ? ' selected' : '') + '>' + tr('vrouw') + '</option></select></label>' +
       ifield('profile.age', 'Leeftijd', I.profile.age) + ifield('profile.heightCm', 'Lengte (cm)', I.profile.heightCm) + ifield('weight', 'Gewicht nu (kg, optioneel)', I.weight) +
@@ -1334,18 +1339,20 @@ function renderIntake(step) {
       '<button class="btn big" data-act="intakeGo" data-s="3">' + tr('Verder') + '</button>';
   } else if (step === '3') {
     const bmr = mifflin(I);
-    h = header('Je doelen', 'Stap 2 van 4') + '<div class="card">' + (bmr ? '<p class="note">' + trf('Onderhoud volgens de formule ≈ {bmr} kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.', { bmr: fmtNum(bmr) }) + '</p>' : '') + '<div class="grid2">' +
-      ifield('goals.kcal', 'Kcal per dag', I.goals.kcal) + ifield('goals.protein', 'Eiwit (g)', I.goals.protein) + ifield('goals.fiber', 'Vezels (g)', I.goals.fiber) + ifield('goals.waterMl', 'Water (ml)', I.goals.waterMl) +
-      ifield('goals.stepsMin', 'Stappen min.', I.goals.stepsMin) + ifield('goals.stepsMax', 'Stappen max.', I.goals.stepsMax) + ifield('goals.sleepH', 'Slaap (u)', I.goals.sleepH) + ifield('goals.caffeineMax', 'Max. cafeïne (shots)', I.goals.caffeineMax) + '</div></div>' +
+    const P = I.settings.purposes, all = !P.length, has = (...k) => all || k.some(x => P.includes(x));
+    const foodish = has('food', 'mealprep');
+    h = header('Je doelen', trf('Stap {n} van {total}', { n: 3, total: 5 })) + '<div class="card">' + (bmr && foodish ? '<p class="note">' + trf('Onderhoud volgens de formule ≈ {bmr} kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.', { bmr: fmtNum(bmr) }) + '</p>' : '') + '<div class="grid2">' +
+      (foodish ? ifield('goals.kcal', 'Kcal per dag', I.goals.kcal) + ifield('goals.protein', 'Eiwit (g)', I.goals.protein) + ifield('goals.fiber', 'Vezels (g)', I.goals.fiber) : '') + (has('food', 'wellbeing') ? ifield('goals.waterMl', 'Water (ml)', I.goals.waterMl) : '') +
+      (has('movement', 'training') ? ifield('goals.stepsMin', 'Stappen min.', I.goals.stepsMin) + ifield('goals.stepsMax', 'Stappen max.', I.goals.stepsMax) : '') + (has('wellbeing') ? ifield('goals.sleepH', 'Slaap (u)', I.goals.sleepH) + ifield('goals.caffeineMax', 'Max. cafeïne (shots)', I.goals.caffeineMax) : '') + '</div>' +
+      (all ? '' : '<p class="small muted">' + tr('We tonen alleen de doelen die passen bij wat je koos. De rest kun je later instellen via Meer.') + '</p>') + '</div>' +
       '<button class="btn big" data-act="intakeGo" data-s="4">' + tr('Verder') + '</button>';
   } else if (step === '4') {
-    h = header('Je check-ins', 'Stap 3 van 4') + '<div class="card"><p class="muted small">' + tr('Op deze momenten vraagt de app wat je at, dronk en hoe je je voelt. Je kan ze later altijd aanpassen.') + '</p>' +
+    h = header('Je check-ins', trf('Stap {n} van {total}', { n: 4, total: 5 })) + '<div class="card"><p class="muted small">' + tr('Op deze momenten vraagt de app wat je at, dronk en hoe je je voelt. Je kan ze later altijd aanpassen.') + '</p>' +
       I.reminders.map((r, i) => '<div class="rem"><input type="checkbox" ' + (r.on ? 'checked' : '') + ' data-chg="intakeRem" data-f="on" data-i="' + i + '"><input type="time" value="' + r.time + '" data-chg="intakeRem" data-f="time" data-i="' + i + '"><span>' + esc(reminderDisplayLabel(r.label)) + '</span></div>').join('') + '</div>' +
       '<button class="btn big" data-act="intakeGo" data-s="5">' + tr('Verder') + '</button>';
   } else if (step === '5') {
     const S = I.settings;
-    h = header('Maak de app persoonlijk', 'Stap 4 van 4 · optioneel') + '<div class="card"><p>' + tr('Kies wat je eerst wilt zien en hoe de app eruitziet. Dit verandert alleen de weergave op dit toestel.') + '</p>' +
-      '<label class="fld"><span>' + tr('Waar wil je de nadruk op leggen?') + '</span><select data-chg="intakePersonalize" data-p="homeFocus">' + [['balanced', 'Alles in balans'], ['food', 'Voeding'], ['movement', 'Beweging en schema’s'], ['wellbeing', 'Stemming en gewoontes']].map(([v, l]) => '<option value="' + v + '"' + (S.homeFocus === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
+    h = header('Maak de app persoonlijk', trf('Stap {n} van {total}', { n: 5, total: 5 }) + ' · ' + tr('optioneel')) + '<div class="card"><p>' + tr('Kies hoe de app eruitziet. Dit verandert alleen de weergave op dit toestel.') + '</p>' +
       '<label class="fld"><span>' + tr('Kleurthema') + '</span><select data-chg="intakePersonalize" data-p="palette">' + [['forest', 'Bosgroen'], ['ocean', 'Oceaanblauw'], ['plum', 'Pruim'], ['sunset', 'Zonsondergang'], ['slate', 'Leisteen'], ['berry', 'Bes'], ['lavender', 'Lavendel'], ['sand', 'Zand'], ['midnight', 'Middernachtblauw']].map(([v, l]) => '<option value="' + v + '"' + (S.palette === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label>' +
       '<label class="fld"><span>' + tr('Tekstgrootte') + '</span><select data-chg="intakePersonalize" data-p="textSize">' + [['compact', 'Compact'], ['normal', 'Standaard'], ['large', 'Groter']].map(([v, l]) => '<option value="' + v + '"' + (S.textSize === v ? ' selected' : '') + '>' + tr(l) + '</option>').join('') + '</select></label></div>' +
       '<button class="btn big" data-act="intakeDone">' + tr('Klaar, start het dagboek') + '</button><button class="link" data-act="intakeDone">' + tr('Overslaan en starten') + '</button>';
@@ -1389,11 +1396,18 @@ function mifflin(I) {
   const f = { zittend: 1.2, licht: 1.375, matig: 1.55, actief: 1.725 }[I.profile.activity] || 1.2;
   return Math.round((10 * w + 6.25 * hgt - 5 * a + (I.profile.sex === 'v' ? -161 : 5)) * f / 10) * 10;
 }
+ACT.intakePurpose = el => {
+  const set = new Set(INTAKE.settings.purposes);
+  if (el.checked) set.add(el.dataset.k); else set.delete(el.dataset.k);
+  INTAKE.settings.purposes = PURPOSE_KEYS.filter(k => set.has(k));
+  if (INTAKE.settings.purposes.length) purposeReminders(INTAKE.reminders, INTAKE.settings.purposes);
+};
+ACT.intakeAllPurposes = () => { INTAKE.settings.purposes = []; for (const r of INTAKE.reminders) if (MEAL_REMINDER_KINDS.includes(r.kind) || r.kind === 'dag') r.on = true; go('#/intake/2'); };
 ACT.intakePersonalize = el => { INTAKE.settings[el.dataset.p] = el.value; applyPersonalSettings(); };
 ACT.intakeDone = () => {
   if (!Array.isArray(INTAKE.reminders) || INTAKE.reminders.some(r => !r || !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time || '') || typeof r.label !== 'string' || !r.label.trim())) { toast(tr('Controleer de naam en tijd van elke herinnering.')); go('#/intake/4'); return; }
   DB.profile = INTAKE.profile; DB.goals = INTAKE.goals; DB.reminders = INTAKE.reminders.sort((a, b) => a.time.localeCompare(b.time));
-  DB.settings.homeFocus = INTAKE.settings.homeFocus; DB.settings.palette = INTAKE.settings.palette; DB.settings.textSize = INTAKE.settings.textSize;
+  applyPurposeSettings(INTAKE.settings.purposes.length ? INTAKE.settings.purposes : null); DB.settings.palette = INTAKE.settings.palette; DB.settings.textSize = INTAKE.settings.textSize;
   if (INTAKE.weight) { DB.profile.startWeight = INTAKE.weight; const d = getDay(todayKey(), true); if (!isNum(d.weight)) d.weight = INTAKE.weight; }
   DB.intakeDone = true; save(); INTAKE = null;
   toast(tr('Klaar! Zet nu je herinneringen op je gsm via Meer.'));
@@ -1415,7 +1429,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.11.14';
+const APP_VERSION = '1.11.16';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
