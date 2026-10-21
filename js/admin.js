@@ -38,10 +38,11 @@ async function renderAdmin() {
   try {
     await ensureSession();
     const rows = await sb('/rest/v1/rpc/list_invites', { method: 'POST', body: {} });
-    $('#invlist').innerHTML = '<div class="card table">' + rows.map(r => '<div class="tr"><span><b class="code">' + esc(r.code) + '</b>' + (r.label ? ' <span class="muted">· ' + esc(r.label) + '</span>' : '') + '</span><b>' + r.uses + '/' + r.max_uses + '</b><small>' + (r.members ? trf('{count} leden', { count: r.members }) + ' · ' : '') + tr(r.active ? 'actief' : 'ingetrokken') + ' · ' + new Date(r.created_at).toLocaleDateString(currentLocale()) +
+    $('#invlist').innerHTML = '<div class="card table">' + rows.map(r => '<div class="tr"><span><b class="code">' + esc(r.code) + '</b>' + (r.label ? ' <span class="muted">· ' + esc(r.label) + '</span>' : '') + '</span><b>' + r.uses + '/' + r.max_uses + '</b><small>' + (r.members ? trf('{count} leden', { count: r.members }) + ' · ' : '') + tr(!r.active ? 'ingetrokken' : r.uses >= r.max_uses ? 'opgebruikt' : 'actief') + ' · ' + new Date(r.created_at).toLocaleDateString(currentLocale()) +
       (/^PRATIK-/.test(r.code) ? '' : ' · <button class="link' + (r.active ? ' danger' : '') + '" data-act="invToggle" data-c="' + esc(r.code) + '" data-a="' + (r.active ? 0 : 1) + '">' + tr(r.active ? 'Intrekken' : 'Opnieuw activeren') + '</button>') +
+      (!/^PRATIK-/.test(r.code) && r.uses >= r.max_uses ? ' · <button class="link" data-act="invReopen" data-c="' + esc(r.code) + '">' + tr('Opnieuw bruikbaar maken (+1)') + '</button>' : '') +
       (r.active && r.uses < r.max_uses ? ' · <button class="link" data-act="invShare" data-c="' + esc(r.code) + '">' + tr('Sturen') + '</button>' : '') + '</small></div>').join('') + '</div>' +
-      '<p class="muted small">' + tr('Intrekken blokkeert alleen nieuwe gebruikers van die code. Wie al lid is, blijft lid.') + '</p>';
+      '<p class="muted small">' + tr('Intrekken blokkeert alleen nieuwe gebruikers van die code. Wie al lid is, blijft lid.') + ' ' + tr('Een opgebruikte code kun je opnieuw bruikbaar maken: hij krijgt één extra gebruik en wordt weer actief.') + '</p>';
   } catch (e) { console.error('Uitnodigingscodes laden mislukt', e); $('#invlist').innerHTML = '<p class="note">' + tr('Uitnodigingscodes laden is mislukt. Probeer het opnieuw.') + '</p>'; }
 }
 ACT.invMax = el => { document.querySelectorAll('#invmax button').forEach(b => b.classList.toggle('on', b === el)); };
@@ -59,4 +60,14 @@ ACT.invCopy = async el => { try { await navigator.clipboard.writeText(el.dataset
 ACT.invToggle = async el => {
   try { await sb('/rest/v1/rpc/set_invite_active', { method: 'POST', body: { p_code: el.dataset.c, p_active: el.dataset.a === '1' } }); renderAdmin(); }
   catch (e) { console.error('Uitnodigingscode aanpassen mislukt', e); toast(tr('Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.')); }
+};
+ACT.invReopen = async el => {
+  el.disabled = true;
+  try {
+    await ensureSession();
+    const ok = await sb('/rest/v1/rpc/reopen_invite', { method: 'POST', body: { p_code: el.dataset.c, p_extra: 1 } });
+    if (ok === false) { toast(tr('Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.')); el.disabled = false; return; }
+    toast(tr('Code is opnieuw bruikbaar'));
+    renderAdmin();
+  } catch (e) { console.error('Uitnodigingscode heropenen mislukt', e); toast(tr('Uitnodigingscode aanpassen is mislukt. Probeer het opnieuw.')); el.disabled = false; }
 };
