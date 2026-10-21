@@ -1964,6 +1964,13 @@ const CAMERA_UI_TRANSLATIONS = {
   'de-DE': { 'Cameratoegang is geblokkeerd. Geef de app toestemming in je browserinstellingen.': 'Der Kamerazugriff ist gesperrt. Erlaube ihn in den Browsereinstellungen.', 'De camera kon niet worden gestart. Je kunt de cijfers ook intypen.': 'Die Kamera konnte nicht gestartet werden. Du kannst die Zahlen auch manuell eingeben.' }
 };
 for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], CAMERA_UI_TRANSLATIONS[locale]);
+const REOPEN_INVITE_TRANSLATIONS = {
+  'nl-BE': { 'opgebruikt': 'opgebruikt', 'Opnieuw bruikbaar maken (+1)': 'Opnieuw bruikbaar maken (+1)', 'Een opgebruikte code kun je opnieuw bruikbaar maken: hij krijgt één extra gebruik en wordt weer actief.': 'Een opgebruikte code kun je opnieuw bruikbaar maken: hij krijgt één extra gebruik en wordt weer actief.', 'Code is opnieuw bruikbaar': 'Code is opnieuw bruikbaar' },
+  'en-GB': { 'opgebruikt': 'used up', 'Opnieuw bruikbaar maken (+1)': 'Make reusable (+1)', 'Een opgebruikte code kun je opnieuw bruikbaar maken: hij krijgt één extra gebruik en wordt weer actief.': 'You can make a used-up code reusable: it gets one extra use and becomes active again.', 'Code is opnieuw bruikbaar': 'Code can be used again' },
+  'fr-FR': { 'opgebruikt': 'épuisé', 'Opnieuw bruikbaar maken (+1)': 'Rendre réutilisable (+1)', 'Een opgebruikte code kun je opnieuw bruikbaar maken: hij krijgt één extra gebruik en wordt weer actief.': 'Un code épuisé peut être rendu réutilisable : il reçoit une utilisation supplémentaire et redevient actif.', 'Code is opnieuw bruikbaar': 'Le code peut à nouveau être utilisé' },
+  'de-DE': { 'opgebruikt': 'aufgebraucht', 'Opnieuw bruikbaar maken (+1)': 'Wieder nutzbar machen (+1)', 'Een opgebruikte code kun je opnieuw bruikbaar maken: hij krijgt één extra gebruik en wordt weer actief.': 'Einen aufgebrauchten Code kannst du wieder nutzbar machen: Er erhält eine zusätzliche Nutzung und wird wieder aktiv.', 'Code is opnieuw bruikbaar': 'Der Code kann wieder verwendet werden' }
+};
+for (const locale of UI_LOCALES) Object.assign(UI_EXTRA_TRANSLATIONS[locale], REOPEN_INVITE_TRANSLATIONS[locale]);
 const TRAINING_DEFAULT_TRANSLATIONS = {
   'nl-BE': { 'Krachttraining': 'Krachttraining', 'Beginner': 'Beginner' },
   'en-GB': { 'Krachttraining': 'Strength training', 'Beginner': 'Beginner' },
