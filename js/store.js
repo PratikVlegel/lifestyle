@@ -311,7 +311,11 @@ function validateImportData(obj) {
       palette: ['forest', 'ocean', 'plum', 'sunset', 'slate', 'berry', 'lavender', 'sand', 'midnight'], textSize: ['compact', 'normal', 'large']
     };
     for (const [field, allowed] of Object.entries(choices)) if (obj.settings[field] !== undefined && !allowed.includes(obj.settings[field])) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
-    for (const field of ['notify', 'pushEnabled', 'moodInsights', 'share']) if (obj.settings[field] !== undefined && typeof obj.settings[field] !== 'boolean') failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+    for (const [field, allowed] of Object.entries({ purposes: ['food', 'mealprep', 'training', 'movement', 'weight', 'wellbeing'], homeSections: ['checkins', 'training', 'prepFeedback', 'week', 'quick', 'meals', 'tip'] })) {
+      const v = obj.settings[field];
+      if (v !== undefined && v !== null && (!Array.isArray(v) || v.length > allowed.length || v.some(x => !allowed.includes(x)))) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
+    }
+    for (const field of ['notify', 'pushEnabled', 'moodInsights', 'share', 'purposePromptDone']) if (obj.settings[field] !== undefined && typeof obj.settings[field] !== 'boolean') failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
     if (obj.settings.glassMl !== undefined && (typeof obj.settings.glassMl !== 'number' || !Number.isInteger(obj.settings.glassMl) || obj.settings.glassMl < 1 || obj.settings.glassMl > 10000)) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
     for (const [field, limit] of Object.entries({ apiKey: 512, sbUrl: 2048, sbKey: 512, model: 100, appUrl: 2048, communityName: 40 })) {
       if (obj.settings[field] !== undefined && obj.settings[field] !== null && (typeof obj.settings[field] !== 'string' || obj.settings[field].length > limit)) failLocalized('Back-up bevat ongeldige profiel- of appinstellingen.');
