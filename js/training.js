@@ -138,7 +138,7 @@ function validExerciseTarget(value) {
 function exerciseTargetText(x) {
   const parts = [esc(x.reps) + (validRepRange(x.reps) ? ' ' + tr('herhalingen') : '')];
   if (Number(x.holdSeconds) > 0) parts.push(Number(x.holdSeconds) + ' ' + tr('sec vasthouden'));
-  if (Number(x.weightKg) > 0) parts.push(fmtNum(Number(x.weightKg), 2) + ' ' + tr('kg'));
+  if (Number(x.weightKg) > 0) { const kg = Number(x.weightKg); parts.push(fmtNum(kg, Number.isInteger(kg) ? 0 : Number.isInteger(kg * 10) ? 1 : 2) + ' ' + tr('kg')); }
   return parts.join(' · ');
 }
 const CUSTOM_EXERCISE_LIBRARY = [

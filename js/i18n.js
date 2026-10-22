@@ -3050,3 +3050,46 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Etiket gelezen met AI. Controleer even de cijfers.': 'Etikett mit KI gelesen. Bitte prüfe die Zahlen.',
   'Tip: zet de voedingstabel groot en scherp in beeld, zonder schittering. Met een API-sleutel (Meer → AI) leest AI etiketten veel nauwkeuriger.': 'Tipp: Nimm die Nährwerttabelle groß und scharf ohne Spiegelung auf. Mit einem API-Schlüssel (Mehr → KI) liest die KI Etiketten viel genauer.'
 });
+/* Rapporten en samenvattingen voor externen */
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Volledig rapport': 'Full report', 'Water (l)': 'Water (l)', 'Stemming /10': 'Mood /10', 'Energie /10': 'Energy /10', 'Stress /10': 'Stress /10', 'Activiteit (min)': 'Activity (min)',
+  'Dagoverzicht': 'Daily overview', '“–” = niet geregistreerd.': '“–” = not recorded.', '* = eigen dagschatting van de kcal': '* = self-entered daily calorie estimate',
+  '≥ = niet alles is geregistreerd (ondergrens)': '≥ = not everything was recorded (lower bound)', '×? = activiteit zonder duur': '×? = activity without a duration',
+  '{count} dag(en) met een onvolledige registratie (≥) tellen niet mee in deze gemiddelden.': '{count} day(s) with incomplete entries (≥) are excluded from these averages.',
+  'Snoep en zoetigheden (porties per dag)': 'Sweets and treats (servings per day)', 'trek {value}/5': 'cravings {value}/5', 'honger vooraf {value}/5': 'hunger beforehand {value}/5', 'Wat': 'What',
+  '{count} porties van ≈ {kcal} kcal': '{count} servings of ≈ {kcal} kcal', 'nog {count} over': '{count} left', 'Eigen beoordeling': 'Own rating',
+  'Geen actief trainingsschema.': 'No active training plan.', 'week {current} van {total}': 'week {current} of {total}', 'Deze schemaweek afgevinkt': 'Ticked off this plan week',
+  '{done} van {total} trainingen': '{done} of {total} sessions', 'Tot nu toe afgevinkt': 'Ticked off so far', '{done} van {total} trainingen (week 1–{week})': '{done} of {total} sessions (weeks 1–{week})',
+  'Trainingen deze schemaweek': 'Sessions this plan week',
+  'Afgevinkte trainingen worden per schemaweek bijgehouden, zonder datum; ze vallen dus niet altijd samen met de rapportperiode. Sets, herhalingen en gewichten zijn de planning, geen gemeten prestaties.': 'Completed sessions are tracked per plan week without a date, so they may not match the report period exactly. Sets, reps and weights are the plan, not measured performance.',
+  'Suikerhoudende frisdrank (porties per dag)': 'Sugary soft drinks (servings per day)', 'Verschil eerste–laatste weging: {diff} kg ({from} → {to}).': 'Change between first and last weigh-in: {diff} kg ({from} → {to}).',
+  'Gemiddeld per dag met gegevens:': 'Average per day with data:', 'eigen dagschatting': 'self-entered daily estimate', '“≥” = niet alles is geregistreerd.': '“≥” = not everything was recorded.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Volledig rapport': 'Rapport complet', 'Water (l)': 'Eau (l)', 'Stemming /10': 'Humeur /10', 'Energie /10': 'Énergie /10', 'Stress /10': 'Stress /10', 'Activiteit (min)': 'Activité (min)',
+  'Dagoverzicht': 'Aperçu par jour', '“–” = niet geregistreerd.': '« – » = non enregistré.', '* = eigen dagschatting van de kcal': '* = estimation journalière saisie vous-même',
+  '≥ = niet alles is geregistreerd (ondergrens)': '≥ = tout n’a pas été enregistré (minimum)', '×? = activiteit zonder duur': '×? = activité sans durée',
+  '{count} dag(en) met een onvolledige registratie (≥) tellen niet mee in deze gemiddelden.': '{count} jour(s) avec un enregistrement incomplet (≥) ne sont pas inclus dans ces moyennes.',
+  'Snoep en zoetigheden (porties per dag)': 'Bonbons et sucreries (portions par jour)', 'trek {value}/5': 'envies {value}/5', 'honger vooraf {value}/5': 'faim avant {value}/5', 'Wat': 'Quoi',
+  '{count} porties van ≈ {kcal} kcal': '{count} portions de ≈ {kcal} kcal', 'nog {count} over': 'encore {count}', 'Eigen beoordeling': 'Votre évaluation',
+  'Geen actief trainingsschema.': 'Aucun programme d’entraînement actif.', 'week {current} van {total}': 'semaine {current} sur {total}', 'Deze schemaweek afgevinkt': 'Cochées cette semaine du programme',
+  '{done} van {total} trainingen': '{done} séances sur {total}', 'Tot nu toe afgevinkt': 'Cochées jusqu’ici', '{done} van {total} trainingen (week 1–{week})': '{done} séances sur {total} (semaines 1–{week})',
+  'Trainingen deze schemaweek': 'Séances de cette semaine du programme',
+  'Afgevinkte trainingen worden per schemaweek bijgehouden, zonder datum; ze vallen dus niet altijd samen met de rapportperiode. Sets, herhalingen en gewichten zijn de planning, geen gemeten prestaties.': 'Les séances cochées sont suivies par semaine de programme, sans date ; elles ne correspondent donc pas toujours à la période du rapport. Séries, répétitions et charges sont le plan, pas des performances mesurées.',
+  'Suikerhoudende frisdrank (porties per dag)': 'Boissons sucrées (portions par jour)', 'Verschil eerste–laatste weging: {diff} kg ({from} → {to}).': 'Différence entre la première et la dernière pesée : {diff} kg ({from} → {to}).',
+  'Gemiddeld per dag met gegevens:': 'Moyenne par jour avec données :', 'eigen dagschatting': 'estimation journalière saisie vous-même', '“≥” = niet alles is geregistreerd.': '« ≥ » = tout n’a pas été enregistré.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Volledig rapport': 'Vollständiger Bericht', 'Water (l)': 'Wasser (l)', 'Gewicht (kg)': 'Gewicht (kg)', 'Stemming /10': 'Stimmung /10', 'Energie /10': 'Energie /10', 'Stress /10': 'Stress /10', 'Activiteit (min)': 'Aktivität (Min.)',
+  'Dagoverzicht': 'Tagesübersicht', '“–” = niet geregistreerd.': '„–“ = nicht erfasst.', '* = eigen dagschatting van de kcal': '* = selbst eingegebene Tagesschätzung',
+  '≥ = niet alles is geregistreerd (ondergrens)': '≥ = nicht alles erfasst (Untergrenze)', '×? = activiteit zonder duur': '×? = Aktivität ohne Dauer',
+  '{count} dag(en) met een onvolledige registratie (≥) tellen niet mee in deze gemiddelden.': '{count} Tag(e) mit unvollständigen Einträgen (≥) zählen nicht zu diesen Durchschnitten.',
+  'Snoep en zoetigheden (porties per dag)': 'Süßigkeiten (Portionen pro Tag)', 'trek {value}/5': 'Heißhunger {value}/5', 'honger vooraf {value}/5': 'Hunger vorher {value}/5', 'Wat': 'Was',
+  '{count} porties van ≈ {kcal} kcal': '{count} Portionen à ≈ {kcal} kcal', 'nog {count} over': 'noch {count} übrig', 'Eigen beoordeling': 'Eigene Bewertung',
+  'Geen actief trainingsschema.': 'Kein aktiver Trainingsplan.', 'week {current} van {total}': 'Woche {current} von {total}', 'Deze schemaweek afgevinkt': 'In dieser Planwoche abgehakt',
+  '{done} van {total} trainingen': '{done} von {total} Einheiten', 'Tot nu toe afgevinkt': 'Bisher abgehakt', '{done} van {total} trainingen (week 1–{week})': '{done} von {total} Einheiten (Woche 1–{week})',
+  'Trainingen deze schemaweek': 'Einheiten dieser Planwoche',
+  'Afgevinkte trainingen worden per schemaweek bijgehouden, zonder datum; ze vallen dus niet altijd samen met de rapportperiode. Sets, herhalingen en gewichten zijn de planning, geen gemeten prestaties.': 'Abgehakte Einheiten werden pro Planwoche ohne Datum gespeichert und decken sich daher nicht immer mit dem Berichtszeitraum. Sätze, Wiederholungen und Gewichte sind der Plan, keine gemessene Leistung.',
+  'Suikerhoudende frisdrank (porties per dag)': 'Zuckerhaltige Getränke (Portionen pro Tag)', 'Verschil eerste–laatste weging: {diff} kg ({from} → {to}).': 'Unterschied zwischen erster und letzter Wiegung: {diff} kg ({from} → {to}).',
+  'Gemiddeld per dag met gegevens:': 'Durchschnitt pro Tag mit Daten:', 'eigen dagschatting': 'selbst eingegebene Tagesschätzung', '“≥” = niet alles is geregistreerd.': '„≥“ = nicht alles erfasst.'
+});

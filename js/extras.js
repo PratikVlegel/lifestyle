@@ -83,12 +83,29 @@ ACT.shopShare = () => { const S = shopState(); shareText(tr('Boodschappen') + '\
 
 /* ---------- rapporten per doelgroep ---------- */
 const AUDIENCES = {
-  dietist: { label: 'Diëtist', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'gewicht', 'drinken', 'supplementen'] },
-  psycholoog: { label: 'Psycholoog', parts: ['stemming', 'slaap', 'ritme', 'honger', 'middelen', 'supplementen', 'notities'] },
-  coach: { label: 'Sportcoach', parts: ['beweging', 'voeding', 'slaap', 'gewicht', 'energie', 'supplementen'] },
-  arts: { label: 'Huisarts', parts: ['profiel', 'slaap', 'gewicht', 'middelen', 'stemming', 'voeding', 'supplementen'] },
-  alles: { label: 'Alles', parts: ['profiel', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'beweging', 'slaap', 'stemming', 'energie', 'notities', 'middelen', 'gewicht', 'drinken', 'supplementen'] }
+  dietist: { label: 'Diëtist', parts: ['profiel', 'dagen', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'gewicht', 'drinken', 'supplementen'], cols: ['kcal', 'protein', 'fiber', 'water', 'weight'] },
+  psycholoog: { label: 'Psycholoog', parts: ['dagen', 'stemming', 'energie', 'slaap', 'ritme', 'honger', 'middelen', 'supplementen', 'notities'], cols: ['mood', 'energy', 'stress', 'sleepH'] },
+  coach: { label: 'Sportcoach', parts: ['dagen', 'training', 'beweging', 'voeding', 'slaap', 'gewicht', 'energie', 'supplementen'], cols: ['steps', 'actMin', 'sleepH', 'energy', 'kcal', 'protein'] },
+  arts: { label: 'Huisarts', parts: ['profiel', 'dagen', 'slaap', 'gewicht', 'middelen', 'stemming', 'voeding', 'supplementen'], cols: ['sleepH', 'cpap', 'mood', 'weight', 'alcohol'] },
+  alles: { label: 'Alles', parts: ['profiel', 'dagen', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'training', 'beweging', 'slaap', 'stemming', 'energie', 'notities', 'middelen', 'gewicht', 'drinken', 'supplementen'], cols: ['kcal', 'protein', 'sleepH', 'mood', 'steps', 'weight'] }
 };
+/* Kolommen van het dagoverzicht: [kop, waarde voor één dag]. */
+const REPORT_COLS = {
+  kcal: ['Kcal', d => { const r = dayNutr(d, 'kcal'); return r ? (r.lb ? '≥ ' : '') + fmtNum(r.v) + (d.kcalOverride ? '*' : '') : ''; }],
+  protein: ['Eiwit (g)', d => { const r = dayNutr(d, 'protein'); return r ? (r.lb ? '≥ ' : '') + fmtNum(r.v) : ''; }],
+  fiber: ['Vezels (g)', d => { const r = dayNutr(d, 'fiber'); return r ? (r.lb ? '≥ ' : '') + fmtNum(r.v) : ''; }],
+  water: ['Water (l)', d => isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) : ''],
+  weight: ['Gewicht (kg)', d => isNum(d.weight) ? fmtNum(d.weight, 1) : ''],
+  mood: ['Stemming /10', d => isValidDailyRating(d.mood) ? String(d.mood) : ''],
+  energy: ['Energie /10', d => isValidDailyRating(d.energy) ? String(d.energy) : ''],
+  stress: ['Stress /10', d => isValidDailyRating(d.stress) ? String(d.stress) : ''],
+  sleepH: ['Slaap (u)', d => isNum(d.sleepH) ? fmtNum(d.sleepH, 1) : ''],
+  steps: ['Stappen', d => isNum(d.steps) ? fmtNum(d.steps) : ''],
+  actMin: ['Activiteit (min)', d => { const a = d.activities || []; if (!a.length) return ''; const min = a.filter(x => isNum(x.min)).reduce((s, x) => s + x.min, 0), open = a.filter(x => !isNum(x.min)).length; return (min ? fmtNum(min) : '') + (open ? (min ? ' + ' : '') + open + '×?' : ''); }],
+  cpap: ['CPAP', d => d.cpap ? tr(d.cpap) : ''],
+  alcohol: ['Alcohol (glazen)', d => isNum(d.alcohol) ? fmtNum(d.alcohol, d.alcohol % 1 ? 1 : 0) : '']
+};
+const REPORT_ACTIVITY = { zittend: 'zittend werk', licht: 'licht actief', matig: 'matig actief', actief: 'zeer actief' };
 const REPORT_NICOTINE_FORMS = {
   cigarette: 'Sigaretten', vape: 'Vape', nicotineGum: 'Nicotinekauwgom', nicotinePouch: 'Nicotinezakjes of snus',
   nicotinePatch: 'Nicotinepleister', heatedTobacco: 'Verhitte tabak', otherNicotine: 'Andere nicotinevorm'
@@ -195,28 +212,48 @@ function reportHtml(aud, n) {
   const reportValue = (name, value) => {
     const D = DVARS[name];
     const unit = D.u === 'u' ? tr('hours') : D.u === 'glazen' ? tr('glasses') : D.u === 'shots' ? tr('servings') : D.u;
+    if (unit && unit.startsWith('/')) return fmtNum(value, 1) + unit;   // schaalscores: "6,4/10"
     return fmtNum(value, D.d) + (unit ? ' ' + unit : '');
   };
   const row = (l, v) => '<tr><th scope="row">' + esc(tr(l)) + '</th><td>' + v + '</td></tr>';
   const sec = (t, body) => body ? '<section><h3>' + esc(tr(t)) + '</h3>' + body + '</section>' : '';
   const tbl = rows => '<table>' + rows.filter(Boolean).join('') + '</table>';
   const mv = (name, extra) => { const v = avgOf(name); return isNum(v) ? reportValue(name, v) + ' <small>(' + reportCount(cntOf(name), '{count} day with data', '{count} days with data') + (extra ? ', ' + extra : '') + ')</small>' : '–'; };
-  let h = '<header><h2>' + esc(trf('Report for {audience}', { audience: tr(A.label).toLocaleLowerCase(currentLocale()) })) + '</h2><p>' + esc(P.name || '') + ' · ' + fmtDay(periodKeys[0]) + ' – ' + fmtDay(end) + ' · ' + reportCount(keys.length, '{count} day with data', '{count} days with data') + '</p><p class="small">' + tr('Self-reported. Calories and nutrition values are rough estimates; “–” means unknown. Sleep refers to the night before that day.') + (A.parts.includes('stemming') ? ' ' + tr('Mood scores are daily self-reflections, not a validated psychological assessment.') : '') + '</p></header>';
+  let h = '<header><h2>' + esc(aud === 'alles' ? tr('Volledig rapport') : trf('Report for {audience}', { audience: tr(A.label).toLocaleLowerCase(currentLocale()) })) + '</h2><p>' + esc(P.name || '') + ' · ' + fmtDay(periodKeys[0]) + ' – ' + fmtDay(end) + ' · ' + reportCount(keys.length, '{count} day with data', '{count} days with data') + '</p><p class="small">' + tr('Self-reported. Calories and nutrition values are rough estimates; “–” means unknown. Sleep refers to the night before that day.') + (A.parts.includes('stemming') ? ' ' + tr('Mood scores are daily self-reflections, not a validated psychological assessment.') : '') + '</p></header>';
   for (const part of A.parts) {
     if (part === 'profiel') {
-      const profileSummary = [P.sex === 'v' ? tr('vrouw') : P.sex === 'm' ? tr('man') : '', P.age ? trf('{count} years', { count: P.age }) : '', P.heightCm ? P.heightCm + ' cm' : ''].filter(Boolean).join(', ');
+      const profileSummary = [P.sex === 'v' ? tr('vrouw') : P.sex === 'm' ? tr('man') : '', P.age ? trf('{count} years', { count: P.age }) : '', P.heightCm ? P.heightCm + ' cm' : '', REPORT_ACTIVITY[P.activity] ? tr(REPORT_ACTIVITY[P.activity]) : ''].filter(Boolean).join(', ');
       h += sec('Profiel en doelen', '<p>' + (profileSummary ? esc(profileSummary) + '. ' : '') + esc(trf('Goals: {kcal} kcal, {protein} g protein, {fiber} g fibre, {water} l water, {stepsMin}–{stepsMax} steps.', { kcal: G.kcal, protein: G.protein, fiber: G.fiber, water: fmtNum(G.waterMl / 1000, 1), stepsMin: G.stepsMin, stepsMax: G.stepsMax })) + '</p>' + (P.notes ? '<div class="report-context"><b>' + tr('Your context note') + '</b><p>' + esc(P.notes) + '</p></div>' : ''));
     }
-    if (part === 'voeding') h += sec('Voedingsgemiddelden uit geregistreerde gegevens', '<p class="small muted">' + tr('Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.') + '</p>' + tbl([row('Kcal', mv('kcal')), row('Eiwit', mv('protein')), row('Koolhydraten', mv('carbs')), row('Vet', mv('fat')), row('Vezels', mv('fiber')), row('Kcal uit geregistreerde maaltijden vóór het avondeten', mv('dayKcal')), row('Kcal uit geregistreerde maaltijden vanaf het avondeten', mv('eveKcal'))]));
-    if (part === 'drinken') h += sec('Drinken', '<p class="small muted">' + tr('Coffee servings and glasses are self-reported; serving size can vary. Missing entries are not counted as zero.') + '</p>' + tbl([row('Water', mv('water')), row('Koffie (porties)', mv('caffeine')), row('Alcohol', alcoholReport(periodKeys))]));
+    if (part === 'dagen') {
+      const cols = A.cols.map(c => REPORT_COLS[c]);
+      const rows = periodKeys.slice().reverse().map(k => {
+        const d = DB.days[k];
+        return '<tr' + (d ? '' : ' class="report-empty"') + '><th scope="row">' + esc(fmtDay(k)) + '</th>' + cols.map(([, f]) => '<td>' + (d ? esc(f(d, k)) || '–' : '–') + '</td>').join('') + '</tr>';
+      }).join('');
+      const marks = [A.cols.includes('kcal') && keys.some(k => DB.days[k].kcalOverride) ? tr('* = eigen dagschatting van de kcal') : '', ['kcal', 'protein', 'fiber'].some(c => A.cols.includes(c)) ? tr('≥ = niet alles is geregistreerd (ondergrens)') : '', A.cols.includes('actMin') ? tr('×? = activiteit zonder duur') : ''].filter(Boolean).join(' · ');
+      h += sec('Dagoverzicht', '<div class="report-scroll"><table class="report-grid"><thead><tr><th scope="col">' + tr('Dag') + '</th>' + cols.map(([l]) => '<th scope="col">' + esc(tr(l)) + '</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + '<p class="small muted">' + esc(tr('“–” = niet geregistreerd.')) + (marks ? ' ' + esc(marks) : '') + '</p>');
+    }
+    if (part === 'voeding') {
+      const lbDays = keys.filter(k => { const r = dayNutr(DB.days[k], 'kcal'); return r && r.lb; }).length;
+      const sweets = keys.map(k => DB.days[k].sweetsServings).filter(v => isNum(v) && v >= 0);
+      h += sec('Voedingsgemiddelden uit geregistreerde gegevens', '<p class="small muted">' + tr('Nutrition averages use only recorded, calculable data. Unlogged meals are excluded and can make totals lower than actual intake. A daily calorie estimate may be self-entered; these figures are not a clinical nutrition assessment.') + (lbDays ? ' ' + esc(trf('{count} dag(en) met een onvolledige registratie (≥) tellen niet mee in deze gemiddelden.', { count: lbDays })) : '') + '</p>' + tbl([row('Kcal', mv('kcal')), row('Eiwit', mv('protein')), row('Koolhydraten', mv('carbs')), row('Vet', mv('fat')), row('Vezels', mv('fiber')), row('Kcal uit geregistreerde maaltijden vóór het avondeten', mv('dayKcal')), row('Kcal uit geregistreerde maaltijden vanaf het avondeten', mv('eveKcal')), sweets.length ? row('Snoep en zoetigheden (porties per dag)', fmtNum(avg(sweets), 1) + ' <small>(' + reportCount(sweets.length, '{count} day with data', '{count} days with data') + ')</small>') : '']));
+    }
+    if (part === 'drinken') {
+      const soft = keys.map(k => DB.days[k].softDrinkServings).filter(v => isNum(v) && v >= 0);
+      h += sec('Drinken', '<p class="small muted">' + tr('Coffee servings and glasses are self-reported; serving size can vary. Missing entries are not counted as zero.') + '</p>' + tbl([row('Water', mv('water')), row('Koffie (porties)', mv('caffeine')), soft.length ? row('Suikerhoudende frisdrank (porties per dag)', fmtNum(avg(soft), 1) + ' <small>(' + reportCount(soft.length, '{count} day with data', '{count} days with data') + ')</small>') : '', A.parts.includes('middelen') ? '' : row('Alcohol', alcoholReport(periodKeys))]));
+    }
     if (part === 'maaltijden') {
       const mealDays = keys.slice().reverse().filter(k => (DB.days[k].meals || []).length);
-      const mealCards = mealDays.map(k => {
-        const d = DB.days[k], kc = dayNutr(d, 'kcal');
-        const meals = SLOT_ORDER.map(s => (d.meals || []).filter(m => m.slot === s).map(m => '<div class="report-meal"><b>' + esc(tr(SLOTS[s]) + (m.time ? ' · ' + m.time : '')) + '</b><p>' + (m.nothing ? esc(tr('niets')) : esc(m.desc)) + '</p>' + (d.hunger && isNum(d.hunger[s]) ? '<small>' + esc(tr('honger')) + ' ' + d.hunger[s] + '/5</small>' : '') + '</div>').join('')).join('');
-        return '<article class="report-day"><div class="report-dayhead"><b>' + fmtDay(k, true) + '</b><span>' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('kcal ?')) + '</span></div>' + meals + '</article>';
+      const hungerNote = (d, s) => d.hunger && isNum(d.hunger[s]) ? ' <small class="muted">· ' + esc(s === 'na' ? trf('trek {value}/5', { value: d.hunger[s] }) : trf('honger vooraf {value}/5', { value: d.hunger[s] })) + '</small>' : '';
+      const num = v => isNum(v) ? fmtNum(v) : '–';
+      const bodies = mealDays.map(k => {
+        const d = DB.days[k], kc = dayNutr(d, 'kcal'), pr = dayNutr(d, 'protein');
+        const head = '<tr class="report-dayrow"><th scope="rowgroup" colspan="2">' + esc(fmtDay(k, true)) + '</th><td>' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + (d.kcalOverride ? '*' : '') : '?') + '</td><td>' + (pr ? (pr.lb ? '≥ ' : '') + fmtNum(pr.v) : '?') + '</td></tr>';
+        const meals = SLOT_ORDER.flatMap(s => (d.meals || []).filter(m => m.slot === s).map(m => '<tr><td>' + esc(tr(SLOTS[s])) + (m.time ? ' <small class="muted">' + esc(m.time) + '</small>' : '') + '</td><td>' + (m.nothing ? esc(tr('niets')) : esc(m.desc || '')) + hungerNote(d, s) + '</td><td>' + (m.nothing ? '0' : num(m.kcal)) + '</td><td>' + (m.nothing ? '0' : num(m.protein)) + '</td></tr>')).join('');
+        return '<tbody>' + head + meals + '</tbody>';
       }).join('');
-      h += sec('Wat er gegeten werd', '<p class="small muted">' + tr('Only recorded meals are shown. An unlisted meal or day is unknown, not proof that nothing was eaten.') + '</p>' + (mealCards ? '<div class="report-days">' + mealCards + '</div>' : '<p>' + tr('No meal entries were recorded in this period.') + '</p>') + '<p class="small muted">' + reportCount(mealDays.length, '{count} day with meal entries', '{count} days with meal entries') + '</p>');
+      h += sec('Wat er gegeten werd', '<p class="small muted">' + tr('Only recorded meals are shown. An unlisted meal or day is unknown, not proof that nothing was eaten.') + '</p>' + (bodies ? '<div class="report-scroll"><table class="report-grid report-meals"><thead><tr><th scope="col">' + tr('Moment') + '</th><th scope="col">' + tr('Wat') + '</th><th scope="col">kcal</th><th scope="col">' + tr('Eiwit (g)') + '</th></tr></thead>' + bodies + '</table></div>' : '<p>' + tr('No meal entries were recorded in this period.') + '</p>') + '<p class="small muted">' + reportCount(mealDays.length, '{count} day with meal entries', '{count} days with meal entries') + (mealDays.some(k => DB.days[k].kcalOverride) ? ' · ' + esc(tr('* = eigen dagschatting van de kcal')) : '') + '</p>');
     }
     if (part === 'ritme') {
       const mealKeys = keys.filter(k => (DB.days[k].meals || []).length);
@@ -226,8 +263,25 @@ function reportHtml(aud, n) {
     }
     if (part === 'honger') h += sec('Honger en trek (1–5)', tbl([row('Honger vóór het avondeten', mv('hungerDinner')), row('Trek \'s avonds', mv('hungerEve'))]));
     if (part === 'preps') {
-      const f = DB.preps.filter(p => p.feedback && p.date && periodKeys.includes(p.date));
-      if (f.length) h += sec('Mealpreps: eigen beoordeling', '<p class="small muted">' + tr('Feedback is linked to the meal prep; the date it was eaten is not recorded.') + '</p><ul>' + f.map(p => '<li><b>' + esc(p.name) + '</b> · ' + fmtDay(p.date) + ': ' + esc(feedbackSummary(p.feedback)) + (p.feedback.note ? ' · "' + esc(p.feedback.note) + '"' : '') + '</li>').join('') + '</ul>');
+      const made = DB.preps.filter(p => p.date && periodKeys.includes(p.date)).sort((a, b) => a.date.localeCompare(b.date));
+      const f = made.filter(p => p.feedback);
+      const madeList = made.map(p => { const { per } = prepTotals(p); return '<li><b>' + esc(p.name) + '</b> · ' + fmtDay(p.date) + ' · ' + esc(trf('{count} porties van ≈ {kcal} kcal', { count: p.portions, kcal: fmtNum(per.kcal) })) + (isNum(p.wasted) && p.wasted > 0 ? ' · ' + esc(trf('{count} weggegooid', { count: fmtNum(p.wasted, p.wasted % 1 ? 2 : 0) })) : '') + (isNum(p.left) && p.left > 0 ? ' · ' + esc(trf('nog {count} over', { count: fmtNum(p.left, p.left % 1 ? 2 : 0) })) : '') + '</li>'; }).join('');
+      if (made.length) h += sec('Mealpreps', '<ul>' + madeList + '</ul>' + (f.length ? '<h4>' + tr('Eigen beoordeling') + '</h4><p class="small muted">' + tr('Feedback is linked to the meal prep; the date it was eaten is not recorded.') + '</p><ul>' + f.map(p => '<li><b>' + esc(p.name) + '</b>: ' + esc(feedbackSummary(p.feedback)) + (p.feedback.note ? ' · "' + esc(p.feedback.note) + '"' : '') + '</li>').join('') + '</ul>' : ''));
+    }
+    if (part === 'training') {
+      const p = typeof activeTrainingPlan === 'function' ? activeTrainingPlan() : null;
+      if (!p || !Array.isArray(p.weeks) || !p.weeks.length) h += sec('Trainingsschema', '<p>' + tr('Geen actief trainingsschema.') + '</p>');
+      else {
+        const txt = v => p.customPlan ? String(v || '') : trTrainingText(v);
+        const wi = Math.min(Math.max(0, (p.currentWeek || 1) - 1), p.weeks.length - 1), week = p.weeks[wi], done = p.doneSessions || [];
+        const doneWeek = week.sessions.filter((_, i) => done.includes(week.number + ':' + i)).length;
+        const planned = p.weeks.slice(0, wi + 1).reduce((s, w) => s + w.sessions.length, 0);
+        const doneTotal = p.weeks.slice(0, wi + 1).reduce((s, w) => s + w.sessions.filter((_, i) => done.includes(w.number + ':' + i)).length, 0);
+        const level = ((typeof TRAIN_LEVELS !== 'undefined' && TRAIN_LEVELS.find(x => x[0] === p.level)) || ['', ''])[1];
+        const title = p.customPlan ? p.name : tr(TRAIN_GOALS[p.goal] || p.name || 'Trainingsschema');
+        const sessions = week.sessions.map((s, i) => '<li><b>' + esc(p.customPlan ? s.day : tr(s.day || 'Training {number}').replace('{number}', i + 1)) + ' · ' + esc(txt(s.title)) + '</b> ' + (done.includes(week.number + ':' + i) ? '✓' : '○') + ((s.exercises || []).length ? '<br><small>' + s.exercises.map(x => esc(txt(x.name)) + ': ' + x.sets + ' × ' + exerciseTargetText(x) + (isNum(x.rest) ? ', ' + x.rest + ' ' + tr('sec rust') : '')).join('<br>') + '</small>' : (s.detail ? '<br><small>' + esc(txt(s.detail)) + '</small>' : '')) + '</li>').join('');
+        h += sec('Trainingsschema', '<p><b>' + esc(title) + '</b>' + (level ? ' · ' + esc(tr(level)) : '') + ' · ' + esc(trf('week {current} van {total}', { current: week.number, total: p.weeks.length })) + '</p>' + tbl([row('Deze schemaweek afgevinkt', esc(trf('{done} van {total} trainingen', { done: doneWeek, total: week.sessions.length }))), row('Tot nu toe afgevinkt', esc(trf('{done} van {total} trainingen (week 1–{week})', { done: doneTotal, total: planned, week: week.number })))]) + '<h4>' + tr('Trainingen deze schemaweek') + '</h4><ul class="report-sessions">' + sessions + '</ul><p class="small muted">' + tr('Afgevinkte trainingen worden per schemaweek bijgehouden, zonder datum; ze vallen dus niet altijd samen met de rapportperiode. Sets, herhalingen en gewichten zijn de planning, geen gemeten prestaties.') + '</p>');
+      }
     }
     if (part === 'beweging') {
       const types = {}; keys.forEach(k => (DB.days[k].activities || []).forEach(a => { const item = types[a.type] || (types[a.type] = { minutes: 0, sessions: 0, timedSessions: 0 }); if (isNum(a.min)) { item.minutes += a.min; item.timedSessions++; } item.sessions++; }));
@@ -251,14 +305,14 @@ function reportHtml(aud, n) {
     if (part === 'stemming') {
       const moodDays = cntOf('mood');
       const lowMoodDays = moodDays ? trf('{count} of {total} mood-scored days', { count: keys.filter(k => isValidDailyRating(dv('mood', k)) && dv('mood', k) <= 5).length, total: moodDays }) : tr('No mood scores were recorded.');
-      h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', lowMoodDays)]));
+      h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', lowMoodDays), cntOf('stress') ? row('Stress', mv('stress')) : '']));
     }
-    if (part === 'notities') { const ns = keys.slice().reverse().filter(k => DB.days[k].moodNote || DB.days[k].notes); if (ns.length) h += sec('Notities', '<ul>' + ns.map(k => '<li><b>' + fmtDay(k) + (isValidDailyRating(DB.days[k].mood) ? ' (' + DB.days[k].mood + '/10)' : '') + ':</b> ' + esc([DB.days[k].moodNote, DB.days[k].notes].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>'); }
+    if (part === 'notities') { const ns = keys.slice().reverse().filter(k => DB.days[k].moodNote || DB.days[k].notes); if (ns.length) h += sec('Notities', '<ul>' + ns.map(k => '<li><b>' + fmtDay(k) + (isValidDailyRating(DB.days[k].mood) ? ' (' + esc(tr('stemming')) + ' ' + DB.days[k].mood + '/10)' : '') + ':</b> ' + esc([DB.days[k].moodNote, DB.days[k].notes].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>'); }
     if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4><p>' + alcoholReport(periodKeys) + '</p></div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
     if (part === 'supplementen') h += sec('Supplementen', supplementReport(periodKeys));
     if (part === 'gewicht') {
       const w = keys.map(k => ({ k, v: DB.days[k].weight })).filter(x => isNum(x.v));
-      h += sec('Gewicht (vóór ontbijt)', w.length ? '<p>' + w.map(x => fmtDay(x.k) + ': ' + fmtNum(x.v, 1) + ' kg').join(' · ') + '</p><p class="small">' + reportCount(w.length, 'Average {weight} kg across {count} weigh-in.', 'Average {weight} kg across {count} weigh-ins.').replace('{weight}', fmtNum(avg(w.map(x => x.v)), 1)) + '</p>' : '<p>' + tr('No weigh-ins recorded.') + '</p>');
+      h += sec('Gewicht (vóór ontbijt)', w.length ? '<p>' + w.map(x => fmtDay(x.k) + ': ' + fmtNum(x.v, 1) + ' kg').join(' · ') + '</p><p class="small">' + reportCount(w.length, 'Average {weight} kg across {count} weigh-in.', 'Average {weight} kg across {count} weigh-ins.').replace('{weight}', fmtNum(avg(w.map(x => x.v)), 1)) + (w.length >= 2 ? ' ' + esc(trf('Verschil eerste–laatste weging: {diff} kg ({from} → {to}).', { diff: (w[w.length - 1].v - w[0].v > 0 ? '+' : '') + fmtNum(w[w.length - 1].v - w[0].v, 1), from: fmtDay(w[0].k), to: fmtDay(w[w.length - 1].k) })) : '') + '</p>' : '<p>' + tr('No weigh-ins recorded.') + '</p>');
     }
   }
   return h;

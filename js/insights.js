@@ -181,7 +181,7 @@ function aiContext(n) {
     const kc = dayNutr(d, 'kcal'), pr = dayNutr(d, 'protein');
     const meals = (d.meals || []).map(m => SLOTS[m.slot] + ': ' + (m.nothing ? 'niets' : m.desc) + (isNum(m.kcal) ? ' (≈' + Math.round(m.kcal) + ' kcal)' : ' (kcal onbekend)')).join('; ');
     const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.join(',') : 'geen nicotine') : d.nicotineForms === null ? '?' : d.vape ?? '?';
-    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', isValidDailyRating(d.energy) ? d.energy : '?', isValidDailyRating(d.mood) ? d.mood : '?', isValidDailyRating(d.stress) ? d.stress : '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', nicotine, d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', (d.moodNote || '') + ' ' + (d.notes || ''), meals].join(' | ');
+    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', isValidDailyRating(d.energy) ? d.energy : '?', isValidDailyRating(d.mood) ? d.mood : '?', isValidDailyRating(d.stress) ? d.stress : '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', nicotine, d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', [d.moodNote, d.notes].filter(Boolean).join(' · ') || '-', meals].join(' | ');
   }).filter(Boolean);
   const P = DB.profile, G = DB.goals;
   return 'PROFIEL: ' + [P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : '', P.activity].filter(Boolean).join(', ') +
@@ -282,16 +282,30 @@ function downscale(file) {
 /* Tekstsamenvatting om te delen met diëtist of in een Claude-chat te plakken. */
 function weekSummaryText(n) {
   n = n || 7;
-  const lines = [trf('Samenvatting van de laatste {count} dagen ({start} – {end})', { count: n, start: fmtDay(addDays(todayKey(), -(n - 1))), end: fmtDay(todayKey()) }), ''];
-  for (const k of rangeKeys(todayKey(), n)) {
+  // Vandaag telt alleen mee als er al iets is ingevuld; anders eindigt de week gisteren.
+  const end = DB.days[todayKey()] ? todayKey() : addDays(todayKey(), -1);
+  const keys = rangeKeys(end, n);
+  const lines = [trf('Samenvatting van de laatste {count} dagen ({start} – {end})', { count: n, start: fmtDay(keys[0]), end: fmtDay(end) })];
+  // gemiddelden bovenaan, zodat de lezer meteen het overzicht heeft
+  const mean = name => { const v = keys.map(k => dv(name, k)).filter(isNum); return v.length ? { v: avg(v), n: v.length } : null; };
+  const avgParts = [['kcal', 'Kcal', 0, ''], ['protein', 'Eiwit', 0, ' g'], ['sleepH', 'Slaap', 1, ' ' + tr('hours')], ['mood', 'Stemming', 1, '/10'], ['steps', 'Stappen', 0, '']].map(([name, label, dec, unit]) => {
+    const m = mean(name); return m ? tr(label) + ' ' + fmtNum(m.v, dec) + unit : null;
+  }).filter(Boolean);
+  if (avgParts.length) lines.push(tr('Gemiddeld per dag met gegevens:') + ' ' + avgParts.join(' · '));
+  lines.push('');
+  for (const k of keys) {
     const d = DB.days[k]; if (!d) { lines.push(fmtDay(k, true) + ': ' + tr('Geen registratie')); continue; }
-    const kc = dayNutr(d, 'kcal');
-    lines.push(fmtDay(k, true) + ': ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' : tr('Kcal onbekend')) +
-      ' · ' + tr('Slaap') + ' ' + (d.sleepH ?? '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (isValidDailyRating(d.energy) ? d.energy : '?') + ' · ' + tr('Stemming') + ' ' + (isValidDailyRating(d.mood) ? d.mood : '?') + ' · ' + (d.steps ?? '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + d.weight + ' kg' : ''));
+    const kc = dayNutr(d, 'kcal'), pr = dayNutr(d, 'protein');
+    lines.push(fmtDay(k, true) + ': ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' + (d.kcalOverride ? ' (' + tr('eigen dagschatting') + ')' : '') : tr('Kcal onbekend')) +
+      (pr ? ' · ' + (pr.lb ? '≥ ' : '') + fmtNum(pr.v) + ' g ' + tr('eiwit') : '') +
+      ' · ' + tr('Slaap') + ' ' + (isNum(d.sleepH) ? fmtNum(d.sleepH, 1) : '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (isValidDailyRating(d.energy) ? d.energy + '/10' : '?') + ' · ' + tr('Stemming') + ' ' + (isValidDailyRating(d.mood) ? d.mood + '/10' : '?') + ' · ' + (isNum(d.steps) ? fmtNum(d.steps) : '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + fmtNum(d.weight, 1) + ' kg' : ''));
+    const acts = (d.activities || []).map(a => tr((ACTIVITIES[a.type] || ACTIVITIES.anders).label) + (isNum(a.min) ? ' ' + a.min + ' min' : ''));
+    if (acts.length) lines.push('   ' + tr('Beweging') + ': ' + acts.join(', '));
+    if (isNum(d.alcohol) && d.alcohol > 0) lines.push('   ' + tr('Alcohol') + ': ' + fmtNum(d.alcohol, d.alcohol % 1 ? 1 : 0) + ' ' + tr('glasses'));
     if (d.supplementsLogged) lines.push('   ' + tr('Supplementen') + ': ' + ((d.supplements || []).length ? d.supplements.map(s => s.name + (s.dose ? ' (' + s.dose + ')' : '')).join(', ') : tr('geen supplementen genomen')));
-    for (const s of SLOT_ORDER) for (const m of (d.meals || []).filter(m => m.slot === s)) lines.push('   ' + tr(SLOTS[s]) + (m.time ? ' ' + m.time : '') + ': ' + (m.nothing ? tr('niets') : m.desc) + (isNum(m.kcal) ? ' (≈ ' + Math.round(m.kcal) + ' kcal)' : ''));
+    for (const s of SLOT_ORDER) for (const m of (d.meals || []).filter(m => m.slot === s)) lines.push('   ' + tr(SLOTS[s]) + (m.time ? ' ' + m.time : '') + ': ' + (m.nothing ? tr('niets') : m.desc) + (isNum(m.kcal) ? ' (≈ ' + Math.round(m.kcal) + ' kcal' + (isNum(m.protein) ? ', ' + fmtNum(m.protein) + ' g ' + tr('eiwit') : '') + ')' : ''));
     if (d.notes || d.moodNote) lines.push('   ' + tr('Notitie:') + ' ' + [d.moodNote, d.notes].filter(Boolean).join(' · '));
   }
-  lines.push('', tr('Kcal zijn ruwe schattingen. Slaap slaat op de nacht vóór die dag.'));
+  lines.push('', tr('Kcal zijn ruwe schattingen. Slaap slaat op de nacht vóór die dag.') + ' ' + tr('“≥” = niet alles is geregistreerd.'));
   return lines.join('\n');
 }

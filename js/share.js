@@ -42,10 +42,15 @@ ACT.sharePrep = async () => {
   const p = prepById(PREP.id) || PREP;
   let link = null;
   try { toast(tr('Recept delen…')); link = await sharePrepOnline(p); } catch (e) { toast(trOr(e.message, 'Recept delen is mislukt. Controleer je verbinding en probeer opnieuw.')); }
-  const { per } = prepTotals(p);
-  const txt = p.name + ' (' + p.portions + ' ' + tr('porties') + ')\n' +
-    p.ingredients.map(g => '- ' + g.name + (isNum(g.grams) ? ': ' + g.grams + ' g' : '')).join('\n') +
-    '\n' + tr('Per portie') + ' ≈ ' + fmtNum(per.kcal) + ' kcal, ' + fmtNum(per.protein) + ' g ' + tr('eiwit') + ' (' + tr('ruwe schatting') + ').' + (link ? '\n\n' + tr('Open in de app:') + ' ' + link : '');
+  const { per, tot } = prepTotals(p);
+  const portions = Math.max(1, Number(p.portions) || 1);
+  const txt = p.name + ' (' + p.portions + ' ' + tr('porties') + ')\n\n' + tr('Ingrediënten') + ':\n' +
+    p.ingredients.map(g => '- ' + g.name + (isNum(g.grams) ? ': ' + fmtNum(g.grams, g.grams % 1 ? 1 : 0) + ' g' : '')).join('\n') +
+    '\n\n' + trf('Per portie ≈ {kcal} kcal, {protein} g eiwit, {carbs} g koolhydraten, {fat} g vet en {fiber} g vezels.', { kcal: fmtNum(per.kcal), protein: fmtNum(per.protein), carbs: fmtNum(per.carbs), fat: fmtNum(per.fat), fiber: fmtNum(per.fiber) }) +
+    (isNum(p.cooked) && p.cooked > 0 ? ' ' + trf('≈ {grams} g bereid per portie.', { grams: fmtNum(p.cooked / portions) }) : '') +
+    '\n' + trf('Hele prep ≈ {kcal} kcal (ruwe schatting).', { kcal: fmtNum(tot.kcal) }) +
+    (p.recipeNote ? '\n\n' + tr('Bereiding') + ':\n' + p.recipeNote : '') +
+    (link ? '\n\n' + tr('Open in de app:') + ' ' + link : '');
   shareText(txt, p.name);
 };
 
