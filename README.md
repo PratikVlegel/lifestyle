@@ -27,7 +27,7 @@ Live: https://pratikvlegel.github.io/lifestyle/
 | `js/training.js` | Offline trainingsplanner: afvallen/conditie, kracht/spiermassa, lopen, terugkeer na revalidatie, marathon en HYROX |
 | `js/community-exercises.js` | Gedeelde oefenbibliotheek met zoekfilters, communityreviews en toevoegen aan eigen schema's |
 | `js/library.js` | Productenbibliotheek, producteditor, eenheden, barcode |
-| `js/ocr.js` | Gratis tekstherkenning van etiketten op het toestel |
+| `js/ocr.js` | Gratis tekstherkenning van etiketten op het toestel: zoekt eerst de voedingstabel, snijdt die uit, zet ze recht en leest ze in meerdere rondes. Met een eigen API-sleutel leest AI het etiket eerst; lukt dat niet, dan valt de app terug op deze tekstherkenning |
 | `js/cloud.js` | Gedeelde producten, recepten, beoordelingen en foto's via Supabase (anoniem account) |
 | `ocr/` | Tesseract.js 5.1.1 + Nederlands taalmodel, ZXing 0.21.3 barcodelezer voor iPhone (Apache 2.0) |
 | `supabase/schema.sql` | Tabel en beveiligingsregels van de gedeelde bibliotheek |
