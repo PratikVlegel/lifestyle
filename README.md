@@ -60,3 +60,8 @@ Het cyclus- en symptoomdagboek is optioneel en blijft in de lokale browseropslag
 ## Back-up en import
 
 Een JSON-back-up bevat persoonlijke dagboek- en appgegevens. De export laat de Anthropic API-sleutel, pushabonnementen, Supabase-serverinstellingen en communitylidmaatschap/beheerdersstatus weg. Een vervangende import behoudt de vertrouwde instellingen van dit toestel en schakelt push uit; profielkeuzes en numerieke grenzen worden gevalideerd voordat gegevens worden opgeslagen.
+
+## Wijzigingen
+
+- **vd-1.12.1**: rapporten voor diëtist, psycholoog, sportcoach en huisarts met dagoverzicht, compacte maaltijdtabel (kcal en eiwit per maaltijd), trainingsschema voor de coach en stress; weeksamenvatting met gemiddelden en eiwit; gedeelde mealprep met alle voedingswaarden.
+- **vd-1.12.0**: mealprep-restjes (deel gegeten, rest weggegooid; overgebleven porties weggooien) en betere etiketherkenning (tabel zoeken, uitsnijden, rechtzetten; AI eerst als er een API-sleutel is).
