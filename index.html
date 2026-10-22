@@ -220,6 +220,22 @@ a.card.wk{text-decoration:none;color:inherit}
 .report-meal{padding:6px 0;border-bottom:1px solid var(--line)}
 .report-meal:last-child{border-bottom:0}
 .report-meal p{margin:2px 0}
+.report-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.report table.report-grid{font-size:.84rem;min-width:100%}
+.report .report-grid th,.report .report-grid td{padding:5px 7px;white-space:nowrap}
+.report .report-grid th:first-child{width:auto}
+.report .report-grid thead th{background:var(--surface2);font-weight:600;border-left:1px solid var(--line)}
+.report .report-grid thead th:first-child{border-left:0}
+.report .report-grid tbody td{text-align:right}
+.report .report-grid thead th:not(:first-child){text-align:right}
+.report .report-meals thead th:nth-child(2){text-align:left}
+.report .report-grid tr.report-empty td,.report .report-grid tr.report-empty th{color:var(--muted)}
+.report .report-meals td:nth-child(2){white-space:normal;text-align:left;min-width:12em}
+.report .report-meals td:first-child{text-align:left;font-weight:600}
+.report .report-meals tr.report-dayrow th,.report .report-meals tr.report-dayrow td{background:var(--surface2);font-weight:700;border-top:2px solid var(--line)}
+.report .report-meals tbody{break-inside:avoid}
+.report-sessions li{margin:4px 0}
+.report h4{margin:12px 0 4px}
 .report-disclosure{max-width:78ch;margin:10px 0 14px;line-height:1.45}
 .report-context{margin:10px 0 0;padding:10px 12px;border-left:3px solid var(--line);border-radius:8px;background:var(--surface2);break-inside:avoid;overflow-wrap:anywhere}
 .report-context p{margin:5px 0 0;white-space:pre-wrap;line-height:1.45}
