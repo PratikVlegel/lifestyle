@@ -63,5 +63,6 @@ Een JSON-back-up bevat persoonlijke dagboek- en appgegevens. De export laat de A
 
 ## Wijzigingen
 
+- **vd-1.12.2**: versienummer in de app (Meer) bijgewerkt en cache-buster van alle gewijzigde scripts verhoogd, zodat toestellen de nieuwe bestanden zeker ophalen.
 - **vd-1.12.1**: rapporten voor diëtist, psycholoog, sportcoach en huisarts met dagoverzicht, compacte maaltijdtabel (kcal en eiwit per maaltijd), trainingsschema voor de coach en stress; weeksamenvatting met gemiddelden en eiwit; gedeelde mealprep met alle voedingswaarden.
 - **vd-1.12.0**: mealprep-restjes (deel gegeten, rest weggegooid; overgebleven porties weggooien) en betere etiketherkenning (tabel zoeken, uitsnijden, rechtzetten; AI eerst als er een API-sleutel is).
