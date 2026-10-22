@@ -225,7 +225,7 @@ async function aiReadLabel(file) {
       model: S.model || 'claude-sonnet-4-5', max_tokens: 400,
       messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-        { type: 'text', text: 'Lees de voedingswaardetabel op dit etiket. Antwoord ALLEEN met JSON: {"name":"productnaam of null","kcal":per 100 g,"protein":g,"carbs":g,"fat":g,"fiber":g}. Gebruik null voor wat er niet staat. Als alleen per portie vermeld is, reken om naar 100 g als de portiegrootte vermeld is.' }
+        { type: 'text', text: 'Lees de voedingswaardetabel op dit etiket. Gebruik de kolom per 100 g (of 100 ml), niet de kolom per portie. Let op decimale komma\'s (bv. "2,5 g" = 2.5). Energie in kcal; staat er alleen kJ, deel dan door 4,184. "protein" = eiwitten, "carbs" = koolhydraten totaal (niet "waarvan suikers"), "fat" = vetten totaal (niet "waarvan verzadigd"), "fiber" = vezels. Antwoord ALLEEN met JSON: {"name":"productnaam of null","kcal":getal,"protein":getal,"carbs":getal,"fat":getal,"fiber":getal}. Gebruik null voor wat er niet staat. Als alleen per portie vermeld is, reken om naar 100 g als de portiegrootte vermeld is.' }
       ] }]
     })
   });
@@ -234,7 +234,13 @@ async function aiReadLabel(file) {
   const txt = (j.content || []).map(c => c.text || '').join('');
   const m = txt.match(/\{[\s\S]*\}/);
   if (!m) throw new Error('Kon het etiket niet lezen.');
-  return JSON.parse(m[0]);
+  const raw = JSON.parse(m[0]), out = { name: typeof raw.name === 'string' ? raw.name : null };
+  // alleen realistische getallen per 100 g overnemen
+  for (const [k, max] of [['kcal', 1000], ['protein', 100], ['carbs', 100], ['fat', 100], ['fiber', 100]]) {
+    const v = typeof raw[k] === 'string' ? Number(raw[k].replace(',', '.')) : raw[k];
+    out[k] = typeof v === 'number' && isFinite(v) && v >= 0 && v <= max ? Math.round(v * 10) / 10 : null;
+  }
+  return out;
 }
 
 /* AI zet een markdown-dagboek om naar app-data. */
@@ -262,11 +268,11 @@ function downscale(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const s = Math.min(1, 1400 / Math.max(img.width, img.height));
+      const s = Math.min(1, 1600 / Math.max(img.width, img.height));
       const c = document.createElement('canvas');
       c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      resolve(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+      resolve(c.toDataURL('image/jpeg', 0.9).split(',')[1]);
     };
     img.onerror = reject;
     img.src = URL.createObjectURL(file);

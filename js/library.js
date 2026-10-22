@@ -107,8 +107,25 @@ ACT.pedScan = () => {
 };
 ACT.pedPhoto = el => { const f = el.files[0]; el.value = ''; if (f) runOcr(f); };
 async function runOcr(file) {
-  const st = $('#ocrstat');
   const show = t => { const s = $('#ocrstat'); if (s) s.innerHTML = '<p class="note">' + esc(tr(t)) + '</p>'; };
+  // Met een eigen API-sleutel en internet leest AI het etiket: dat is veel betrouwbaarder.
+  if (DB.settings.apiKey && navigator.onLine) {
+    show('Etiket lezen met AI…');
+    try {
+      const r = await aiReadLabel(file);
+      const found = NUTR.filter(n => isNum(r[n]));
+      if (found.length) {
+        for (const n of found) PED.per[n] = r[n];
+        if (!String(PED.name || '').trim() && r.name) PED.name = String(r.name).slice(0, 200);
+        PED.uncertain = [];
+        if (!PED.source || PED.source === 'eigen') PED.source = 'etiket';
+        renderFoodEditor(found.length < 5
+          ? trf('AI las {count} van de 5 waarden. Controleer ze met het etiket en vul de rest zelf aan.', { count: found.length })
+          : tr('Etiket gelezen met AI. Controleer even de cijfers.'));
+        return;
+      }
+    } catch (e) { console.warn('AI-etiket mislukt, gratis tekstherkenning als reserve', e); }
+  }
   show('Etiket lezen… De eerste keer laadt de app de tekstherkenning (±7 MB), daarna werkt het offline.');
   try {
     const r = await ocrLabel(file, m => { if (m.status && m.progress !== undefined) show(ocrStatus(m)); });
@@ -122,6 +139,7 @@ async function runOcr(file) {
       ? trf('{count} van de 5 waarden gelezen; niet gevonden: {missing}. Controleer ze met het etiket.', { count: found.length, missing })
         : tr('Alle 5 waarden gelezen. Controleer ze met het etiket.'));
     } else renderFoodEditor('Ik kon geen voedingswaarden lezen. Neem de foto dichterbij, recht van voren en zonder schittering, of vul de waarden zelf in.');
+    if (found.length && found.length < 5 && !DB.settings.apiKey) { const s = $('#ocrstat'); if (s) s.insertAdjacentHTML('beforeend', '<p class="muted small">' + esc(tr('Tip: zet de voedingstabel groot en scherp in beeld, zonder schittering. Met een API-sleutel (Meer → AI) leest AI etiketten veel nauwkeuriger.')) + '</p>'); }
   } catch (e) { console.error('Etiket lezen mislukt', e); show('Etiket lezen is mislukt. Probeer een scherpere foto of vul de waarden zelf in.'); }
 }
 function ocrStatus(m) {

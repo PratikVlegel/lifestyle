@@ -227,7 +227,7 @@ ACT.quickCoffee = () => { const d = getDay(todayKey(), true), total = (isNum(d.c
 ACT.quickEat = () => openPicker(items => {
   const d = getDay(todayKey(), true);
   const slot = slotForNow();
-  items.forEach(it => { it.slot = slot; it.time = nowTime(); d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); });
+  items.forEach(it => { it.slot = slot; it.time = nowTime(); d.meals.push(it); if (it.prepId) usePortion(it.prepId, prepStockUse(it)); });
   if (!save()) return; toast(tr('Genoteerd bij') + ' ' + tr(SLOTS[slot])); render();
 });
 function slotForNow() {
@@ -528,7 +528,7 @@ ACT.ciSave = () => {
   if (CI.kind === 'ontbijt') d.weight = f.weight === '?' ? '?' : f.weight;
   for (const [slot, items] of Object.entries(CI.items)) {
     const t = f['time_' + slot] || defaultTime(slot) || '';
-    for (const it of items) { it.slot = slot; it.time = t; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }
+    for (const it of items) { it.slot = slot; it.time = t; d.meals.push(it); if (it.prepId) usePortion(it.prepId, prepStockUse(it)); }
   }
   for (const [slot, a] of Object.entries(CI.ans)) {
     if (!a || (CI.items[slot] || []).length) continue;
@@ -553,7 +553,8 @@ ACT.ciSave = () => {
 
 /* ================= itemkiezer (sheet) ================= */
 let PICK_TAB = 'prep';
-function openPicker(cb) { PICK_CB = cb; renderPicker(); $('#sheet').hidden = false; document.body.classList.add('noscroll'); }
+let PICK_WASTE = false;
+function openPicker(cb) { PICK_CB = cb; PICK_WASTE = false; renderPicker(); $('#sheet').hidden = false; document.body.classList.add('noscroll'); }
 function closeSheet() { $('#sheet').hidden = true; document.body.classList.remove('noscroll'); stopScan(); }
 ACT.closeSheet = closeSheet;
 function renderPicker(msg) {
@@ -565,6 +566,7 @@ function renderPicker(msg) {
   } else if (PICK_TAB === 'prep') {
     const preps = DB.preps.slice().sort((a, b) => (b.left > 0) - (a.left > 0) || (b.date || '').localeCompare(a.date || ''));
     if (!preps.length) h += '<p class="muted">' + tr('Nog geen mealpreps. Maak er een in het tabblad Mealprep.') + '</p>';
+    else h += '<label class="toggle"><input type="checkbox" data-chg="pickWaste"' + (PICK_WASTE ? ' checked' : '') + '> ' + tr('Rest van de portie weggegooid') + '</label>' + (PICK_WASTE ? '<p class="muted small">' + tr('Kies hoeveel je at. De hele portie gaat van je voorraad, alleen wat je at telt mee in je dagboek.') + '</p>' : '');
     h += preps.map(p => {
       const { per } = prepTotals(p);
       return '<div class="pick"><div><b>' + esc(p.name) + '</b><small>≈ ' + fmtNum(per.kcal) + ' kcal · ' + fmtNum(per.protein) + ' g ' + tr('eiwit per portie') + ' · ' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' ' + tr('over') : '') + '</small></div><div class="chips">' +
@@ -589,7 +591,8 @@ function libResults(q) {
 ACT.libSearch = el => { $('#libres').innerHTML = libResults(el.value); };
 document.addEventListener('keyup', e => { if (e.target.id === 'libq') $('#libres').innerHTML = libResults(e.target.value); });
 ACT.pickTab = el => { PICK_TAB = el.dataset.t; renderPicker(); };
-ACT.pickPrep = el => { const p = prepById(el.dataset.id); const it = itemFromPrep(p, Number(el.dataset.p)); closeSheet(); PICK_CB && PICK_CB([it]); };
+ACT.pickWaste = el => { PICK_WASTE = el.checked; renderPicker(); };
+ACT.pickPrep = el => { const p = prepById(el.dataset.id); const it = itemFromPrep(p, Number(el.dataset.p)); if (PICK_WASTE) setMealWaste(it, true); closeSheet(); PICK_CB && PICK_CB([it]); };
 ACT.pickFood = el => {
   const f = DB.foods.find(x => x.id === el.dataset.id); const a = readAmount(f, 'p');
   if (!a) return toast(tr('Vul een hoeveelheid in.'));
@@ -772,7 +775,7 @@ ACT.supplementAdd = el => {
 ACT.supplementRemove = el => { const d = getDay(el.dataset.k, true); d.supplements = Array.isArray(d.supplements) ? d.supplements : []; d.supplements.splice(Number(el.dataset.i), 1); if (!save()) return; renderDay(el.dataset.k); };
 ACT.supplementNone = el => { const d = getDay(el.dataset.k, true); d.supplements = []; d.supplementsLogged = true; if (!save()) return; renderDay(el.dataset.k); };
 ACT.supplementClear = el => { const d = getDay(el.dataset.k, true); delete d.supplements; delete d.supplementsLogged; if (!save()) return; renderDay(el.dataset.k); };
-ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, it.portion); }); if (!save()) return; render(); });
+ACT.dayAdd = el => openPicker(items => { const d = getDay(el.dataset.k, true); items.forEach(it => { it.slot = el.dataset.s; it.time = ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, prepStockUse(it)); }); if (!save()) return; render(); });
 ACT.saveDay = el => {
   const fields = [...document.querySelectorAll('[data-dk]')];
   for (const i of fields) {
@@ -817,7 +820,7 @@ ACT.dayNicotine = el => {
   if (!save()) return; renderDay(el.dataset.k);
 };
 ACT.dropOverride = el => { delete getDay(el.dataset.k).kcalOverride; save(); render(); };
-ACT.delMeal = el => { const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id); if (!confirm(trf('Verwijderen: {item}?', { item: m.desc || tr('item') }))) return; if (m.prepId) usePortion(m.prepId, -m.portion); d.meals = d.meals.filter(x => x !== m); save(); render(); };
+ACT.delMeal = el => { const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id); if (!confirm(trf('Verwijderen: {item}?', { item: m.desc || tr('item') }))) return; if (m.prepId) usePortion(m.prepId, -prepStockUse(m)); d.meals = d.meals.filter(x => x !== m); save(); render(); };
 ACT.delDay = el => { if (!confirm(trf('Hele dag {date} verwijderen?', { date: fmtDay(el.dataset.k) }))) return; delete DB.days[el.dataset.k]; save(); go('#/dagboek'); };
 ACT.editMeal = el => {
   const d = getDay(el.dataset.k); const m = d.meals.find(x => x.id === el.dataset.id);
@@ -825,6 +828,7 @@ ACT.editMeal = el => {
     '<label class="fld"><span>' + tr('Omschrijving') + '</span><input id="em_desc" maxlength="2000" value="' + esc(m.desc || '') + '"></label>' +
     '<div class="grid2"><label class="fld"><span>' + tr('Tijd') + '</span><input id="em_time" type="time" value="' + esc(m.time || '') + '"></label><label class="fld"><span>' + tr('Moment') + '</span><select id="em_slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (m.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label></div>' +
     '<div class="grid5 meal-edit-macros">' + [['kcal', 'kcal'], ['protein', 'eiwit'], ['carbs', 'koolh.'], ['fat', 'vet'], ['fiber', 'vezels']].map(([key, label]) => '<label class="fld"><span>' + (key === 'kcal' ? 'kcal' : tr(label) + ' g') + '</span><input id="em_' + key + '" type="number" inputmode="decimal" min="0" step="0.1" value="' + (isNum(m[key]) ? m[key] : '') + '"></label>').join('') + '</div>' +
+    (m.prepId && isNum(m.portion) && m.portion < 1 ? '<label class="toggle"><input type="checkbox" id="em_waste"' + (m.wasted ? ' checked' : '') + '> ' + tr('Rest van de portie weggegooid') + '</label><p class="muted small">' + tr('Aangevinkt: de hele portie gaat van je mealprep-voorraad. Je dagboek telt alleen wat je at.') + '</p>' : '') +
     '<button class="btn" data-act="saveMeal" data-k="' + el.dataset.k + '" data-id="' + m.id + '">' + tr('Bewaren') + '</button>';
   $('#sheet').hidden = false;
 };
@@ -835,7 +839,10 @@ ACT.saveMeal = el => {
     const err = numericError(key, num(id), DB);
     if (err) { toast(err); $(id).focus(); return; }
   }
-  m.desc = $('#em_desc').value; m.time = $('#em_time').value; m.slot = $('#em_slot').value; m.nothing = false;
+  m.desc = $('#em_desc').value;
+  const wasteBox = $('#em_waste');
+  if (wasteBox && !!wasteBox.checked !== !!m.wasted) { const delta = setMealWaste(m, wasteBox.checked); if (delta) usePortion(m.prepId, delta); }
+  m.time = $('#em_time').value; m.slot = $('#em_slot').value; m.nothing = false;
   m.kcal = num('#em_kcal'); m.protein = num('#em_protein'); m.carbs = num('#em_carbs'); m.fat = num('#em_fat'); m.fiber = num('#em_fiber'); delete m.lb;
   save(); closeSheet(); render();
 };
@@ -849,7 +856,7 @@ function renderPreps() {
     const { per } = prepTotals(p);
     return '<a class="card prepc' + (p.left > 0 ? '' : ' empty') + '" href="#/prep/' + p.id + '">' + (prepPhotoSrc(p) ? '<img class="prepthumb" src="' + esc(prepPhotoSrc(p)) + '" alt="" loading="lazy">' : '') + '<div class="pc-h"><b>' + esc(p.name) + '</b><span class="pill">' + (isNum(p.left) ? fmtNum(p.left, p.left % 1 ? 2 : 0) + ' / ' + p.portions + ' ' + tr('over') : p.portions + ' ' + tr('porties')) + '</span></div>' +
       '<div class="macro">' + ['kcal', 'protein', 'carbs', 'fat', 'fiber'].map(n => '<span><b>' + (prepKnows(p, n) ? fmtNum(per[n]) : '–') + '</b>' + (n === 'kcal' ? 'kcal' : 'g ' + tr(NUTR_LABEL[n])) + '</span>').join('') + '</div>' +
-      '<small class="muted">' + tr('per portie') + ' · ' + tr('gemaakt') + ' ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + (p.feedback ? ' · ' + esc(feedbackSummary(p.feedback)) : '') + (p.sharedId ? ' · ' + tr('gedeeld') : '') + '</small></a>';
+      '<small class="muted">' + tr('per portie') + ' · ' + tr('gemaakt') + ' ' + (p.date ? fmtDay(p.date) : '?') + (p.plan ? ' · ' + esc(p.plan) : '') + (p.feedback ? ' · ' + esc(feedbackSummary(p.feedback)) : '') + (isNum(p.wasted) && p.wasted > 0 ? ' · ' + trf('{count} weggegooid', { count: fmtNum(p.wasted, p.wasted % 1 ? 2 : 0) }) : '') + (p.sharedId ? ' · ' + tr('gedeeld') : '') + '</small></a>';
   }).join('');
   h += '<a class="card prepc" href="#/bieb"><div class="pc-h"><b>' + tr('Productenbibliotheek') + '</b><span class="pill">' + DB.foods.length + '</span></div><small class="muted">' + tr('Producten met etiketwaarden en eenheden. Scan, fotografeer of voeg toe, en hergebruik ze in elk recept.') + (cloudReady() && DB.settings.share !== false ? ' ' + tr('Gedeeld over je toestellen en met andere gebruikers.') : '') + '</small></a>';
   view().innerHTML = h;
@@ -865,6 +872,7 @@ function renderPrep(id) {
     '<div class="grid2"><label class="fld"><span>' + tr('Porties') + '</span><input type="number" inputmode="numeric" data-pp="portions" value="' + P.portions + '"></label><label class="fld"><span>' + tr('Nog over') + '</span><input type="number" inputmode="decimal" step="0.25" data-pp="left" value="' + (isNum(P.left) ? P.left : '') + '"></label></div><label class="fld"><span>' + tr('Gemaakt op') + '</span><input type="date" data-pp="date" value="' + esc(P.date || '') + '"></label>' +
     '<label class="fld"><span>' + tr('Planning (optioneel)') + '</span><input data-pp="plan" value="' + esc(P.plan || '') + '" placeholder="' + esc(tr('bv. lunch ma–wo')) + '"></label>' +
     '<label class="fld"><span>' + tr('Gewicht bereid, hele pot (optioneel)') + '</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="cooked" value="' + (isNum(P.cooked) ? P.cooked : '') + '"><em>g</em></div></label></div>';
+  if (!P.isNew) h += prepLeftoverHtml(P);
   h += prepExtrasHtml(P);
   h += '<h2 class="sec">' + tr('Ingrediënten') + '</h2>';
   h += P.ingredients.map((g, i) => '<div class="card ing" data-i="' + i + '">' +
@@ -881,6 +889,31 @@ function renderPrep(id) {
   if (!P.isNew) h += '<div class="inrow"><button class="link" data-act="dupPrep">' + tr('Opnieuw maken (kopie)') + '</button><button class="link danger" data-act="delPrep">' + tr('Verwijderen') + '</button></div>';
   view().innerHTML = h;
 }
+function prepLeftoverHtml(P) {
+  const stored = prepById(P.id);
+  const left = stored && isNum(stored.left) ? stored.left : null;
+  const wasted = stored && isNum(stored.wasted) ? stored.wasted : 0;
+  if (left === null || (left <= 0 && !wasted)) return '';
+  let h = '<div class="card" id="prepwaste"><h3>' + tr('Restjes') + '</h3>';
+  if (left > 0) {
+    h += '<p class="small">' + trf('Nog {count} porties over. Iets weggegooid of niet meer goed?', { count: fmtNum(left, left % 1 ? 2 : 0) }) + '</p><div class="chips">' +
+      (left > 1 ? '<button class="chip" data-act="wastePrep" data-n="1">' + tr('1 portie weggooien') + '</button>' : '') +
+      (left > 0.5 ? '<button class="chip" data-act="wastePrep" data-n="0.5">' + tr('½ portie weggooien') + '</button>' : '') +
+      '<button class="chip" data-act="wastePrep" data-n="all">' + trf('Alles weggooien ({count})', { count: fmtNum(left, left % 1 ? 2 : 0) }) + '</button></div>';
+  }
+  if (wasted) h += '<p class="muted small">' + trf('Weggegooid tot nu toe: {count}.', { count: fmtNum(wasted, wasted % 1 ? 2 : 0) }) + '</p>';
+  return h + '</div>';
+}
+ACT.wastePrep = el => {
+  const stored = prepById(PREP.id); if (!stored) return;
+  const n = el.dataset.n === 'all' ? stored.left : Number(el.dataset.n);
+  if (el.dataset.n === 'all' && !confirm(trf('Alle {count} overgebleven porties weggooien?', { count: fmtNum(stored.left, stored.left % 1 ? 2 : 0) }))) return;
+  const done = wastePrepPortions(PREP.id, n);
+  if (!done || !save()) return;
+  PREP.left = stored.left; PREP.wasted = stored.wasted;
+  toast(trf('Weggegooid: {count}. Nog {left} over.', { count: fmtNum(done, done % 1 ? 2 : 0), left: fmtNum(stored.left, stored.left % 1 ? 2 : 0) }));
+  const y = scrollY; renderPrep(PREP.id); scrollTo(0, y);
+};
 function prepKnows(p, n) { return (p.ingredients || []).some(g => g.per && isNum(g.per[n])); }
 function ingSummary(g) {
   const t = ingTotals(g);

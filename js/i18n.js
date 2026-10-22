@@ -3001,3 +3001,52 @@ const DIETITIAN_REPORT_DATA_COPY = {
   }
 };
 for (const [locale, labels] of Object.entries(DIETITIAN_REPORT_DATA_COPY)) Object.assign(UI_EXTRA_TRANSLATIONS[locale], labels);
+/* Mealprep-restjes en etiket lezen met AI */
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Rest van de portie weggegooid': 'Rest of the serving thrown away',
+  'Kies hoeveel je at. De hele portie gaat van je voorraad, alleen wat je at telt mee in je dagboek.': 'Choose how much you ate. The whole serving comes off your stock; only what you ate counts in your diary.',
+  'Aangevinkt: de hele portie gaat van je mealprep-voorraad. Je dagboek telt alleen wat je at.': 'Ticked: the whole serving comes off your meal prep stock. Your diary only counts what you ate.',
+  'Restjes': 'Leftovers',
+  'Nog {count} porties over. Iets weggegooid of niet meer goed?': '{count} servings left. Thrown something away or no longer good?',
+  '1 portie weggooien': 'Throw away 1 serving', '½ portie weggooien': 'Throw away ½ serving', 'Alles weggooien ({count})': 'Throw away all ({count})',
+  'Weggegooid tot nu toe: {count}.': 'Thrown away so far: {count}.',
+  'Alle {count} overgebleven porties weggooien?': 'Throw away all {count} remaining servings?',
+  'Weggegooid: {count}. Nog {left} over.': 'Thrown away: {count}. {left} left.',
+  '{count} weggegooid': '{count} thrown away',
+  'Etiket lezen met AI…': 'Reading the label with AI…',
+  'AI las {count} van de 5 waarden. Controleer ze met het etiket en vul de rest zelf aan.': 'AI read {count} of the 5 values. Check them against the label and fill in the rest yourself.',
+  'Etiket gelezen met AI. Controleer even de cijfers.': 'Label read with AI. Please check the numbers.',
+  'Tip: zet de voedingstabel groot en scherp in beeld, zonder schittering. Met een API-sleutel (Meer → AI) leest AI etiketten veel nauwkeuriger.': 'Tip: fill the frame with the nutrition table, sharp and without glare. With an API key (More → AI), AI reads labels much more accurately.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Rest van de portie weggegooid': 'Reste de la portion jeté',
+  'Kies hoeveel je at. De hele portie gaat van je voorraad, alleen wat je at telt mee in je dagboek.': 'Choisissez ce que vous avez mangé. La portion entière est retirée du stock ; seul ce que vous avez mangé compte dans votre journal.',
+  'Aangevinkt: de hele portie gaat van je mealprep-voorraad. Je dagboek telt alleen wat je at.': 'Coché : la portion entière est retirée du stock de votre plat préparé. Votre journal ne compte que ce que vous avez mangé.',
+  'Restjes': 'Restes',
+  'Nog {count} porties over. Iets weggegooid of niet meer goed?': 'Encore {count} portions. Quelque chose jeté ou plus bon ?',
+  '1 portie weggooien': 'Jeter 1 portion', '½ portie weggooien': 'Jeter ½ portion', 'Alles weggooien ({count})': 'Tout jeter ({count})',
+  'Weggegooid tot nu toe: {count}.': 'Jeté jusqu’ici : {count}.',
+  'Alle {count} overgebleven porties weggooien?': 'Jeter les {count} portions restantes ?',
+  'Weggegooid: {count}. Nog {left} over.': 'Jeté : {count}. Il en reste {left}.',
+  '{count} weggegooid': '{count} jetées',
+  'Etiket lezen met AI…': 'Lecture de l’étiquette avec l’IA…',
+  'AI las {count} van de 5 waarden. Controleer ze met het etiket en vul de rest zelf aan.': 'L’IA a lu {count} des 5 valeurs. Vérifiez-les sur l’étiquette et complétez le reste vous-même.',
+  'Etiket gelezen met AI. Controleer even de cijfers.': 'Étiquette lue avec l’IA. Vérifiez les chiffres.',
+  'Tip: zet de voedingstabel groot en scherp in beeld, zonder schittering. Met een API-sleutel (Meer → AI) leest AI etiketten veel nauwkeuriger.': 'Astuce : cadrez le tableau nutritionnel en grand, net et sans reflet. Avec une clé API (Plus → IA), l’IA lit les étiquettes bien plus précisément.'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Rest van de portie weggegooid': 'Rest der Portion weggeworfen',
+  'Kies hoeveel je at. De hele portie gaat van je voorraad, alleen wat je at telt mee in je dagboek.': 'Wähle, wie viel du gegessen hast. Die ganze Portion wird vom Vorrat abgezogen; im Tagebuch zählt nur, was du gegessen hast.',
+  'Aangevinkt: de hele portie gaat van je mealprep-voorraad. Je dagboek telt alleen wat je at.': 'Angehakt: Die ganze Portion wird vom Meal-Prep-Vorrat abgezogen. Im Tagebuch zählt nur, was du gegessen hast.',
+  'Restjes': 'Reste',
+  'Nog {count} porties over. Iets weggegooid of niet meer goed?': 'Noch {count} Portionen übrig. Etwas weggeworfen oder nicht mehr gut?',
+  '1 portie weggooien': '1 Portion wegwerfen', '½ portie weggooien': '½ Portion wegwerfen', 'Alles weggooien ({count})': 'Alles wegwerfen ({count})',
+  'Weggegooid tot nu toe: {count}.': 'Bisher weggeworfen: {count}.',
+  'Alle {count} overgebleven porties weggooien?': 'Alle {count} übrigen Portionen wegwerfen?',
+  'Weggegooid: {count}. Nog {left} over.': 'Weggeworfen: {count}. Noch {left} übrig.',
+  '{count} weggegooid': '{count} weggeworfen',
+  'Etiket lezen met AI…': 'Etikett wird mit KI gelesen…',
+  'AI las {count} van de 5 waarden. Controleer ze met het etiket en vul de rest zelf aan.': 'Die KI hat {count} von 5 Werten gelesen. Prüfe sie am Etikett und ergänze den Rest selbst.',
+  'Etiket gelezen met AI. Controleer even de cijfers.': 'Etikett mit KI gelesen. Bitte prüfe die Zahlen.',
+  'Tip: zet de voedingstabel groot en scherp in beeld, zonder schittering. Met een API-sleutel (Meer → AI) leest AI etiketten veel nauwkeuriger.': 'Tipp: Nimm die Nährwerttabelle groß und scharf ohne Spiegelung auf. Mit einem API-Schlüssel (Mehr → KI) liest die KI Etiketten viel genauer.'
+});

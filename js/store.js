@@ -253,6 +253,28 @@ function usePortion(prepId, delta) {
   if (!p || !isNum(p.left)) return;
   p.left = Math.max(0, Math.round((p.left - delta) * 100) / 100);
 }
+/* Hoeveel porties een maaltijd uit de voorraad haalt. Bij "rest weggegooid" is dat
+   de hele portie (used), terwijl de voedingswaarden alleen het gegeten deel tellen. */
+function prepStockUse(it) { return isNum(it.used) ? it.used : it.portion; }
+/* Markeer dat de rest van deze portie weggegooid is (of zet dat terug). */
+function setMealWaste(it, on) {
+  if (!it || !it.prepId || !isNum(it.portion)) return;
+  const before = prepStockUse(it);
+  if (on && it.portion < 1) { it.used = 1; it.wasted = Math.round((1 - it.portion) * 100) / 100; }
+  else { delete it.used; delete it.wasted; }
+  const base = String(it.desc || '').replace(/ · rest weggegooid$/, '');
+  it.desc = it.wasted ? base + ' · rest weggegooid' : base;
+  return prepStockUse(it) - before;
+}
+/* Overgebleven porties van een mealprep weggooien. */
+function wastePrepPortions(prepId, n) {
+  const p = prepById(prepId);
+  if (!p || !isNum(p.left) || !(n > 0)) return 0;
+  const amount = Math.min(p.left, n);
+  p.left = Math.round((p.left - amount) * 100) / 100;
+  p.wasted = Math.round(((isNum(p.wasted) ? p.wasted : 0) + amount) * 100) / 100;
+  return amount;
+}
 
 /* ---------- herinneringen ---------- */
 function reminderStatus(k) {
@@ -490,12 +512,15 @@ function validateImportData(obj) {
       if (meal.time !== undefined && meal.time !== null && (typeof meal.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(meal.time))) fail('een maaltijd op ' + key + ' heeft een ongeldige tijd.');
       if (meal.desc !== undefined && (typeof meal.desc !== 'string' || meal.desc.length > 2000)) fail('een maaltijdtekst op ' + key + ' is ongeldig of te lang.');
       for (const field of ['kcal', 'protein', 'carbs', 'fat', 'fiber']) numeric(meal[field], field === 'kcal' ? [0, 20000] : [0, 1000], key + ' · ' + field);
+      numeric(meal.used, [0, 100], key + ' · gebruikte porties');
+      numeric(meal.wasted, [0, 100], key + ' · weggegooid');
     }
   }
   for (const prep of obj.preps || []) {
     if (typeof prep.id !== 'string' || !prep.id || typeof prep.name !== 'string' || prep.name.length > 200 || !Array.isArray(prep.ingredients) || prep.ingredients.length > 200) fail('een mealprep heeft een ongeldige structuur.');
     numeric(prep.portions, [0.01, 1000], 'mealprep · porties');
     numeric(prep.left, [0, 10000], 'mealprep · voorraad');
+    numeric(prep.wasted, [0, 10000], 'mealprep · weggegooid');
     for (const ing of prep.ingredients) {
       if (!record(ing) || (ing.name !== undefined && (typeof ing.name !== 'string' || ing.name.length > 200)) || (ing.mode !== undefined && !['per100', 'totaal'].includes(ing.mode)) || (ing.per !== undefined && !record(ing.per))) fail('een ingrediënt heeft een ongeldige structuur.');
       numeric(ing.grams, [0, 1000000], 'ingrediënt · hoeveelheid');
