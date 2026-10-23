@@ -11,7 +11,7 @@ function niceMax(v) {
   const step = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
   return step * p;
 }
-function xLabelEvery(n) { return n <= 8 ? 1 : n <= 16 ? 2 : n <= 35 ? 7 : 14; }
+function xLabelEvery(n) { return n <= 8 ? 1 : n <= 16 ? 2 : n <= 35 ? 7 : n <= 100 ? 14 : n <= 200 ? 30 : n <= 400 ? 61 : 122; }
 
 /* Staafgrafiek. data: [{k, v, lb}] ; opts: {goal, goal2, goalIsMax, dec, unit} */
 function barChart(data, opts) {
@@ -76,9 +76,9 @@ function lineChart(data, opts) {
   });
   if (opts.ma) {
     const ma = data.map((d, i) => avg(data.slice(Math.max(0, i - 6), i + 1).map(z => z.v)));
-    g += pathOf(ma.map((v, i) => [i, v]), x, y, 'ma');
+    g += pathOf(ma.map((v, i) => [i, v]).filter(pt => !opts.connect || isNum(pt[1])), x, y, 'ma');
   }
-  g += pathOf(data.map((d, i) => [i, d.v]), x, y, 'line');
+  g += pathOf(data.map((d, i) => [i, d.v]).filter(pt => !opts.connect || isNum(pt[1])), x, y, 'line');
   data.forEach((d, i) => {
     if (isNum(d.v)) g += '<circle class="dot" cx="' + x(i) + '" cy="' + y(d.v) + '" r="' + (data.length > 40 ? 2 : 3.2) + '"><title>' + fmtDay(d.k) + ': ' + fmtNum(d.v, opts.dec) + ' ' + (opts.unit || '') + '</title></circle>';
   });

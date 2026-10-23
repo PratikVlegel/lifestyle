@@ -183,21 +183,72 @@ function supplementReport(dateKeys) {
   const entries = [...products.values()].map(p => '<li><b>' + esc(p.name) + '</b> · ' + esc(reportCount(p.dates.size, '{count} logged day', '{count} logged days')) + (p.doses.size ? ' · ' + esc(tr('Recorded dose(s):')) + ' ' + [...p.doses].map(esc).join(', ') : '') + '</li>').join('');
   return '<p>' + esc(trf('Supplement logs: {logged} of {total} days. Explicitly marked no use: {none}. Unknown or unrecorded: {unknown}.', { logged: logged.length, total: dateKeys.length, none: noUse, unknown })) + '</p>' + (entries ? '<ul>' + entries + '</ul>' : '') + '<p class="small muted">' + tr('Self-reported product names and label doses; this report does not assess whether use or dose is appropriate.') + '</p>';
 }
-let REP = { a: 'dietist', n: 14 };
+let REP = { a: 'dietist', mode: 'n', n: 14, month: null, from: null, to: null };
+const REPORT_MAX_DAYS = 731;
+function reportDayLabel(k) { return parseKey(k).toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short', year: 'numeric' }); }
+function reportMonthLabel(m) { const t = parseKey(m + '-01').toLocaleDateString(currentLocale(), { month: 'long', year: 'numeric' }); return t.charAt(0).toUpperCase() + t.slice(1); }
+function monthLastKey(m) { const [y, mo] = m.split('-').map(Number); return keyOf(new Date(y, mo, 0)); }
+/* Alle maanden van de eerste geregistreerde dag tot nu, nieuwste eerst, met het aantal dagen met gegevens. */
+function reportMonths() {
+  const keys = Object.keys(DB.days).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  const now = todayKey().slice(0, 7), first = keys.length ? keys[0].slice(0, 7) : now, out = [];
+  const count = {}; for (const k of keys) count[k.slice(0, 7)] = (count[k.slice(0, 7)] || 0) + 1;
+  let [y, m] = now.split('-').map(Number);
+  while (out.length < 600) { const key = y + '-' + pad(m); out.push({ m: key, n: count[key] || 0 }); if (key <= first) break; m--; if (!m) { m = 12; y--; } }
+  return out;
+}
+function keysBetween(from, to) { const out = []; for (let k = from; k <= to && out.length < REPORT_MAX_DAYS; k = addDays(k, 1)) out.push(k); return out; }
+/* De gekozen periode als lijst dagsleutels (oud → nieuw). */
+function reportPeriodKeys() {
+  if (REP.mode === 'month' && REP.month) {
+    const last = monthLastKey(REP.month), today = todayKey();
+    return keysBetween(REP.month + '-01', last < today ? last : today);
+  }
+  if (REP.mode === 'range' && REP.from && REP.to) return keysBetween(REP.from, REP.to);
+  return rangeKeys(completeKey(), REP.n);
+}
+function reportPeriodPicker() {
+  let h = '<div class="seg">' + [7, 14, 30, 90].map(n => '<button class="' + (REP.mode === 'n' && REP.n === n ? 'on' : '') + '" data-act="repN" data-n="' + n + '">' + trf('{count} days', { count: n }) + '</button>').join('') +
+    '<button class="' + (REP.mode === 'month' ? 'on' : '') + '" data-act="repMode" data-m="month">' + tr('Maand') + '</button>' +
+    '<button class="' + (REP.mode === 'range' ? 'on' : '') + '" data-act="repMode" data-m="range">' + tr('Van–tot') + '</button></div>';
+  if (REP.mode === 'month') {
+    h += '<label class="fld"><span>' + tr('Kies een maand') + '</span><select data-chg="repMonth">' + reportMonths().map(x => '<option value="' + x.m + '"' + (REP.month === x.m ? ' selected' : '') + '>' + esc(reportMonthLabel(x.m)) + ' · ' + esc(reportCount(x.n, '{count} day with data', '{count} days with data')) + '</option>').join('') + '</select></label>';
+  }
+  if (REP.mode === 'range') {
+    h += '<div class="grid2"><label class="fld"><span>' + tr('Van') + '</span><input type="date" id="rep_from" value="' + esc(REP.from || '') + '" max="' + todayKey() + '"></label><label class="fld"><span>' + tr('Tot en met') + '</span><input type="date" id="rep_to" value="' + esc(REP.to || '') + '" max="' + todayKey() + '"></label></div>' +
+      '<button class="btn ghost" data-act="repRange">' + tr('Toon deze periode') + '</button><p class="muted small">' + tr('Maximaal 2 jaar per rapport.') + '</p>';
+  }
+  return h;
+}
+ACT.repMode = el => {
+  REP.mode = el.dataset.m;
+  if (REP.mode === 'month' && !REP.month) REP.month = todayKey().slice(0, 7);
+  if (REP.mode === 'range' && !(REP.from && REP.to)) { REP.to = completeKey(); REP.from = addDays(REP.to, -89); }
+  render();
+};
+ACT.repMonth = el => { REP.month = el.value; render(); };
+ACT.repRange = () => {
+  const from = $('#rep_from').value, to = $('#rep_to').value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) return toast(tr('Kies een begin- en einddatum.'));
+  if (from > to) return toast(tr('De begindatum moet vóór de einddatum liggen.'));
+  if (keysBetween(from, to).length >= REPORT_MAX_DAYS && addDays(from, REPORT_MAX_DAYS - 1) < to) return toast(tr('Maximaal 2 jaar per rapport.'));
+  REP.from = from; REP.to = to; render();
+};
 function renderReport() {
   let h = '<div class="noprint">' + header('Rapport', 'Alleen wat relevant is, klaar om te printen of te delen', true);
   h += '<div class="chips">' + Object.entries(AUDIENCES).map(([k, v]) => '<button class="chip ' + (REP.a === k ? 'on' : '') + '" data-act="repA" data-a="' + k + '">' + tr(v.label) + '</button>').join('') + '</div>';
-  h += '<div class="seg">' + [7, 14, 30].map(n => '<button class="' + (REP.n === n ? 'on' : '') + '" data-act="repN" data-n="' + n + '">' + trf('{count} days', { count: n }) + '</button>').join('') + '</div>';
+  h += reportPeriodPicker();
   h += '<div class="inrow wrap"><button class="btn" data-act="repPrint">' + tr('Afdrukken / PDF') + '</button><button class="btn ghost" data-act="repShare">' + tr('Deel als tekst') + '</button></div><p class="muted small report-disclosure">' + tr('Review this report before sharing or printing. It includes only the selected sections and period, and may contain personal details, weight, mood, substance use and free-text notes. Nothing is shared until you choose Share.') + '</p></div>';
-  h += '<article class="report" id="report">' + reportHtml(REP.a, REP.n) + '</article>';
+  h += '<article class="report" id="report">' + reportHtml(REP.a, reportPeriodKeys()) + '</article>';
   view().innerHTML = h;
 }
 ACT.repA = el => { REP.a = el.dataset.a; render(); };
-ACT.repN = el => { REP.n = Number(el.dataset.n); render(); };
+ACT.repN = el => { REP.mode = 'n'; REP.n = Number(el.dataset.n); render(); };
 ACT.repPrint = () => window.print();
 ACT.repShare = () => shareText(document.getElementById('report').innerText, trf('Report for {audience}', { audience: tr(AUDIENCES[REP.a].label) }));
-function reportHtml(aud, n) {
-  const end = completeKey(), periodKeys = rangeKeys(end, n), keys = periodKeys.filter(k => DB.days[k]);
+function reportHtml(aud, periodArg) {
+  const periodKeys = Array.isArray(periodArg) ? periodArg : rangeKeys(completeKey(), periodArg || 14);
+  const end = periodKeys[periodKeys.length - 1], keys = periodKeys.filter(k => DB.days[k]);
   const P = DB.profile, G = DB.goals, A = AUDIENCES[aud];
   const reportSlotKcal = (key, name) => {
     const d = DB.days[key];
@@ -219,13 +270,14 @@ function reportHtml(aud, n) {
   const sec = (t, body) => body ? '<section><h3>' + esc(tr(t)) + '</h3>' + body + '</section>' : '';
   const tbl = rows => '<table>' + rows.filter(Boolean).join('') + '</table>';
   const mv = (name, extra) => { const v = avgOf(name); return isNum(v) ? reportValue(name, v) + ' <small>(' + reportCount(cntOf(name), '{count} day with data', '{count} days with data') + (extra ? ', ' + extra : '') + ')</small>' : '–'; };
-  let h = '<header><h2>' + esc(aud === 'alles' ? tr('Volledig rapport') : trf('Report for {audience}', { audience: tr(A.label).toLocaleLowerCase(currentLocale()) })) + '</h2><p>' + esc(P.name || '') + ' · ' + fmtDay(periodKeys[0]) + ' – ' + fmtDay(end) + ' · ' + reportCount(keys.length, '{count} day with data', '{count} days with data') + '</p><p class="small">' + tr('Self-reported. Calories and nutrition values are rough estimates; “–” means unknown. Sleep refers to the night before that day.') + (A.parts.includes('stemming') ? ' ' + tr('Mood scores are daily self-reflections, not a validated psychological assessment.') : '') + '</p></header>';
+  let h = '<header><h2>' + esc(aud === 'alles' ? tr('Volledig rapport') : trf('Report for {audience}', { audience: tr(A.label).toLocaleLowerCase(currentLocale()) })) + '</h2><p>' + esc(P.name || '') + ' · ' + esc(reportDayLabel(periodKeys[0])) + ' – ' + esc(reportDayLabel(end)) + ' · ' + reportCount(keys.length, '{count} day with data', '{count} days with data') + '</p><p class="small">' + tr('Self-reported. Calories and nutrition values are rough estimates; “–” means unknown. Sleep refers to the night before that day.') + (A.parts.includes('stemming') ? ' ' + tr('Mood scores are daily self-reflections, not a validated psychological assessment.') : '') + '</p></header>';
   for (const part of A.parts) {
     if (part === 'profiel') {
       const profileSummary = [P.sex === 'v' ? tr('vrouw') : P.sex === 'm' ? tr('man') : '', P.age ? trf('{count} years', { count: P.age }) : '', P.heightCm ? P.heightCm + ' cm' : '', REPORT_ACTIVITY[P.activity] ? tr(REPORT_ACTIVITY[P.activity]) : ''].filter(Boolean).join(', ');
       h += sec('Profiel en doelen', '<p>' + (profileSummary ? esc(profileSummary) + '. ' : '') + esc(trf('Goals: {kcal} kcal, {protein} g protein, {fiber} g fibre, {water} l water, {stepsMin}–{stepsMax} steps.', { kcal: G.kcal, protein: G.protein, fiber: G.fiber, water: fmtNum(G.waterMl / 1000, 1), stepsMin: G.stepsMin, stepsMax: G.stepsMax })) + '</p>' + (P.notes ? '<div class="report-context"><b>' + tr('Your context note') + '</b><p>' + esc(P.notes) + '</p></div>' : ''));
     }
     if (part === 'dagen') {
+      if (periodKeys.length > 31) h += reportGroupedSummary(A.cols, periodKeys, periodKeys.length > 120 ? 'month' : 'week');
       const cols = A.cols.map(c => REPORT_COLS[c]);
       const rows = periodKeys.slice().reverse().map(k => {
         const d = DB.days[k];
@@ -310,10 +362,94 @@ function reportHtml(aud, n) {
     if (part === 'notities') { const ns = keys.slice().reverse().filter(k => DB.days[k].moodNote || DB.days[k].notes); if (ns.length) h += sec('Notities', '<ul>' + ns.map(k => '<li><b>' + fmtDay(k) + (isValidDailyRating(DB.days[k].mood) ? ' (' + esc(tr('stemming')) + ' ' + DB.days[k].mood + '/10)' : '') + ':</b> ' + esc([DB.days[k].moodNote, DB.days[k].notes].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>'); }
     if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4><p>' + alcoholReport(periodKeys) + '</p></div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
     if (part === 'supplementen') h += sec('Supplementen', supplementReport(periodKeys));
-    if (part === 'gewicht') {
-      const w = keys.map(k => ({ k, v: DB.days[k].weight })).filter(x => isNum(x.v));
-      h += sec('Gewicht (vóór ontbijt)', w.length ? '<p>' + w.map(x => fmtDay(x.k) + ': ' + fmtNum(x.v, 1) + ' kg').join(' · ') + '</p><p class="small">' + reportCount(w.length, 'Average {weight} kg across {count} weigh-in.', 'Average {weight} kg across {count} weigh-ins.').replace('{weight}', fmtNum(avg(w.map(x => x.v)), 1)) + (w.length >= 2 ? ' ' + esc(trf('Verschil eerste–laatste weging: {diff} kg ({from} → {to}).', { diff: (w[w.length - 1].v - w[0].v > 0 ? '+' : '') + fmtNum(w[w.length - 1].v - w[0].v, 1), from: fmtDay(w[0].k), to: fmtDay(w[w.length - 1].k) })) : '') + '</p>' : '<p>' + tr('No weigh-ins recorded.') + '</p>');
-    }
+    if (part === 'gewicht') h += sec('Gewicht (vóór ontbijt)', reportWeight(periodKeys));
+  }
+  return h;
+}
+
+/* ---------- rapport: gewicht en lange periodes ---------- */
+const REPORT_NUM = {
+  kcal: d => { const r = dayNutr(d, 'kcal'); return r && !r.lb ? r.v : null; },
+  protein: d => { const r = dayNutr(d, 'protein'); return r && !r.lb ? r.v : null; },
+  fiber: d => { const r = dayNutr(d, 'fiber'); return r && !r.lb ? r.v : null; },
+  water: d => isNum(dayWaterMl(d)) ? dayWaterMl(d) / 1000 : null,
+  weight: d => isNum(d.weight) ? d.weight : null,
+  mood: d => isValidDailyRating(d.mood) ? d.mood : null,
+  energy: d => isValidDailyRating(d.energy) ? d.energy : null,
+  stress: d => isValidDailyRating(d.stress) ? d.stress : null,
+  sleepH: d => isNum(d.sleepH) ? d.sleepH : null,
+  steps: d => isNum(d.steps) ? d.steps : null,
+  actMin: d => { const a = (d.activities || []).filter(x => isNum(x.min)); return a.length ? a.reduce((t, x) => t + x.min, 0) : null; },
+  alcohol: d => isNum(d.alcohol) ? d.alcohol : null
+};
+const REPORT_DEC = { water: 1, weight: 1, mood: 1, energy: 1, stress: 1, sleepH: 1, alcohol: 1 };
+/* Groepeer dagsleutels per week (maandag) of per maand. */
+function reportGroups(periodKeys, by) {
+  const groups = [];
+  for (const k of periodKeys) {
+    let g;
+    if (by === 'month') g = k.slice(0, 7);
+    else { const d = parseKey(k), off = (d.getDay() + 6) % 7; g = addDays(k, -off); }
+    if (!groups.length || groups[groups.length - 1].g !== g) groups.push({ g, keys: [] });
+    groups[groups.length - 1].keys.push(k);
+  }
+  return groups;
+}
+function reportGroupLabel(grp, by) {
+  if (by === 'month') return reportMonthLabel(grp.g);
+  return fmtDay(grp.keys[0]) + ' – ' + fmtDay(grp.keys[grp.keys.length - 1]);
+}
+function reportGroupedSummary(colNames, periodKeys, by) {
+  const cols = colNames.filter(c => REPORT_NUM[c]);
+  if (!cols.length) return '';
+  const groups = reportGroups(periodKeys, by).reverse();
+  const rows = groups.map(grp => {
+    const days = grp.keys.map(k => DB.days[k]).filter(Boolean);
+    return '<tr' + (days.length ? '' : ' class="report-empty"') + '><th scope="row">' + esc(reportGroupLabel(grp, by)) + '</th><td>' + days.length + '</td>' + cols.map(c => {
+      const v = avg(days.map(REPORT_NUM[c]));
+      return '<td>' + (isNum(v) ? esc(fmtNum(v, REPORT_DEC[c] || 0)) : '–') + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  const title = by === 'month' ? 'Maandgemiddelden' : 'Weekgemiddelden';
+  return '<section><h3>' + esc(tr(title)) + '</h3><div class="report-scroll"><table class="report-grid"><thead><tr><th scope="col">' + tr(by === 'month' ? 'Maand' : 'Week') + '</th><th scope="col">' + tr('Dagen') + '</th>' +
+    cols.map(c => '<th scope="col">' + esc(tr(REPORT_COLS[c][0])) + '</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="small muted">' + esc(tr('Gemiddelde over de dagen met een waarde. Voeding telt alleen volledig geregistreerde dagen.')) + '</p></section>';
+}
+function reportWeight(periodKeys) {
+  const w = periodKeys.filter(k => DB.days[k] && isNum(DB.days[k].weight)).map(k => ({ k, v: DB.days[k].weight }));
+  if (!w.length) return '<p>' + tr('No weigh-ins recorded.') + '</p>';
+  const kg = v => fmtNum(v, 1) + ' kg';
+  const multiYear = periodKeys[0].slice(0, 4) !== periodKeys[periodKeys.length - 1].slice(0, 4);
+  const fmtDay = (k, long) => multiYear ? reportDayLabel(k) : window.fmtDay(k, long);
+  const signed = v => (v > 0 ? '+' : v < 0 ? '−' : '±') + fmtNum(Math.abs(v), 1) + ' kg';
+  const first = w[0], last = w[w.length - 1], vals = w.map(x => x.v);
+  const lo = w.reduce((a, x) => x.v < a.v ? x : a), hi = w.reduce((a, x) => x.v > a.v ? x : a);
+  const spanDays = Math.round((parseKey(last.k) - parseKey(first.k)) / 864e5);
+  const row = (l, v) => '<tr><th scope="row">' + esc(tr(l)) + '</th><td>' + v + '</td></tr>';
+  let h = '<table>' +
+    row('Eerste weging', esc(kg(first.v)) + ' <small>(' + esc(fmtDay(first.k)) + ')</small>') +
+    (w.length > 1 ? row('Laatste weging', esc(kg(last.v)) + ' <small>(' + esc(fmtDay(last.k)) + ')</small>') + row('Verschil', '<b>' + esc(signed(last.v - first.v)) + '</b>' + (spanDays >= 14 ? ' <small>(' + esc(trf('≈ {rate} per week', { rate: signed((last.v - first.v) / spanDays * 7) })) + ')</small>' : '')) : '') +
+    (w.length > 2 ? row('Laagste', esc(kg(lo.v)) + ' <small>(' + esc(fmtDay(lo.k)) + ')</small>') + row('Hoogste', esc(kg(hi.v)) + ' <small>(' + esc(fmtDay(hi.k)) + ')</small>') : '') +
+    row('Gemiddeld', esc(kg(avg(vals)))) +
+    row('Aantal wegingen', esc(String(w.length))) + '</table>';
+  if (w.length > 1) {
+    const data = periodKeys.map(k => ({ k, v: DB.days[k] && isNum(DB.days[k].weight) ? DB.days[k].weight : null }));
+    h += '<div class="report-chart">' + lineChart(data, { dec: 1, unit: 'kg', label: tr('Gewicht'), ma: w.length >= 7, connect: true }) + '</div>' + (w.length >= 7 ? '<p class="small muted">' + esc(tr('Punten = wegingen; dikke lijn = gemiddelde van de laatste 7 dagen.')) + '</p>' : '');
+  }
+  if (w.length > 31) {
+    const by = periodKeys.length > 120 ? 'month' : 'week';
+    const rows = reportGroups(periodKeys, by).reverse().map(grp => {
+      const v = grp.keys.filter(k => DB.days[k] && isNum(DB.days[k].weight)).map(k => DB.days[k].weight);
+      if (!v.length) return '';
+      return '<tr><th scope="row">' + esc(reportGroupLabel(grp, by)) + '</th><td>' + esc(fmtNum(avg(v), 1)) + '</td><td>' + esc(fmtNum(Math.min(...v), 1) + ' – ' + fmtNum(Math.max(...v), 1)) + '</td><td>' + v.length + '</td></tr>';
+    }).join('');
+    h += '<div class="report-scroll"><table class="report-grid"><thead><tr><th scope="col">' + tr(by === 'month' ? 'Maand' : 'Week') + '</th><th scope="col">' + tr('Gemiddeld (kg)') + '</th><th scope="col">' + tr('Laagste – hoogste') + '</th><th scope="col">' + tr('Wegingen') + '</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  } else {
+    const rows = w.slice().reverse().map((x, i, arr) => {
+      const prev = arr[i + 1];
+      return '<tr><th scope="row">' + esc(fmtDay(x.k, true)) + '</th><td>' + esc(fmtNum(x.v, 1)) + '</td><td>' + (prev ? esc(signed(x.v - prev.v)) : '–') + '</td></tr>';
+    }).join('');
+    h += '<div class="report-scroll"><table class="report-grid"><thead><tr><th scope="col">' + tr('Dag') + '</th><th scope="col">' + tr('Gewicht (kg)') + '</th><th scope="col">' + tr('t.o.v. vorige') + '</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
   return h;
 }
