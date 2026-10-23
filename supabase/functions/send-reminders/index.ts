@@ -14,6 +14,11 @@ type Device = {
 
 const cors = { 'Access-Control-Allow-Origin': 'null', 'Access-Control-Allow-Headers': 'content-type,x-push-cron-secret' };
 const PUSH_TIMEOUT_MS = 10_000;
+// Android parks idle phones in Doze. Normal-priority pushes then wait until the next
+// maintenance window; with a short TTL the push service silently drops them.
+// High urgency wakes the device; a 2-hour TTL still delivers after a short offline spell.
+// The topic (reminder id) makes a newer push replace an undelivered older one.
+const PUSH_TTL_SECONDS = 2 * 60 * 60;
 const MAX_REMINDER_LATE_MINUTES = 6 * 60;
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'content-type': 'application/json' } });
 
@@ -138,7 +143,7 @@ Deno.serve(async req => {
           };
           const [title, body] = notificationText(d.language);
           const appUrl = Deno.env.get('APP_URL') || 'https://pratikvlegel.github.io/lifestyle/';
-          const payload = await buildPushPayload({ data: JSON.stringify({ title, body, url: `${appUrl}#/checkin/${encodeURIComponent(r.id)}` }), options: { ttl: 120 } }, subscription, vapid);
+          const payload = await buildPushPayload({ data: JSON.stringify({ title, body, url: `${appUrl}#/checkin/${encodeURIComponent(r.id)}` }), options: { ttl: PUSH_TTL_SECONDS, urgency: 'high', topic: r.id.slice(0, 32) } }, subscription, vapid);
           const response = await fetch(d.endpoint, { ...payload, redirect: 'manual', signal: AbortSignal.timeout(PUSH_TIMEOUT_MS) });
           if (response.status === 404 || response.status === 410) {
             await admin.from('webpush_subscriptions').delete().eq('id', d.id);

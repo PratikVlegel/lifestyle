@@ -63,6 +63,7 @@ Een JSON-back-up bevat persoonlijke dagboek- en appgegevens. De export laat de A
 
 ## Wijzigingen
 
+- **send-reminders (23 okt 2026)**: pushmeldingen met hoge prioriteit (`urgency: high`) en 2 uur geldigheid in plaats van 2 minuten, plus `topic` per herinnering. Zonder die instellingen hield Android in Doze de melding vast en liet Google ze na 2 minuten vervallen. Deploy: `supabase functions deploy send-reminders --project-ref gbyausuldubxktdrwfux`.
 - **vd-1.14.0**: rapporten voor 7, 14, 30 of 90 dagen, een gekozen maand of een eigen periode (tot 2 jaar). Bij lange periodes week- of maandgemiddelden. Gewicht als overzichtstabel (eerste/laatste, verschil, tempo per week, laagste/hoogste), grafiek met 7-daags gemiddelde en tabel per weging of per week/maand.
 - **vd-1.13.0**: eten toevoegen werkt nu als een bord: je zet meerdere onderdelen samen (bv. boterham + surimi + kaas + soep, of een mealprep met extra kaas of saus) en kiest het moment, ook als snack. Bij een bestaande maaltijd kan je via "+ erbij" iets toevoegen. Water uit eten (soep, bouillon) kan je per onderdeel in ml aangeven of als "water in gerecht" toevoegen; dat telt mee bij het water van de dag. Uitnodigingsscherm toont de AI-uitleg weer correct.
 - **vd-1.12.2**: versienummer in de app (Meer) bijgewerkt en cache-buster van alle gewijzigde scripts verhoogd, zodat toestellen de nieuwe bestanden zeker ophalen.
