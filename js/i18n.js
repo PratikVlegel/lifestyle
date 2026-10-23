@@ -3093,3 +3093,81 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Suikerhoudende frisdrank (porties per dag)': 'Zuckerhaltige Getränke (Portionen pro Tag)', 'Verschil eerste–laatste weging: {diff} kg ({from} → {to}).': 'Unterschied zwischen erster und letzter Wiegung: {diff} kg ({from} → {to}).',
   'Gemiddeld per dag met gegevens:': 'Durchschnitt pro Tag mit Daten:', 'eigen dagschatting': 'selbst eingegebene Tagesschätzung', '“≥” = niet alles is geregistreerd.': '„≥“ = nicht alles erfasst.'
 });
+
+/* Bord met meerdere onderdelen en water uit eten */
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Op je bord': 'On your plate',
+  'Op je bord: {item}. Voeg nog iets toe of tik op Klaar.': 'On your plate: {item}. Add something else or tap Done.',
+  'Klaar · {count} toevoegen': 'Done · add {count}',
+  'Kies hierboven wat je at': 'Choose above what you ate',
+  'Kies eerst wat je at.': 'First choose what you ate.',
+  'Maximaal 30 onderdelen per keer.': 'At most 30 items at a time.',
+  'Hoeveel hiervan telt als water (bv. soep)?': 'How much of this counts as water (e.g. soup)?',
+  'ml vocht': 'ml fluid',
+  'vocht': 'fluid',
+  '💧 = hoeveel ml als water telt, bv. de bouillon of het water van je soep.': '💧 = how many ml count as water, e.g. the stock or water in your soup.',
+  'snack': 'snack',
+  'Vocht: tussen 0 en 10000 ml.': 'Fluid: between 0 and 10000 ml.',
+  'Vul in hoeveel ml (1 tot 10000).': 'Enter how many ml (1 to 10000).',
+  'Water in gerecht ({ml} ml)': 'Water in dish ({ml} ml)',
+  'Water in een gerecht': 'Water in a dish',
+  'Soep, thee, bouillon: het water telt mee bij je water van vandaag, zonder kcal.': "Soup, tea, stock: the water counts towards today's water, with no kcal.",
+  'Waarvan vocht (ml, optioneel)': 'Of which fluid (ml, optional)',
+  'bv. 330 bij een kom soep': 'e.g. 330 for a bowl of soup',
+  'Telt als water (ml)': 'Counts as water (ml)',
+  'erbij': 'add to this',
+  'Toegevoegd': 'Added',
+  'alleen drinken: {amount} ml uit soep/eten telt er al automatisch bij': 'drinks only: {amount} ml from soup/food is already added automatically'
+});
+
+/* Bord met meerdere onderdelen en water uit eten */
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Op je bord': "Dans l'assiette",
+  'Op je bord: {item}. Voeg nog iets toe of tik op Klaar.': "Dans l'assiette : {item}. Ajoutez autre chose ou touchez Terminé.",
+  'Klaar · {count} toevoegen': 'Terminé · ajouter {count}',
+  'Kies hierboven wat je at': 'Choisissez ci-dessus ce que vous avez mangé',
+  'Kies eerst wat je at.': "Choisissez d'abord ce que vous avez mangé.",
+  'Maximaal 30 onderdelen per keer.': '30 éléments maximum à la fois.',
+  'Hoeveel hiervan telt als water (bv. soep)?': 'Quelle part compte comme eau (p. ex. soupe) ?',
+  'ml vocht': 'ml de liquide',
+  'vocht': 'liquide',
+  '💧 = hoeveel ml als water telt, bv. de bouillon of het water van je soep.': "💧 = combien de ml comptent comme eau, p. ex. le bouillon ou l'eau de votre soupe.",
+  'snack': 'en-cas',
+  'Vocht: tussen 0 en 10000 ml.': 'Liquide : entre 0 et 10000 ml.',
+  'Vul in hoeveel ml (1 tot 10000).': 'Indiquez combien de ml (1 à 10000).',
+  'Water in gerecht ({ml} ml)': 'Eau dans le plat ({ml} ml)',
+  'Water in een gerecht': "De l'eau dans un plat",
+  'Soep, thee, bouillon: het water telt mee bij je water van vandaag, zonder kcal.': "Soupe, thé, bouillon : l'eau compte dans votre eau du jour, sans kcal.",
+  'Waarvan vocht (ml, optioneel)': 'Dont liquide (ml, facultatif)',
+  'bv. 330 bij een kom soep': 'p. ex. 330 pour un bol de soupe',
+  'Telt als water (ml)': 'Compte comme eau (ml)',
+  'erbij': 'ajouter',
+  'Toegevoegd': 'Ajouté',
+  'alleen drinken: {amount} ml uit soep/eten telt er al automatisch bij': 'boissons uniquement : {amount} ml de soupe/repas sont déjà ajoutés automatiquement'
+});
+
+/* Bord met meerdere onderdelen en water uit eten */
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Op je bord': 'Auf dem Teller',
+  'Op je bord: {item}. Voeg nog iets toe of tik op Klaar.': 'Auf dem Teller: {item}. Füge noch etwas hinzu oder tippe auf Fertig.',
+  'Klaar · {count} toevoegen': 'Fertig · {count} hinzufügen',
+  'Kies hierboven wat je at': 'Wähle oben, was du gegessen hast',
+  'Kies eerst wat je at.': 'Wähle zuerst, was du gegessen hast.',
+  'Maximaal 30 onderdelen per keer.': 'Höchstens 30 Teile auf einmal.',
+  'Hoeveel hiervan telt als water (bv. soep)?': 'Wie viel davon zählt als Wasser (z. B. Suppe)?',
+  'ml vocht': 'ml Flüssigkeit',
+  'vocht': 'Flüssigkeit',
+  '💧 = hoeveel ml als water telt, bv. de bouillon of het water van je soep.': '💧 = wie viele ml als Wasser zählen, z. B. die Brühe oder das Wasser deiner Suppe.',
+  'snack': 'Snack',
+  'Vocht: tussen 0 en 10000 ml.': 'Flüssigkeit: zwischen 0 und 10000 ml.',
+  'Vul in hoeveel ml (1 tot 10000).': 'Gib an, wie viele ml (1 bis 10000).',
+  'Water in gerecht ({ml} ml)': 'Wasser im Gericht ({ml} ml)',
+  'Water in een gerecht': 'Wasser in einem Gericht',
+  'Soep, thee, bouillon: het water telt mee bij je water van vandaag, zonder kcal.': 'Suppe, Tee, Brühe: Das Wasser zählt zu deinem Wasser von heute, ohne kcal.',
+  'Waarvan vocht (ml, optioneel)': 'Davon Flüssigkeit (ml, optional)',
+  'bv. 330 bij een kom soep': 'z. B. 330 bei einer Schüssel Suppe',
+  'Telt als water (ml)': 'Zählt als Wasser (ml)',
+  'erbij': 'dazu',
+  'Toegevoegd': 'Hinzugefügt',
+  'alleen drinken: {amount} ml uit soep/eten telt er al automatisch bij': 'nur Getränke: {amount} ml aus Suppe/Essen werden schon automatisch dazugezählt'
+});

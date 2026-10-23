@@ -80,7 +80,7 @@ function buildInsights(n) {
   }
 
   /* --- Drinken, cafeïne, alcohol --- */
-  const wat = recent.map(x => x.d.waterMl).filter(isNum);
+  const wat = recent.map(x => dayWaterMl(x.d)).filter(isNum);
   if (wat.length >= 3) {
     const a = avg(wat);
     if (a < G.waterMl * 0.85) add('voeding', 'Water', trf('Gemiddeld ≈ {average} l per dag (doel {target} l). Een glas water bij een check-in kan een eenvoudige herinnering zijn.', { average: fmtNum(a / 1000, 1), target: fmtNum(G.waterMl / 1000, 1) }), wat.length + ' dagen', 'tip');
@@ -181,7 +181,7 @@ function aiContext(n) {
     const kc = dayNutr(d, 'kcal'), pr = dayNutr(d, 'protein');
     const meals = (d.meals || []).map(m => SLOTS[m.slot] + ': ' + (m.nothing ? 'niets' : m.desc) + (isNum(m.kcal) ? ' (≈' + Math.round(m.kcal) + ' kcal)' : ' (kcal onbekend)')).join('; ');
     const nicotine = Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? d.nicotineForms.join(',') : 'geen nicotine') : d.nicotineForms === null ? '?' : d.vape ?? '?';
-    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', isValidDailyRating(d.energy) ? d.energy : '?', isValidDailyRating(d.mood) ? d.mood : '?', isValidDailyRating(d.stress) ? d.stress : '?', d.steps ?? '?', isNum(d.waterMl) ? d.waterMl : '?', d.caffeine ?? '?', d.alcohol ?? '?', nicotine, d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', [d.moodNote, d.notes].filter(Boolean).join(' · ') || '-', meals].join(' | ');
+    return [k, kc ? (kc.lb ? '≥' : '≈') + kc.v : '?', pr ? Math.round(pr.v) : '?', d.sleepH ?? '?', d.cpap ?? '?', isValidDailyRating(d.energy) ? d.energy : '?', isValidDailyRating(d.mood) ? d.mood : '?', isValidDailyRating(d.stress) ? d.stress : '?', d.steps ?? '?', isNum(dayWaterMl(d)) ? dayWaterMl(d) : '?', d.caffeine ?? '?', d.alcohol ?? '?', nicotine, d.softDrinkServings ?? '?', d.sweetsServings ?? '?', d.weight ?? '?', [d.moodNote, d.notes].filter(Boolean).join(' · ') || '-', meals].join(' | ');
   }).filter(Boolean);
   const P = DB.profile, G = DB.goals;
   return 'PROFIEL: ' + [P.sex === 'v' ? 'vrouw' : 'man', P.age ? P.age + ' jaar' : '', P.heightCm ? P.heightCm + ' cm' : '', P.activity].filter(Boolean).join(', ') +
@@ -298,7 +298,7 @@ function weekSummaryText(n) {
     const kc = dayNutr(d, 'kcal'), pr = dayNutr(d, 'protein');
     lines.push(fmtDay(k, true) + ': ' + (kc ? (kc.lb ? '≥ ' : '≈ ') + fmtNum(kc.v) + ' kcal' + (d.kcalOverride ? ' (' + tr('eigen dagschatting') + ')' : '') : tr('Kcal onbekend')) +
       (pr ? ' · ' + (pr.lb ? '≥ ' : '') + fmtNum(pr.v) + ' g ' + tr('eiwit') : '') +
-      ' · ' + tr('Slaap') + ' ' + (isNum(d.sleepH) ? fmtNum(d.sleepH, 1) : '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (isValidDailyRating(d.energy) ? d.energy + '/10' : '?') + ' · ' + tr('Stemming') + ' ' + (isValidDailyRating(d.mood) ? d.mood + '/10' : '?') + ' · ' + (isNum(d.steps) ? fmtNum(d.steps) : '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + fmtNum(d.weight, 1) + ' kg' : ''));
+      ' · ' + tr('Slaap') + ' ' + (isNum(d.sleepH) ? fmtNum(d.sleepH, 1) : '?') + ' ' + tr('hours') + ' · ' + tr('Energie') + ' ' + (isValidDailyRating(d.energy) ? d.energy + '/10' : '?') + ' · ' + tr('Stemming') + ' ' + (isValidDailyRating(d.mood) ? d.mood + '/10' : '?') + ' · ' + (isNum(d.steps) ? fmtNum(d.steps) : '?') + ' ' + tr('Stappen').toLocaleLowerCase(currentLocale()) + ' · ' + tr('Water').toLocaleLowerCase(currentLocale()) + ' ' + (isNum(dayWaterMl(d)) ? fmtNum(dayWaterMl(d) / 1000, 1) + ' l' : '?') + (isNum(d.weight) ? ' · ' + fmtNum(d.weight, 1) + ' kg' : ''));
     const acts = (d.activities || []).map(a => tr((ACTIVITIES[a.type] || ACTIVITIES.anders).label) + (isNum(a.min) ? ' ' + a.min + ' min' : ''));
     if (acts.length) lines.push('   ' + tr('Beweging') + ': ' + acts.join(', '));
     if (isNum(d.alcohol) && d.alcohol > 0) lines.push('   ' + tr('Alcohol') + ': ' + fmtNum(d.alcohol, d.alcohol % 1 ? 1 : 0) + ' ' + tr('glasses'));

@@ -40,7 +40,7 @@ function favResults() {
   if (!list.length) return '<p class="muted">' + tr('Nog niets. Wat je vaak eet, verschijnt hier vanzelf.') + '</p>';
   return list.map((e, i) => '<button class="pick wide" data-act="pickFav" data-i="' + i + '"><b>' + esc(e.m.desc) + '</b><small>' + nutrLine(e.m) + ' · ' + trf('In 45 dagen: {count} keer', { count: e.n }) + '</small></button>').join('');
 }
-ACT.pickFav = el => { const e = frequentItems(15)[Number(el.dataset.i)]; closeSheet(); PICK_CB && PICK_CB([copyItem(e.m)]); };
+ACT.pickFav = el => { const e = frequentItems(15)[Number(el.dataset.i)]; pickAdd(copyItem(e.m)); };
 
 /* ---------- boodschappenlijst uit mealpreps ---------- */
 function shopState() { DB.shop = DB.shop || { sel: {}, done: {}, extra: [] }; return DB.shop; }
@@ -94,7 +94,7 @@ const REPORT_COLS = {
   kcal: ['Kcal', d => { const r = dayNutr(d, 'kcal'); return r ? (r.lb ? '≥ ' : '') + fmtNum(r.v) + (d.kcalOverride ? '*' : '') : ''; }],
   protein: ['Eiwit (g)', d => { const r = dayNutr(d, 'protein'); return r ? (r.lb ? '≥ ' : '') + fmtNum(r.v) : ''; }],
   fiber: ['Vezels (g)', d => { const r = dayNutr(d, 'fiber'); return r ? (r.lb ? '≥ ' : '') + fmtNum(r.v) : ''; }],
-  water: ['Water (l)', d => isNum(d.waterMl) ? fmtNum(d.waterMl / 1000, 1) : ''],
+  water: ['Water (l)', d => isNum(dayWaterMl(d)) ? fmtNum(dayWaterMl(d) / 1000, 1) : ''],
   weight: ['Gewicht (kg)', d => isNum(d.weight) ? fmtNum(d.weight, 1) : ''],
   mood: ['Stemming /10', d => isValidDailyRating(d.mood) ? String(d.mood) : ''],
   energy: ['Energie /10', d => isValidDailyRating(d.energy) ? String(d.energy) : ''],

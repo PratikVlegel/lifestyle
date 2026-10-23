@@ -222,14 +222,14 @@ function kpiTile(key) {
 }
 ACT.openKpi = el => go('#/kpi/' + el.dataset.k);
 ACT.openCheckin = el => go('#/checkin/' + el.dataset.id);
-ACT.quickWater = () => { const d = getDay(todayKey(), true), total = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; if (total > NUM_LIMITS.waterMl[1]) return toast(tr('Invoerlimiet bereikt: maximaal 30 l water per dag.')); d.waterMl = total; if (!save()) return; toast(trf('Water vandaag: {amount} l', { amount: fmtNum(d.waterMl / 1000, 2) })); render(); };
+ACT.quickWater = () => { const d = getDay(todayKey(), true), total = (isNum(d.waterMl) ? d.waterMl : 0) + DB.settings.glassMl; if (total > NUM_LIMITS.waterMl[1]) return toast(tr('Invoerlimiet bereikt: maximaal 30 l water per dag.')); d.waterMl = total; if (!save()) return; toast(trf('Water vandaag: {amount} l', { amount: fmtNum(dayWaterMl(d) / 1000, 2) })); render(); };
 ACT.quickCoffee = () => { const d = getDay(todayKey(), true), total = (isNum(d.caffeine) ? d.caffeine : 0) + 1; if (total > NUM_LIMITS.caffeine[1]) return toast(tr('Invoerlimiet bereikt: maximaal 100 cafeïneporties per dag.')); d.caffeine = total; if (!save()) return; toast(trf('Cafeïne vandaag: {count} porties', { count: d.caffeine })); render(); };
-ACT.quickEat = () => openPicker(items => {
+ACT.quickEat = () => openPicker((items, chosen) => {
   const d = getDay(todayKey(), true);
-  const slot = slotForNow();
+  const slot = chosen || slotForNow();
   items.forEach(it => { it.slot = slot; it.time = nowTime(); d.meals.push(it); if (it.prepId) usePortion(it.prepId, prepStockUse(it)); });
   if (!save()) return; toast(tr('Genoteerd bij') + ' ' + tr(SLOTS[slot])); render();
-});
+}, { chooseSlot: true });
 function slotForNow() {
   const t = nowTime();
   if (t < '10:30') return 'ontbijt'; if (t < '12:00') return 'tussen1'; if (t < '14:30') return 'lunch';
@@ -246,7 +246,7 @@ function mealsList(day, k, editable) {
     for (const m of ms) {
       h += '<div class="meal"><div class="mt">' + (m.time ? '<span class="tm">' + esc(m.time) + '</span>' : '') + (m.nothing ? '<em>' + tr('niets gegeten') + '</em>' : esc(m.desc)) + '</div>' +
         '<div class="mn">' + (m.nothing ? '' : nutrLine(m)) + '</div>' +
-        (editable ? '<div class="ma"><button class="link" data-act="editMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Wijzig') + '</button><button class="link danger" data-act="delMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Verwijder') + '</button></div>' : '') + '</div>';
+        (editable ? '<div class="ma">' + (m.nothing ? '' : '<button class="link" data-act="mealExtra" data-k="' + k + '" data-id="' + m.id + '">+ ' + tr('erbij') + '</button>') + '<button class="link" data-act="editMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Wijzig') + '</button><button class="link danger" data-act="delMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Verwijder') + '</button></div>' : '') + '</div>';
     }
     h += '</div>';
   }
@@ -261,6 +261,7 @@ function nutrLine(m) {
   if (isNum(m.carbs)) p.push(fmtNum(m.carbs) + ' g ' + tr('koolh.'));
   if (isNum(m.fat)) p.push(fmtNum(m.fat) + ' g ' + tr('vet'));
   if (isNum(m.fiber)) p.push(fmtNum(m.fiber) + ' g ' + tr('vezels'));
+  if (isNum(m.fluidMl) && m.fluidMl > 0) p.push('💧 ' + fmtNum(m.fluidMl) + ' ml ' + tr('vocht'));
   return p.join(' · ');
 }
 
@@ -370,7 +371,7 @@ function renderCheckin(rid, dateKey) {
       '<label class="fld"><span>' + tr('Waarom zo? (werk, mensen, honger, slaap…)') + '</span><input type="text" maxlength="1000" data-ci="moodNote" value="' + esc(CI.f.moodNote || '') + '" placeholder="' + tr('bv. drukke dag, ruzie op het werk') + '"></label></div>';
     h += '<div class="card"><h3>' + tr('Beweging en drinken') + '</h3>' +
       field('steps', 'Stappen', 'number', { unit: '', step: '1', unknown: 'onbekend', bare: true }) +
-      field('waterL', 'Water vandaag in totaal', 'number', { unit: 'l', step: '0.25', unknown: 'onbekend', bare: true, hint: trf('Al genoteerd: {amount}', { amount: day && isNum(day.waterMl) ? fmtNum(day.waterMl / 1000, 2) + ' l' : tr('niets') }) }) +
+      field('waterL', 'Water vandaag in totaal', 'number', { unit: 'l', step: '0.25', unknown: 'onbekend', bare: true, hint: trf('Al genoteerd: {amount}', { amount: day && isNum(day.waterMl) ? fmtNum(day.waterMl / 1000, 2) + ' l' : tr('niets') }) + (day && mealFluidMl(day) ? ' · ' + trf('alleen drinken: {amount} ml uit soep/eten telt er al automatisch bij', { amount: fmtNum(mealFluidMl(day)) }) : '') }) +
       field('caffeine', 'Koffie / espresso / energiedrank (shots)', 'number', { unit: 'shots', step: '1', unknown: 'onbekend', bare: true }) +
       nicotineFormChoice() +
       field('softDrinkServings', tr('Frisdrank'), 'number', { unit: tr('glazen of blikjes'), step: '0.5', unknown: tr('onbekend'), bare: true, optional: true }) +
@@ -554,7 +555,64 @@ ACT.ciSave = () => {
 /* ================= itemkiezer (sheet) ================= */
 let PICK_TAB = 'prep';
 let PICK_WASTE = false;
-function openPicker(cb) { PICK_CB = cb; PICK_WASTE = false; renderPicker(); $('#sheet').hidden = false; document.body.classList.add('noscroll'); }
+/* Het "bord": alles wat je in één keer at (bv. boterham + surimi + kaas + soep, of mealprep + saus).
+   Elk onderdeel wordt een eigen regel in het dagboek, maar je voegt ze samen toe. */
+let PICK_BASKET = [];
+let PICK_OPTS = {};
+let PICK_SLOT = null;
+function openPicker(cb, opts) {
+  PICK_CB = cb; PICK_OPTS = opts || {}; PICK_BASKET = []; PICK_SLOT = PICK_OPTS.chooseSlot ? slotForNow() : null; PICK_WASTE = false;
+  renderPicker(); $('#sheet').hidden = false; document.body.classList.add('noscroll');
+}
+function pickAdd(it) {
+  if (PICK_BASKET.length >= 30) return toast(tr('Maximaal 30 onderdelen per keer.'));
+  PICK_BASKET.push(it); PICK_WASTE = false;
+  const q = $('#libq') ? $('#libq').value : '';
+  renderPicker(trf('Op je bord: {item}. Voeg nog iets toe of tik op Klaar.', { item: it.desc }));
+  if (q && $('#libq')) { $('#libq').value = q; $('#libres').innerHTML = libResults(q); }
+}
+function basketHtml() {
+  const B = PICK_BASKET;
+  let h = '<div class="basket">';
+  if (B.length) {
+    const tot = k => B.reduce((a, it) => a + (isNum(it[k]) ? it[k] : 0), 0);
+    const unknown = B.some(it => !isNum(it.kcal));
+    const fl = tot('fluidMl');
+    h += '<div class="basket-h"><b>' + tr('Op je bord') + ' (' + B.length + ')</b><span>' + (unknown ? '≥ ' : '≈ ') + fmtNum(tot('kcal')) + ' kcal · ' + fmtNum(tot('protein')) + ' g ' + tr('eiwit') + (fl ? ' · 💧 ' + fmtNum(fl) + ' ml' : '') + '</span></div>';
+    h += '<div class="items">' + B.map((it, i) => '<div class="it"><div><b>' + esc(it.desc) + '</b><small>' + nutrLine(it) + '</small></div>' +
+      '<label class="bfl" title="' + esc(tr('Hoeveel hiervan telt als water (bv. soep)?')) + '">💧<input type="number" inputmode="numeric" min="0" max="10000" step="10" placeholder="0" value="' + (isNum(it.fluidMl) && it.fluidMl > 0 ? it.fluidMl : '') + '" data-chg="pickFluid" data-i="' + i + '" aria-label="' + esc(tr('ml vocht')) + '">ml</label>' +
+      '<button class="iconbtn sm" data-act="pickDel" data-i="' + i + '" aria-label="' + tr('Verwijder') + '">✕</button></div>').join('') + '</div>';
+    if (!fl) h += '<p class="muted small">' + tr('💧 = hoeveel ml als water telt, bv. de bouillon of het water van je soep.') + '</p>';
+  }
+  const btn = '<button class="btn" data-act="pickDone"' + (B.length ? '' : ' disabled') + '>' + (B.length ? trf('Klaar · {count} toevoegen', { count: B.length }) : tr('Kies hierboven wat je at')) + '</button>';
+  if (PICK_OPTS.chooseSlot) h += '<div class="basket-row"><label class="fld basket-slot"><span>' + tr('Moment') + '</span><select data-chg="pickSlot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (PICK_SLOT === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + (['tussen1', 'tussen2', 'na'].includes(s) ? ' · ' + tr('snack') : '') + '</option>').join('') + '</select></label>' + btn + '</div>';
+  else h += btn;
+  return h + '</div>';
+}
+ACT.pickDel = el => { PICK_BASKET.splice(Number(el.dataset.i), 1); renderPicker(); };
+ACT.pickFluid = el => {
+  const it = PICK_BASKET[Number(el.dataset.i)]; if (!it) return;
+  const v = el.value === '' ? null : Math.round(Number(el.value.replace(',', '.')));
+  if (v !== null && !(v >= 0 && v <= 10000)) { toast(tr('Vocht: tussen 0 en 10000 ml.')); el.value = it.fluidMl || ''; return; }
+  if (v) it.fluidMl = v; else delete it.fluidMl;
+  renderPicker();
+};
+ACT.pickSlot = el => { PICK_SLOT = el.value; };
+ACT.pickDone = () => {
+  if (!PICK_BASKET.length) return toast(tr('Kies eerst wat je at.'));
+  const items = PICK_BASKET, slot = PICK_SLOT, cb = PICK_CB;
+  PICK_BASKET = []; closeSheet(); cb && cb(items, slot);
+};
+ACT.pickWater = () => {
+  const v = Math.round(Number(($('#vwater').value || '').replace(',', '.')));
+  if (!(v > 0 && v <= 10000)) { toast(tr('Vul in hoeveel ml (1 tot 10000).')); $('#vwater').focus(); return; }
+  pickAdd({ id: uid(), src: 'vocht', desc: trf('Water in gerecht ({ml} ml)', { ml: fmtNum(v) }), kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, fluidMl: v });
+};
+/* Na het eten nog iets bij een maaltijd zetten (bv. kaas of saus op je mealprep). */
+ACT.mealExtra = el => {
+  const k = el.dataset.k, m = getDay(k).meals.find(x => x.id === el.dataset.id); if (!m) return;
+  openPicker(items => { const d = getDay(k, true); items.forEach(it => { it.slot = m.slot; it.time = m.time || ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, prepStockUse(it)); }); if (!save()) return; toast(tr('Toegevoegd')); render(); });
+};
 function closeSheet() { $('#sheet').hidden = true; document.body.classList.remove('noscroll'); stopScan(); }
 ACT.closeSheet = closeSheet;
 function renderPicker(msg) {
@@ -579,8 +637,12 @@ function renderPicker(msg) {
   } else {
     h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="vdesc" type="text" placeholder="' + tr('bv. croissant, mixgrill met frieten') + '"></label>' +
       '<div class="grid3"><label class="fld"><span>kcal</span><input id="vkcal" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('eiwit g') + '</span><input id="vprot" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('vezels g') + '</span><input id="vfib" type="number" inputmode="decimal"></label></div>' +
-      '<p class="muted small">' + tr('Weet je de kcal niet? Laat leeg; dan telt de dag als ondergrens (≥).') + '</p><button class="btn" data-act="pickFree">' + tr('Toevoegen') + '</button>';
+      '<p class="muted small">' + tr('Weet je de kcal niet? Laat leeg; dan telt de dag als ondergrens (≥).') + '</p>' +
+      '<label class="fld"><span>💧 ' + tr('Waarvan vocht (ml, optioneel)') + '</span><input id="vfl" type="number" inputmode="numeric" placeholder="' + tr('bv. 330 bij een kom soep') + '"></label>' +
+      '<button class="btn ghost" data-act="pickFree">+ ' + tr('Op je bord') + '</button>' +
+      '<div class="card water-in-dish"><h3>💧 ' + tr('Water in een gerecht') + '</h3><p class="muted small">' + tr('Soep, thee, bouillon: het water telt mee bij je water van vandaag, zonder kcal.') + '</p><div class="inrow"><input id="vwater" type="number" inputmode="numeric" placeholder="330"><span>ml</span><button class="btn ghost" data-act="pickWater">+ ' + tr('Op je bord') + '</button></div></div>';
   }
+  h += basketHtml();
   $('#sheet .sheet-in').innerHTML = h;
 }
 function libResults(q) {
@@ -592,13 +654,13 @@ ACT.libSearch = el => { $('#libres').innerHTML = libResults(el.value); };
 document.addEventListener('keyup', e => { if (e.target.id === 'libq') $('#libres').innerHTML = libResults(e.target.value); });
 ACT.pickTab = el => { PICK_TAB = el.dataset.t; renderPicker(); };
 ACT.pickWaste = el => { PICK_WASTE = el.checked; renderPicker(); };
-ACT.pickPrep = el => { const p = prepById(el.dataset.id); const it = itemFromPrep(p, Number(el.dataset.p)); if (PICK_WASTE) setMealWaste(it, true); closeSheet(); PICK_CB && PICK_CB([it]); };
+ACT.pickPrep = el => { const p = prepById(el.dataset.id); const it = itemFromPrep(p, Number(el.dataset.p)); if (PICK_WASTE) setMealWaste(it, true); pickAdd(it); };
 ACT.pickFood = el => {
   const f = DB.foods.find(x => x.id === el.dataset.id); const a = readAmount(f, 'p');
   if (!a) return toast(tr('Vul een hoeveelheid in.'));
-  f.used = (f.used || 0) + 1; save(); closeSheet();
+  f.used = (f.used || 0) + 1; save();
   const it = itemFromFood(f, a.g); if (a.label) it.desc = f.name + ' (' + a.label + ', ' + fmtNum(a.g, a.g % 1 ? 1 : 0) + ' g)';
-  PICK_CB && PICK_CB([it]);
+  pickAdd(it);
 };
 ACT.pickFree = () => {
   const desc = $('#vdesc').value.trim(); if (!desc) return toast(tr('Wat at je?'));
@@ -607,8 +669,11 @@ ACT.pickFree = () => {
     const err = numericError(key, num(id), DB);
     if (err) { toast(err); $(id).focus(); return; }
   }
+  const fl = num('#vfl');
+  if (fl !== null && !(fl >= 0 && fl <= 10000)) { toast(tr('Vocht: tussen 0 en 10000 ml.')); $('#vfl').focus(); return; }
   const it = { id: uid(), src: 'vrij', desc, kcal: num('#vkcal'), protein: num('#vprot'), fiber: num('#vfib') };
-  closeSheet(); PICK_CB && PICK_CB([it]);
+  if (fl) it.fluidMl = Math.round(fl);
+  pickAdd(it);
 };
 
 /* ---------- barcode scannen (Open Food Facts, online) ---------- */
@@ -828,6 +893,7 @@ ACT.editMeal = el => {
     '<label class="fld"><span>' + tr('Omschrijving') + '</span><input id="em_desc" maxlength="2000" value="' + esc(m.desc || '') + '"></label>' +
     '<div class="grid2"><label class="fld"><span>' + tr('Tijd') + '</span><input id="em_time" type="time" value="' + esc(m.time || '') + '"></label><label class="fld"><span>' + tr('Moment') + '</span><select id="em_slot">' + SLOT_ORDER.map(s => '<option value="' + s + '"' + (m.slot === s ? ' selected' : '') + '>' + tr(SLOTS[s]) + '</option>').join('') + '</select></label></div>' +
     '<div class="grid5 meal-edit-macros">' + [['kcal', 'kcal'], ['protein', 'eiwit'], ['carbs', 'koolh.'], ['fat', 'vet'], ['fiber', 'vezels']].map(([key, label]) => '<label class="fld"><span>' + (key === 'kcal' ? 'kcal' : tr(label) + ' g') + '</span><input id="em_' + key + '" type="number" inputmode="decimal" min="0" step="0.1" value="' + (isNum(m[key]) ? m[key] : '') + '"></label>').join('') + '</div>' +
+    '<label class="fld"><span>💧 ' + tr('Telt als water (ml)') + '</span><input id="em_fluid" type="number" inputmode="numeric" min="0" max="10000" step="10" value="' + (isNum(m.fluidMl) ? m.fluidMl : '') + '"></label>' +
     (m.prepId && isNum(m.portion) && m.portion < 1 ? '<label class="toggle"><input type="checkbox" id="em_waste"' + (m.wasted ? ' checked' : '') + '> ' + tr('Rest van de portie weggegooid') + '</label><p class="muted small">' + tr('Aangevinkt: de hele portie gaat van je mealprep-voorraad. Je dagboek telt alleen wat je at.') + '</p>' : '') +
     '<button class="btn" data-act="saveMeal" data-k="' + el.dataset.k + '" data-id="' + m.id + '">' + tr('Bewaren') + '</button>';
   $('#sheet').hidden = false;
@@ -839,6 +905,9 @@ ACT.saveMeal = el => {
     const err = numericError(key, num(id), DB);
     if (err) { toast(err); $(id).focus(); return; }
   }
+  const fl = num('#em_fluid');
+  if (fl !== null && !(fl >= 0 && fl <= 10000)) { toast(tr('Vocht: tussen 0 en 10000 ml.')); $('#em_fluid').focus(); return; }
+  if (fl) m.fluidMl = Math.round(fl); else delete m.fluidMl;
   m.desc = $('#em_desc').value;
   const wasteBox = $('#em_waste');
   if (wasteBox && !!wasteBox.checked !== !!m.wasted) { const delta = setMealWaste(m, wasteBox.checked); if (delta) usePortion(m.prepId, delta); }
@@ -1462,7 +1531,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.12.2';
+const APP_VERSION = '1.13.0';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

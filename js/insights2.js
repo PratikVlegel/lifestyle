@@ -14,7 +14,7 @@ const DVARS = {
   carbs: { l: 'koolhydraten', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'carbs'); return r && !r.lb ? r.v : null; } },
   fiber: { l: 'vezels', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'fiber'); return r && !r.lb ? r.v : null; } },
   fat: { l: 'vet', u: 'g', d: 0, f: d => { const r = dayNutr(d, 'fat'); return r && !r.lb ? r.v : null; } },
-  water: { l: 'water', u: 'l', d: 1, f: d => isNum(d.waterMl) ? d.waterMl / 1000 : null },
+  water: { l: 'water', u: 'l', d: 1, f: d => isNum(dayWaterMl(d)) ? dayWaterMl(d) / 1000 : null },
   caffeine: { l: 'cafeïne', u: 'shots', d: 1, f: d => isNum(d.caffeine) ? d.caffeine : null },
   alcohol: { l: 'alcohol', u: 'glazen', d: 1, f: d => isNum(d.alcohol) ? d.alcohol : null },
   vape: { l: 'vapen', u: '', d: 1, f: d => d.vape in VAPE_NUM ? VAPE_NUM[d.vape] : null },

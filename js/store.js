@@ -137,6 +137,18 @@ function getDay(k, create) {
   return d;
 }
 const isNum = v => typeof v === 'number' && isFinite(v);
+/* Water uit eten (soep, bouillon, thee in een gerecht) telt mee bij het water van de dag. */
+function mealFluidMl(day) {
+  let s = 0;
+  for (const m of (day && day.meals) || []) if (!m.nothing && isNum(m.fluidMl) && m.fluidMl > 0) s += m.fluidMl;
+  return s;
+}
+function dayWaterMl(day) {
+  if (!day) return null;
+  const f = mealFluidMl(day);
+  if (isNum(day.waterMl)) return day.waterMl + f;
+  return f > 0 ? f : null;
+}
 function isValidDailyRating(v) { return Number.isInteger(v) && v >= 1 && v <= 10; }
 
 /* Voedingssom van een dag. lb = ondergrens (een deel onbekend). */
@@ -162,7 +174,7 @@ const METRICS = {
   carbs: { label: 'Koolhydraten', unit: 'g', chart: 'bar', dec: 0, get: d => vOf(dayNutr(d, 'carbs')), lb: d => { const r = dayNutr(d, 'carbs'); return r && r.lb; }, sum: true },
   fiber: { label: 'Vezels', unit: 'g', chart: 'bar', dec: 0, get: d => vOf(dayNutr(d, 'fiber')), lb: d => { const r = dayNutr(d, 'fiber'); return r && r.lb; }, goal: () => DB.goals.fiber, sum: true },
   fat: { label: 'Vet', unit: 'g', chart: 'bar', dec: 0, get: d => vOf(dayNutr(d, 'fat')), lb: d => { const r = dayNutr(d, 'fat'); return r && r.lb; }, sum: true },
-  water: { label: 'Water', unit: 'l', chart: 'bar', dec: 1, get: d => d && isNum(d.waterMl) ? d.waterMl / 1000 : null, goal: () => DB.goals.waterMl / 1000 },
+  water: { label: 'Water', unit: 'l', chart: 'bar', dec: 1, get: d => isNum(dayWaterMl(d)) ? dayWaterMl(d) / 1000 : null, goal: () => DB.goals.waterMl / 1000 },
   steps: { label: 'Stappen', unit: '', chart: 'bar', dec: 0, get: d => d && isNum(d.steps) ? d.steps : null, goal: () => DB.goals.stepsMin, goal2: () => DB.goals.stepsMax },
   sleep: { label: 'Slaap', unit: 'u', chart: 'bar', dec: 1, get: d => d && isNum(d.sleepH) ? d.sleepH : null, goal: () => DB.goals.sleepH },
   mood: { label: 'Stemming', unit: '/10', chart: 'line', dec: 0, get: d => d && isValidDailyRating(d.mood) ? d.mood : null, min: 1, max: 10 },
@@ -514,6 +526,7 @@ function validateImportData(obj) {
       for (const field of ['kcal', 'protein', 'carbs', 'fat', 'fiber']) numeric(meal[field], field === 'kcal' ? [0, 20000] : [0, 1000], key + ' · ' + field);
       numeric(meal.used, [0, 100], key + ' · gebruikte porties');
       numeric(meal.wasted, [0, 100], key + ' · weggegooid');
+      numeric(meal.fluidMl, [0, 10000], key + ' · vocht');
     }
   }
   for (const prep of obj.preps || []) {
