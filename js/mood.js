@@ -88,47 +88,7 @@ function renderMoodModule() {
     view().innerHTML = h; return;
   }
   const keys = rangeKeys(todayKey(), 60), records = keys.map(k => ({ k, d: DB.days[k] })).filter(x => x.d && isValidDailyRating(x.d.mood));
-  h += '<div class="card"><b>' + tr('Laatste 60 dagen') + '</b><p class="muted small">' + records.length + ' ' + tr('dagen met een stemmingsscore. Een score zegt alleen hoe jij die dag je stemming hebt ingeschat.') + '</p></div>';
-  if (records.length < 14) {
-    h += '<div class="card note"><b>' + tr('Nog te weinig registraties voor een zinvolle vergelijking') + '</b><p class="small">' + tr('Er zijn minstens 14 stemmingsdagen nodig, en minstens 5 dagen per kant van elke vergelijking. Je hoeft niet elke dag in te vullen.') + '</p></div>';
-  } else {
-    let cards = '';
-    const sleepRows = records.filter(x => isNum(x.d.sleepH)).map(x => ({ x: x.d.sleepH, y: x.d.mood }));
-    const underSleep = v => v < Number(DB.goals.sleepH || 7.5), enoughSleep = v => !underSleep(v);
-    underSleep.label = 'Onder je slaaprichtpunt'; enoughSleep.label = 'Op/boven je slaaprichtpunt';
-    cards += moodComparison('Slaap', 'Slaap is de nacht vóór de stemmingsscore. Een persoonlijk slaaprichtpunt is geen klinische grens.', sleepRows, underSleep, enoughSleep);
-    const stressRows = records.filter(x => isValidDailyRating(x.d.stress)).map(x => ({ x: x.d.stress, y: x.d.mood }));
-    const moreStress = v => v >= 6, lessStress = v => v < 6; moreStress.label = 'Meer spanning (6–10)'; lessStress.label = 'Minder spanning (1–5)';
-    cards += moodComparison('Stress en spanning', 'Je eigen score van 1–10 is een korte dagreflectie, geen gevalideerde psychologische test. De vergelijking laat alleen zien wat in jouw ingevulde dagen samen voorkwam.', stressRows, moreStress, lessStress);
-    const alcRows = records.filter(x => isNum(x.d.alcohol) && x.d.alcohol >= 0).map(x => ({ x: x.d.alcohol, y: x.d.mood }));
-    const drank = v => v > 0, geenDrank = v => v === 0; drank.label = 'Alcohol geregistreerd'; geenDrank.label = 'Geen alcohol geregistreerd';
-    cards += moodComparison('Alcohol', 'Alleen expliciet geregistreerde nul of een positieve waarde telt mee; een ontbrekende registratie is onbekend.', alcRows, drank, geenDrank);
-    const nicotineRows = records.map(x => {
-      if (Object.hasOwn(x.d, 'nicotineForms')) return Array.isArray(x.d.nicotineForms) ? { x: x.d.nicotineForms.length ? 1 : 0, y: x.d.mood } : null;
-      if (Object.hasOwn(MOOD_VAPE, x.d.vape)) return { x: MOOD_VAPE[x.d.vape] > 0 ? 1 : 0, y: x.d.mood };
-      return null;
-    }).filter(Boolean);
-    const nicotine = v => v > 0, noNicotine = v => v === 0; nicotine.label = 'Nicotinegebruik geregistreerd'; noNicotine.label = 'Geen nicotine geregistreerd';
-    cards += moodComparison('Nicotinevormen', 'Je kunt meerdere vormen registreren, zoals sigaretten, vapes, nicotinekauwgom en nicotinezakjes. Dit is alleen een vergelijking van je eigen registraties; gebruiksvorm, hoeveelheid en ontbrekende dagen kunnen verschillen.', nicotineRows, nicotine, noNicotine);
-    const caffeineRows = records.filter(x => isNum(x.d.caffeine) && x.d.caffeine >= 0).map(x => ({ x: x.d.caffeine, y: x.d.mood }));
-    const caffeineLimit = Number.isFinite(DB.goals.caffeineMax) ? DB.goals.caffeineMax : 4;
-    const aboveCaffeine = v => v > caffeineLimit, withinCaffeine = v => v <= caffeineLimit;
-    aboveCaffeine.label = 'Boven je ingestelde cafeïnegrens'; withinCaffeine.label = 'Binnen je ingestelde cafeïnegrens';
-    cards += moodComparison('Cafeïne', 'Porties zijn zelf geregistreerd en meten geen cafeïnedosis of tijdstip. Deze vergelijking beschrijft alleen samen voorkomen en geen effect.', caffeineRows, aboveCaffeine, withinCaffeine);
-    const softRows = records.filter(x => isNum(x.d.softDrinkServings) && x.d.softDrinkServings >= 0).map(x => ({ x: x.d.softDrinkServings, y: x.d.mood }));
-    const softAny = v => v > 0, softNone = v => v === 0; softAny.label = 'Frisdrank genoteerd'; softNone.label = 'Geen frisdrank genoteerd';
-    cards += moodComparison('Frisdrank', 'Porties zijn zelf ingeschat; drankjes die je niet hebt geregistreerd blijven onbekend. Deze vergelijking beschrijft samen voorkomen en geen effect.', softRows, softAny, softNone);
-    const sweetRows = records.filter(x => isNum(x.d.sweetsServings) && x.d.sweetsServings >= 0).map(x => ({ x: x.d.sweetsServings, y: x.d.mood }));
-    const sweetsAny = v => v > 0, sweetsNone = v => v === 0; sweetsAny.label = 'Snoep of zoetigheid genoteerd'; sweetsNone.label = 'Geen snoep of zoetigheid genoteerd';
-    cards += moodComparison('Snoep en zoetigheden', 'Porties zijn zelf ingeschat; niet ingevulde dagen tellen niet mee als nul. De vergelijking kan geen oorzaak of gezondheidseffect aantonen.', sweetRows, sweetsAny, sweetsNone);
-    const stepRows = records.filter(x => isNum(x.d.steps)).map(x => ({ x: x.d.steps, y: x.d.mood }));
-    const belowSteps = v => v < Number(DB.goals.stepsMin || 0), meetsSteps = v => v >= Number(DB.goals.stepsMin || 0); belowSteps.label = 'Onder je stappendoel'; meetsSteps.label = 'Op/boven je stappendoel';
-    cards += moodComparison('Beweging', 'Stappen zijn slechts een deel van beweging; geregistreerde dagen kunnen verschillen van ontbrekende dagen.', stepRows, meetsSteps, belowSteps);
-    const fiberRows = records.map(x => ({ x: dayNutr(x.d, 'fiber'), y: x.d.mood })).filter(x => x.x && !x.x.lb && isNum(x.x.v)).map(x => ({ x: x.x.v, y: x.y }));
-    const belowFiber = v => v < Number(DB.goals.fiber || 30), meetsFiber = v => v >= Number(DB.goals.fiber || 30); belowFiber.label = 'Onder je vezelrichtpunt'; meetsFiber.label = 'Op/boven je vezelrichtpunt';
-    cards += moodComparison('Geregistreerde vezels', 'Dit gaat over voedingsmiddelen met ingevulde voedingswaarden in je dagboek, niet over je volledige voedingskwaliteit.', fiberRows, meetsFiber, belowFiber);
-    h += cards || '<div class="card note"><b>' + tr('Per factor nog te weinig gegevens') + '</b><p class="small">' + tr('Een vergelijking verschijnt pas bij minstens vijf dagen per groep. Ontbrekende waarden blijven buiten de berekening.') + '</p></div>';
-  }
+    h += moodInsightsHtml(records);
   h += supplementMoodPatterns(records);
   h += '<div class="card mood-care"><h3>' + tr('Als je stemming je zorgen baart') + '</h3><p>' + tr('Een dagboek kan helpen om je eigen ervaringen te bespreken, maar vervangt geen gesprek met een huisarts of andere zorgverlener. Neem contact op als een sombere stemming langer aanhoudt of je dagelijks leven beïnvloedt.') + '</p><a href="https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/low-mood-sadness-depression/" target="_blank" rel="noopener">' + tr('NHS: omgaan met een lage stemming') + '</a></div>';
   view().innerHTML = h;
@@ -148,4 +108,149 @@ function renderEvidenceAdvice() {
     ['Lage stemming', 'Kleine, regelmatige activiteiten, contact met iemand die je vertrouwt en routine kunnen steun geven. Als een lage stemming langer aanhoudt of je dagelijks leven raakt, bespreek dit met je huisarts.', 'NHS · low mood', 'https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/low-mood-sadness-depression/']
   ];
   return '<div class="evidence-grid">' + items.map(([title, body, source, url]) => '<article class="card evidence-card"><span class="pill">' + esc(tr(title)) + '</span><p>' + esc(tr(body)) + '</p><a href="' + url + '" target="_blank" rel="noopener">' + esc(tr(source)) + ' ↗</a></article>').join('') + '</div>';
+}
+
+/* ---------- persoonlijke verbanden (v1.15) ----------
+   Elke factor wordt vergeleken met stemming en energie via:
+   - een rangcorrelatie (Spearman): werkt met elke verdeling en is robuust voor uitschieters;
+   - een gesplitste vergelijking: dagen met meer vs minder van de factor (rond je eigen mediaan),
+     of 0 tegenover > 0 als de factor vaak nul is (bv. alcohol).
+   Zo blijft er iets zinnigs over, ook als je bijna nooit alcohol drinkt. */
+const MOOD_MIN_DAYS = 6;
+function moodPrevDay(k) { return DB.days[addDays(k, -1)]; }
+function moodActMin(d) { const a = Array.isArray(d.activities) ? d.activities.filter(x => isNum(x.min)) : null; return a && a.length ? a.reduce((t, x) => t + x.min, 0) : null; }
+function moodNicotine(d) {
+  if (Object.hasOwn(d, 'nicotineForms')) return Array.isArray(d.nicotineForms) ? (d.nicotineForms.length ? 1 : 0) : null;
+  if (Object.hasOwn(MOOD_VAPE, d.vape)) return MOOD_VAPE[d.vape] > 0 ? 1 : 0;
+  return null;
+}
+function moodComplete(d, n) { const r = dayNutr(d, n); return r && !r.lb && isNum(r.v) ? r.v : null; }
+const MOOD_FACTORS = [
+  { id: 'sleep', label: 'Slaap', more: 'een langere nacht', less: 'een kortere nacht', unit: 'u', dec: 1, get: d => isNum(d.sleepH) ? d.sleepH : null },
+  { id: 'stress', label: 'Stress', more: 'meer stress', less: 'minder stress', unit: '/10', dec: 0, get: d => isValidDailyRating(d.stress) ? d.stress : null },
+  { id: 'steps', label: 'Stappen', more: 'meer stappen', less: 'minder stappen', unit: '', dec: 0, get: d => isNum(d.steps) ? d.steps : null },
+  { id: 'act', label: 'Sport/activiteit', more: 'meer beweging', less: 'minder beweging', unit: 'min', dec: 0, get: moodActMin },
+  { id: 'caffeine', label: 'Cafeïne', more: 'meer cafeïne', less: 'minder cafeïne', zero: 'geen cafeïne', any: 'cafeïne', unit: 'porties', dec: 0, get: d => isNum(d.caffeine) ? d.caffeine : null },
+  { id: 'alcoholPrev', label: 'Alcohol de dag ervoor', more: 'meer alcohol de dag ervoor', less: 'minder alcohol de dag ervoor', zero: 'geen alcohol de dag ervoor', any: 'alcohol de dag ervoor', unit: 'glazen', dec: 0, get: (d, k) => { const p = moodPrevDay(k); return p && isNum(p.alcohol) ? p.alcohol : null; } },
+  { id: 'alcohol', label: 'Alcohol', more: 'meer alcohol', less: 'minder alcohol', zero: 'geen alcohol', any: 'alcohol', unit: 'glazen', dec: 0, get: d => isNum(d.alcohol) ? d.alcohol : null },
+  { id: 'nicotine', label: 'Nicotine', zero: 'geen nicotine', any: 'nicotine', unit: '', dec: 0, binary: true, get: moodNicotine },
+  { id: 'soft', label: 'Frisdrank', more: 'meer frisdrank', less: 'minder frisdrank', zero: 'geen frisdrank', any: 'frisdrank', unit: 'porties', dec: 1, get: d => isNum(d.softDrinkServings) ? d.softDrinkServings : null },
+  { id: 'sweets', label: 'Snoep', more: 'meer snoep', less: 'minder snoep', zero: 'geen snoep', any: 'snoep', unit: 'porties', dec: 1, get: d => isNum(d.sweetsServings) ? d.sweetsServings : null },
+  { id: 'water', label: 'Water', more: 'meer water', less: 'minder water', unit: 'l', dec: 1, get: d => isNum(dayWaterMl(d)) ? dayWaterMl(d) / 1000 : null },
+  { id: 'kcal', label: 'Kcal', more: 'meer kcal', less: 'minder kcal', unit: 'kcal', dec: 0, get: d => moodComplete(d, 'kcal') },
+  { id: 'protein', label: 'Eiwit', more: 'meer eiwit', less: 'minder eiwit', unit: 'g', dec: 0, get: d => moodComplete(d, 'protein') },
+  { id: 'fiber', label: 'Vezels', more: 'meer vezels', less: 'minder vezels', unit: 'g', dec: 0, get: d => moodComplete(d, 'fiber') }
+];
+const MOOD_OUTCOMES = [['mood', 'stemming'], ['energy', 'energie']];
+function moodRanks(v) {
+  const idx = v.map((x, i) => [x, i]).sort((a, b) => a[0] - b[0]), r = new Array(v.length);
+  for (let i = 0; i < idx.length;) { let j = i; while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++; for (let t = i; t <= j; t++) r[idx[t][1]] = (i + j) / 2 + 1; i = j + 1; }
+  return r;
+}
+function moodSpearman(pts) {
+  if (pts.length < 5) return null;
+  const rx = moodRanks(pts.map(p => p.x)), ry = moodRanks(pts.map(p => p.y));
+  return pearson(rx.map((x, i) => ({ x, y: ry[i] })));
+}
+function moodStrength(r) { const a = Math.abs(r); return a >= 0.6 ? 'sterk' : a >= 0.4 ? 'duidelijk' : a >= 0.25 ? 'zwak' : 'geen'; }
+/* Analyseer één factor tegen één uitkomst. */
+function moodAnalyse(f, outKey, records) {
+  const pts = records.map(x => ({ k: x.k, x: f.get(x.d, x.k), y: x.d[outKey] })).filter(p => isNum(p.x) && isValidDailyRating(p.y));
+  const res = { f, outKey, n: pts.length, pts };
+  if (pts.length < MOOD_MIN_DAYS) { res.need = MOOD_MIN_DAYS - pts.length; return res; }
+  const zeros = pts.filter(p => p.x === 0).length;
+  let hi, lo, mode;
+  if (f.binary || zeros >= pts.length * 0.35) { hi = pts.filter(p => p.x > 0); lo = pts.filter(p => p.x === 0); mode = 'zero'; }
+  else {
+    const xs = pts.map(p => p.x).sort((a, b) => a - b), med = moodMedian(xs);
+    hi = pts.filter(p => p.x > med); lo = pts.filter(p => p.x < med);
+    const eq = pts.filter(p => p.x === med);
+    if (hi.length <= lo.length) hi = hi.concat(eq); else lo = lo.concat(eq);
+    mode = 'median'; res.med = med;
+  }
+  res.hi = hi; res.lo = lo; res.mode = mode;
+  if (hi.length < 3 || lo.length < 3) { res.skewed = true; return res; }
+  res.hiAvg = avg(hi.map(p => p.y)); res.loAvg = avg(lo.map(p => p.y)); res.diff = res.hiAvg - res.loAvg;
+  res.r = f.binary ? null : moodSpearman(pts);
+  const rr = isNum(res.r) ? res.r : Math.max(-1, Math.min(1, res.diff / 3));
+  res.strength = moodStrength(rr);
+  // Bij weinig dagen is een groot verband snel toeval: eis dan een sterkere samenhang (≈ p < 0,10).
+  const crit = 1.645 / Math.sqrt(Math.max(1, pts.length - 1));
+  if (Math.abs(rr) < crit && res.strength !== 'geen') res.strength = 'zwak';
+  if (Math.abs(res.diff) < 0.4) res.strength = 'geen';
+  res.score = Math.abs(rr) * Math.min(1, pts.length / 14) + Math.abs(res.diff) / 10;
+  return res;
+}
+function moodSentence(a) {
+  const out = tr(a.outKey === 'mood' ? 'stemming' : 'energie');
+  const fmt = v => fmtNum(v, a.f.dec) + (a.f.unit ? (a.f.unit[0] === '/' ? '' : ' ') + tr(a.f.unit) : '');
+  const hiLbl = a.mode === 'zero' ? tr(a.f.any) : tr(a.f.more) + (isNum(a.med) ? ' (≥ ' + fmt(a.med) + ')' : '');
+  const loLbl = a.mode === 'zero' ? tr(a.f.zero) : tr(a.f.less);
+  return trf('Bij {hi}: {out} gemiddeld {hiAvg}. Bij {lo}: {loAvg}.', { hi: hiLbl, out, hiAvg: fmtNum(a.hiAvg, 1), lo: loLbl, loAvg: fmtNum(a.loAvg, 1) });
+}
+function moodPill(a) {
+  const cls = { sterk: 'strong', duidelijk: 'clear', zwak: 'weak', geen: 'none' }[a.strength];
+  const txt = a.strength === 'geen' ? tr('geen duidelijk verschil') : tr(a.strength + ' verband');
+  return '<span class="pill mood-' + cls + '">' + txt + '</span>';
+}
+function moodTrendCard(records) {
+  const first = records.length ? records.map(x => x.k).sort()[0] : todayKey();
+  const keys = rangeKeys(todayKey(), 60).filter(k => k >= first);
+  const series = keys.map(k => ({ k, v: DB.days[k] && isValidDailyRating(DB.days[k].mood) ? DB.days[k].mood : null }));
+  const en = records.filter(x => isValidDailyRating(x.d.energy));
+  const last14 = records.filter(x => x.k > addDays(todayKey(), -14)), prev14 = records.filter(x => x.k <= addDays(todayKey(), -14) && x.k > addDays(todayKey(), -28));
+  const wk = records.filter(x => { const g = parseKey(x.k).getDay(); return g > 0 && g < 6; }), we = records.filter(x => { const g = parseKey(x.k).getDay(); return g === 0 || g === 6; });
+  const m = arr => avg(arr.map(x => x.d.mood));
+  let h = '<section class="card"><h3>' + tr('Je stemming de laatste 60 dagen') + '</h3>' + lineChart(series, { min: 1, max: 10, dec: 0, unit: '/10', label: tr('Stemming'), ma: records.length >= 7, connect: true });
+  h += '<div class="mood-groups mood-stats">' +
+    '<div><span>' + tr('Gemiddelde stemming') + '</span><b>' + fmtNum(m(records), 1) + '<small>/10</small></b><small>' + records.length + ' ' + tr('dagen') + '</small></div>' +
+    (en.length ? '<div><span>' + tr('Gemiddelde energie') + '</span><b>' + fmtNum(avg(en.map(x => x.d.energy)), 1) + '<small>/10</small></b><small>' + en.length + ' ' + tr('dagen') + '</small></div>' : '') +
+    (last14.length >= 4 && prev14.length >= 4 ? '<div><span>' + tr('Laatste 2 weken') + '</span><b>' + fmtNum(m(last14), 1) + '</b><small>' + trf('daarvoor {v}', { v: fmtNum(m(prev14), 1) }) + '</small></div>' : '') +
+    (wk.length >= 3 && we.length >= 2 ? '<div><span>' + tr('Weekdag / weekend') + '</span><b>' + fmtNum(m(wk), 1) + ' / ' + fmtNum(m(we), 1) + '</b><small>' + wk.length + ' / ' + we.length + ' ' + tr('dagen') + '</small></div>' : '') +
+    '</div></section>';
+  return h;
+}
+function moodInsightsHtml(records) {
+  if (records.length < MOOD_MIN_DAYS) return '<div class="card note"><b>' + tr('Nog even verder invullen') + '</b><p class="small">' + trf('Vanaf {min} dagen met een stemmingsscore zie je hier de eerste verbanden. Je hebt er nu {n}.', { min: MOOD_MIN_DAYS, n: records.length }) + '</p></div>';
+  const all = [];
+  for (const f of MOOD_FACTORS) for (const [o] of MOOD_OUTCOMES) all.push(moodAnalyse(f, o, records));
+  const ok = all.filter(a => isNum(a.diff));
+  const signals = ok.filter(a => a.strength !== 'geen').sort((a, b) => b.score - a.score);
+  const shownIds = new Set(); const top = [];
+  for (const a of signals) { if (shownIds.has(a.f.id)) continue; shownIds.add(a.f.id); top.push(a); if (top.length >= 4) break; }
+  let h = '<section class="card mood-top"><h3>' + tr('Wat valt op') + '</h3>';
+  if (top.length) {
+    h += top.map((a, i) => '<div class="mood-signal"><div class="mood-factor-head"><b>' + esc(tr(a.f.label)) + ' → ' + esc(tr(a.outKey === 'mood' ? 'stemming' : 'energie')) + '</b>' + moodPill(a) + '</div><p>' + esc(moodSentence(a)) + '</p><p class="muted small">' + a.n + ' ' + tr('dagen') + (a.n < 14 ? ' · ' + tr('voorlopig, wordt betrouwbaarder met meer dagen') : '') + '</p>' +
+      (i === 0 && !a.f.binary ? '<details><summary>' + tr('Toon als grafiek') + '</summary>' + scatterChart(a.pts, { xLabel: tr(a.f.label) + (a.f.unit ? ' (' + tr(a.f.unit) + ')' : ''), yLabel: tr(a.outKey === 'mood' ? 'stemming' : 'energie') + ' /10', ymin: 1, ymax: 10, label: tr(a.f.label) }) + '</details>' : '') + '</div>').join('');
+  } else {
+    h += '<p>' + tr('Nog geen duidelijke verbanden. Je stemming en energie lopen tot nu toe niet merkbaar samen met één van je gewoontes.') + '</p>';
+  }
+  const quiet = [...new Set(ok.filter(a => !shownIds.has(a.f.id) && a.strength === 'geen').map(a => a.f.id))].filter(id => !ok.some(a => a.f.id === id && a.strength !== 'geen'));
+  if (quiet.length) h += '<p class="muted small">' + tr('Bekeken, maar zonder duidelijk verschil:') + ' ' + quiet.map(id => esc(tr(MOOD_FACTORS.find(f => f.id === id).label).toLocaleLowerCase(currentLocale()))).join(', ') + '.</p>';
+  h += '<p class="muted small">' + tr('Dit toont wat bij jou samen voorkomt, niet wat de oorzaak is. Een verband is pas "duidelijk" als het verschil groot genoeg is en over meerdere dagen terugkomt.') + '</p></section>';
+  h += moodTrendCard(records);
+  // Overzichtstabel van alle factoren
+  const rows = MOOD_FACTORS.map(f => {
+    const cells = MOOD_OUTCOMES.map(([o]) => {
+      const a = all.find(x => x.f === f && x.outKey === o);
+      if (!a || !isNum(a.diff)) return '<td class="muted">–</td>';
+      const arrow = Math.abs(a.diff) < 0.4 ? '≈' : a.diff > 0 ? '▲' : '▼';
+      return '<td class="mood-cell mood-' + ({ sterk: 'strong', duidelijk: 'clear', zwak: 'weak', geen: 'none' }[a.strength]) + '">' + arrow + ' ' + (a.diff > 0 ? '+' : '') + fmtNum(a.diff, 1) + '</td>';
+    }).join('');
+    const n = Math.max(...MOOD_OUTCOMES.map(([o]) => (all.find(x => x.f === f && x.outKey === o) || {}).n || 0));
+    return { f, cells, n, has: MOOD_OUTCOMES.some(([o]) => { const a = all.find(x => x.f === f && x.outKey === o); return a && isNum(a.diff); }) };
+  });
+  const withData = rows.filter(r => r.has);
+  if (withData.length) h += '<section class="card"><h3>' + tr('Alle factoren') + '</h3><p class="muted small">' + tr('Verschil in punten (op 10) tussen dagen met meer en dagen met minder (of geen) van die factor. ▲ = hoger bij meer.') + '</p><div class="report-scroll"><table class="mood-table"><thead><tr><th>' + tr('Factor') + '</th><th>' + tr('Stemming') + '</th><th>' + tr('Energie') + '</th><th>' + tr('Dagen') + '</th></tr></thead><tbody>' +
+    withData.map(r => '<tr><th scope="row">' + esc(tr(r.f.label)) + '</th>' + r.cells + '<td>' + r.n + '</td></tr>').join('') + '</tbody></table></div></section>';
+  // Wat nog ontbreekt
+  const missing = MOOD_FACTORS.map(f => {
+    const a = all.find(x => x.f === f && x.outKey === 'mood');
+    if (rows.find(r => r.f === f).has) return null;
+    if (a.need) return esc(tr(f.label)) + ' <small>(' + trf('nog {n} dagen', { n: a.need }) + ')</small>';
+    if (a.skewed) return esc(tr(f.label)) + ' <small>(' + trf('bijna altijd hetzelfde: {a} · {b}', { a: a.hi.length, b: a.lo.length }) + ')</small>';
+    return null;
+  }).filter(Boolean);
+  if (missing.length) h += '<details class="card mood-missing"><summary>' + trf('Nog te weinig gegevens voor {n} factoren', { n: missing.length }) + '</summary><p class="small">' + missing.join(' · ') + '</p><p class="muted small">' + tr('Een factor verschijnt zodra je hem minstens 6 dagen samen met je stemming hebt ingevuld en hij niet elke dag hetzelfde is. Vul ook expliciet 0 in (bv. geen alcohol), anders blijft de dag onbekend.') + '</p></details>';
+  return h;
 }

@@ -356,6 +356,21 @@ details summary{cursor:pointer;font-weight:600}
 .evidence-card{margin:6px 0;display:flex;flex-direction:column;align-items:flex-start}
 .evidence-card p{margin:10px 0;line-height:1.55}
 .evidence-card a{margin-top:auto;font-size:.82rem;font-weight:600}
+.mood-signal{padding:10px 0;border-bottom:1px solid var(--line)}
+.mood-signal:last-of-type{border-bottom:0}
+.mood-signal p{margin:6px 0}
+.pill.mood-strong{background:var(--accent);color:var(--bg)}
+.pill.mood-clear{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.pill.mood-weak{background:var(--surface2);color:var(--muted)}
+.pill.mood-none{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.mood-stats{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.mood-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.mood-table th,.mood-table td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.mood-table th:first-child,.mood-table thead th:first-child{text-align:left}
+.mood-table td.mood-strong{font-weight:700;color:var(--accent)}
+.mood-table td.mood-clear{font-weight:600}
+.mood-table td.mood-none,.mood-table td.mood-weak{color:var(--muted)}
+.mood-missing summary{cursor:pointer;font-weight:600}
 .mood-intro h2{font-size:1.2rem}
 .mood-factor{border-left:4px solid var(--accent)}
 .mood-factor-limited{border-left-color:var(--line);background:var(--surface2)}
@@ -437,27 +452,27 @@ nav.tabs a.on{color:var(--accent)}
 <div id="sheet" hidden><div class="sheet-in"></div></div>
 <div id="toast" hidden role="status"></div>
 <script src="js/config.js"></script>
-<script src="js/store.js?v=1.14.0"></script>
-<script src="js/i18n.js?v=1.14.0"></script>
+<script src="js/store.js?v=1.15.0"></script>
+<script src="js/i18n.js?v=1.15.0"></script>
 <script src="js/migrate.js"></script>
-<script src="js/charts.js?v=1.14.0"></script>
-<script src="js/insights.js?v=1.14.0"></script>
-<script src="js/ocr.js?v=1.14.0"></script>
+<script src="js/charts.js?v=1.15.0"></script>
+<script src="js/insights.js?v=1.15.0"></script>
+<script src="js/ocr.js?v=1.15.0"></script>
 <script src="js/cloud.js"></script>
-<script src="js/app.js?v=1.14.0"></script>
+<script src="js/app.js?v=1.15.0"></script>
 <script src="js/home-setup.js?v=1.11.16"></script>
 <script src="js/push.js?v=1.10.75"></script>
-<script src="js/library.js?v=1.14.0"></script>
+<script src="js/library.js?v=1.15.0"></script>
 <script src="js/activity.js?v=1.11.1"></script>
-<script src="js/share.js?v=1.14.0"></script>
-<script src="js/insights2.js?v=1.14.0"></script>
-<script src="js/mood.js?v=1.10.94"></script>
+<script src="js/share.js?v=1.15.0"></script>
+<script src="js/insights2.js?v=1.15.0"></script>
+<script src="js/mood.js?v=1.15.0"></script>
 <script src="js/cycle.js?v=1.11.6"></script>
 <script src="js/week.js"></script>
-<script src="js/extras.js?v=1.14.0"></script>
-<script src="js/invite.js?v=1.14.0"></script>
+<script src="js/extras.js?v=1.15.0"></script>
+<script src="js/invite.js?v=1.15.0"></script>
 <script src="js/admin.js"></script>
-<script src="js/training.js?v=1.14.0"></script>
+<script src="js/training.js?v=1.15.0"></script>
 <script src="js/community-exercises.js?v=1.10.44"></script>
 <script src="js/community-kpi.js"></script>
 </body>
