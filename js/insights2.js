@@ -53,13 +53,15 @@ function moreInsights(n, recent, add) {
   for (const x of recent) {
     const ms = (x.d.meals || []).filter(m => !m.nothing && minutesOf(m.time) !== null).map(m => minutesOf(m.time)).sort((a, b) => a - b);
     if (ms.length >= 2) { firsts.push(ms[0]); let g = 0; for (let i = 1; i < ms.length; i++) g = Math.max(g, ms[i] - ms[i - 1]); gaps.push(g); }
-    const lunchNothing = (x.d.meals || []).some(m => m.slot === 'lunch' && m.nothing) || ((x.d.meals || []).length >= 2 && !(x.d.meals || []).some(m => m.slot === 'lunch'));
+    // Alleen expliciet "niets gegeten" bij de lunch: een niet ingevulde lunch is onbekend, niet overgeslagen.
+    const lunchNothing = (x.d.meals || []).some(m => m.slot === 'lunch' && m.nothing);
     const ev = dv('eveKcal', x.k);
     if (lunchNothing) { skipped++; if (isNum(ev)) skippedEve.push(ev); } else if (isNum(ev)) normalEve.push(ev);
   }
   if (gaps.length >= 4) {
     const g = avg(gaps), long = gaps.filter(x => x >= 360).length;
-    add('ritme', 'Je eetritme', 'Je eerste maaltijd valt gemiddeld om ' + pad(Math.floor(avg(firsts) / 60)) + ':' + pad(Math.round(avg(firsts) % 60)) + '. De langste pauze tussen twee eetmomenten is gemiddeld ' + fmtNum(g / 60, 1) + ' u' + (long ? '; op ' + long + ' dagen 6 u of langer' : '') + '. Wil je weten of dit voor jou uitmaakt? Noteer een week lang ook je honger en test één gepland eetmoment op dagen met een lange pauze. Dit patroon toont samenhang, geen oorzaak.', gaps.length + ' dagen met tijden', long ? 'tip' : 'info');
+    const fm = Math.round(avg(firsts));
+    add('ritme', 'Je eetritme', 'Je eerste maaltijd valt gemiddeld om ' + pad(Math.floor(fm / 60)) + ':' + pad(fm % 60) + '. De langste pauze tussen twee eetmomenten is gemiddeld ' + fmtNum(g / 60, 1) + ' u' + (long ? '; op ' + long + ' dagen 6 u of langer' : '') + '. Wil je weten of dit voor jou uitmaakt? Noteer een week lang ook je honger en test één gepland eetmoment op dagen met een lange pauze. Dit patroon toont samenhang, geen oorzaak.', gaps.length + ' dagen met tijden', long ? 'tip' : 'info');
   }
   if (skipped >= 2 && skippedEve.length >= 1 && normalEve.length >= 2) {
     add('ritme', 'Als de lunch wegvalt', 'Op ' + skipped + ' dagen viel de lunch weg. Op die dagen at je vanaf het avondeten gemiddeld ' + fmtNum(avg(skippedEve)) + ' kcal, tegenover ' + fmtNum(avg(normalEve)) + ' kcal op dagen mét lunch.', skipped + ' dagen', avg(skippedEve) > avg(normalEve) * 1.15 ? 'tip' : 'info');
@@ -76,6 +78,17 @@ function moreInsights(n, recent, add) {
     const proteinMeals = trf('Ontbijt: ≈ {breakfast} g{lunch}{dinner}.', { breakfast: fmtNum(b), lunch: isNum(l) ? trf(' · lunch: ≈ {value} g', { value: fmtNum(l) }) : '', dinner: isNum(a) ? trf(' · avondeten: ≈ {value} g', { value: fmtNum(a) }) : '' });
     add('voeding', 'Eiwit per maaltijd', proteinMeals + ' ' +
       (b < 15 ? tr('In deze geregistreerde ontbijten staat weinig eiwit. Als je dat wilt veranderen, voeg een bron toe die je graag eet (bijvoorbeeld ei, yoghurt, tofu of bonen) en kijk of dit voor jou een prettigere maaltijd oplevert. Dit is geen individueel eiwitvoorschrift.') : tr('Je geregistreerde ontbijt bevat gemiddeld een eiwitbron. Een goede registratie zegt nog niet alles over je totale voedingskwaliteit.')), per.ontbijt.length + ' ontbijten', b < 15 ? 'tip' : 'good');
+  }
+
+  /* 5b. Eiwit verdeeld over de dag: maaltijden met ≥ 25 g */
+  const mealProt = [];
+  for (const x of recent) for (const s of ['ontbijt', 'lunch', 'avond']) {
+    const ms = (x.d.meals || []).filter(m => m.slot === s && !m.nothing);
+    if (ms.length && ms.every(m => isNum(m.protein))) mealProt.push(ms.reduce((t, m) => t + m.protein, 0));
+  }
+  if (mealProt.length >= 6) {
+    const hit = mealProt.filter(v => v >= 25).length, pct = Math.round(hit / mealProt.length * 100);
+    add('voeding', 'Eiwit per hoofdmaaltijd', trf('{pct}% van je volledig geregistreerde hoofdmaaltijden had minstens 25 g eiwit ({hit} van {total}).', { pct, hit, total: mealProt.length }) + ' ' + (pct < 50 ? tr('Eiwit verspreiden over je hoofdmaaltijden (ongeveer 25–30 g per maaltijd) helpt bij verzadiging en bij het behoud van spiermassa, zeker als je afvalt of krachttraining doet. Kijk welke maaltijd het makkelijkst een eiwitbron extra krijgt.') : tr('Je eiwit is goed verspreid over je hoofdmaaltijden; dat helpt bij verzadiging en spierbehoud.')), mealProt.length + ' maaltijden', pct < 50 ? 'tip' : 'good');
   }
 
   /* 6. Mealprep-porties: lukt het om ze op te eten? */
@@ -127,7 +140,7 @@ function moreInsights(n, recent, add) {
   const actDays = recent.filter(x => (x.d.activities || []).length);
   if (actDays.length) {
     const types = {};
-    actDays.forEach(x => x.d.activities.forEach(a => { types[a.type] = (types[a.type] || 0) + a.min; }));
+    actDays.forEach(x => x.d.activities.forEach(a => { types[a.type] = (types[a.type] || 0) + (isNum(a.min) ? a.min : 0); }));
     const e1 = avg(actDays.map(x => x.d.energy).filter(isValidDailyRating)), e0 = avg(recent.filter(x => !(x.d.activities || []).length).map(x => x.d.energy).filter(isValidDailyRating));
     add('activiteit', 'Sporten en bewegen', trf('Op {days} dagen registreerde je extra beweging: {activities}.{energy}', {
       days: actDays.length,

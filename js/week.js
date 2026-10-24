@@ -21,6 +21,34 @@ function weekStats(endKey) {
   out.best = moods.length ? moods.reduce((a, b) => b.v > a.v ? b : a) : null;
   return out;
 }
+/* Conclusies: wat veranderde merkbaar tegenover vorige week, en is dat gunstig? */
+const WEEK_CHANGE = {
+  kcal: [150, 0], protein: [10, 1], fiber: [4, 1], water: [0.3, 1], steps: [1000, 1], burn: [80, 1], sleepH: [0.4, 1],
+  energy: [0.7, 1], mood: [0.7, 1], hungerEve: [0.5, -1], eveKcal: [150, -1], caffeine: [1, -1], alcohol: [1, -1]
+};
+function weekChangesHtml(cur, prev) {
+  const better = [], worse = [], neutral = [];
+  for (const [name, label] of WEEK_ROWS) {
+    const a = cur[name], b = prev[name], cfg = WEEK_CHANGE[name];
+    if (!cfg || !isNum(a) || !isNum(b) || Math.abs(a - b) < cfg[0]) continue;
+    const up = a > b, D = DVARS[name];
+    let good = cfg[1] === 0 ? null : (up ? cfg[1] > 0 : cfg[1] < 0);
+    if (name === 'sleepH' && up && b >= (DB.goals.sleepH || 7.5)) good = null; // boven je slaapdoel is meer niet per se beter
+    if (name === 'kcal' && isNum(DB.goals.kcal)) good = Math.abs(a - DB.goals.kcal) < Math.abs(b - DB.goals.kcal) ? true : null;
+    const dec = Math.max(D.d, ['energy', 'mood', 'stress', 'hungerEve'].includes(name) ? 1 : 0);
+    const f = v => fmtNum(v, dec) + (D.u ? (D.u[0] === '/' ? '' : ' ') + D.u : '');
+    const txt = trf('{label}: {from} → {to}', { label: tr(label), from: f(b), to: f(a) }) + ' (' + (up ? '+' : '−') + fmtNum(Math.abs(a - b), dec) + ')';
+    (good === true ? better : good === false ? worse : neutral).push(txt);
+  }
+  if (isNum(cur.weight) && isNum(prev.weight)) {
+    const d = cur.weight - prev.weight;
+    neutral.push(trf('Gewicht (weekgemiddelde): {from} → {to} kg', { from: fmtNum(prev.weight, 1), to: fmtNum(cur.weight, 1) }) + ' (' + (d > 0 ? '+' : d < 0 ? '−' : '±') + fmtNum(Math.abs(d), 1) + ')');
+  }
+  if (!better.length && !worse.length && !neutral.length) return '<div class="card"><h3>' + tr('Wat veranderde') + '</h3><p class="small">' + tr('Geen merkbare verschillen met vorige week: je week leek sterk op de vorige.') + '</p></div>';
+  const list = (title, items, cls) => items.length ? '<p class="small week-chg ' + cls + '"><b>' + tr(title) + '</b></p><ul class="small week-chg-list">' + items.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '';
+  return '<div class="card"><h3>' + tr('Wat veranderde') + '</h3>' + list('Beter dan vorige week', better, 'up') + list('Minder goed dan vorige week', worse, 'down') + list('Anders, zonder oordeel', neutral, '') +
+    '<p class="muted small">' + tr('Alleen verschillen die groot genoeg zijn om op te vallen. Eén week is kort: kijk of een verandering ook de week erna terugkomt.') + '</p></div>';
+}
 function weekEnd() { const t = todayKey(); const dow = parseKey(t).getDay(); return dow === 0 ? t : addDays(t, -dow); } // laatste zondag (of vandaag)
 function renderWeek(endArg) {
   const end = endArg || (parseKey(todayKey()).getDay() === 0 ? completeKey() : weekEnd());
@@ -42,6 +70,7 @@ function renderWeek(endArg) {
   if (cur.acts) notes.push(cur.acts + ' ' + tr(cur.acts > 1 ? 'extra activiteiten gelogd.' : 'extra activiteit gelogd.'));
   if (cur.alcoholTotal) notes.push(cur.alcoholTotal + ' ' + tr('glazen alcohol deze week.') );
   if (cur.best) notes.push(tr('Beste dag:') + ' ' + fmtDay(cur.best.k, true) + ' (' + tr('stemming') + ' ' + cur.best.v + '/10).');
+  h += weekChangesHtml(cur, prev);
   h += '<div class="card"><h3>' + tr('In het kort') + '</h3>' + notes.map(n => '<p class="small">' + esc(n) + '</p>').join('') + '</div>';
   const ins = buildInsights(14).filter(i => i.tone === 'tip').slice(0, 3);
   if (ins.length) h += '<h2 class="sec">' + tr('Om op te letten deze week') + '</h2>' + ins.map(insightCard).join('');

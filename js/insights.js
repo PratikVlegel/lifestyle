@@ -17,7 +17,7 @@ function pairs(n, fx, fy, shiftY) {
 }
 function splitCompare(pts, threshold) {
   const lo = pts.filter(p => p.x < threshold).map(p => p.y), hi = pts.filter(p => p.x >= threshold).map(p => p.y);
-  if (lo.length < 2 || hi.length < 2) return null;
+  if (lo.length < 3 || hi.length < 3) return null;
   return { lo: avg(lo), hi: avg(hi), nlo: lo.length, nhi: hi.length };
 }
 function slotKcal(day, slots) {
@@ -26,6 +26,17 @@ function slotKcal(day, slots) {
   return any ? s : 0;
 }
 
+/* Gewichtstrend via lineaire regressie: robuuster dan eerste vs laatste weging. */
+function weightTrend(endKey, days) {
+  const keys = rangeKeys(endKey, days), pts = [];
+  keys.forEach((k, i) => { const w = DB.days[k] && DB.days[k].weight; if (isNum(w)) pts.push({ x: i, y: w, k }); });
+  if (pts.length < 5) return null;
+  const span = pts[pts.length - 1].x - pts[0].x;
+  if (span < 13) return null;
+  const fit = linFit(pts); if (!fit) return null;
+  const last = fit.a + fit.b * pts[pts.length - 1].x;
+  return { perDay: fit.b, perWeek: fit.b * 7, pctWeek: fit.b * 7 / last * 100, n: pts.length, span, now: last, from: pts[0].k, to: pts[pts.length - 1].k };
+}
 function buildInsights(n) {
   n = n || 30;
   const out = [];
@@ -39,7 +50,12 @@ function buildInsights(n) {
   if (kcFull.length >= 3) {
     const a = avg(kcFull.map(x => x.r.v));
     const diff = a - G.kcal;
-    if (diff < -250) add('voeding', 'Gemiddeld onder je richtpunt',
+    const wt = weightTrend(completeKey(), 28);
+    if (diff < -250 && wt && wt.perWeek < -0.1) add('voeding', 'Onder je richtpunt, gewicht daalt',
+      trf('Op volledig geregistreerde dagen eet je gemiddeld ≈ {average} kcal, {difference} onder je richtpunt van {target} kcal. Je gewicht daalt intussen met ongeveer {rate} kg per week ({pct}% van je gewicht).', { average: fmtNum(a), difference: fmtNum(-diff), target: fmtNum(G.kcal), rate: fmtNum(-wt.perWeek, 1), pct: fmtNum(-wt.pctWeek, 1) }) + ' ' +
+      (wt.pctWeek < -1 ? tr('Dat is sneller dan de ongeveer 0,5–1% per week die vaak als haalbaar tempo wordt genoemd. Bij snel gewichtsverlies verlies je makkelijker ook spiermassa en houd je het moeilijker vol; bespreek je tempo met je diëtist of huisarts.') : tr('Dat tempo ligt binnen wat vaak als haalbaar wordt gezien. Let vooral op genoeg eiwit en of je honger en energie goed blijven.')),
+      kcFull.length + ' volledige dagen · ' + wt.n + ' wegingen', wt.pctWeek < -1 ? 'tip' : 'good');
+    else if (diff < -250) add('voeding', 'Gemiddeld onder je richtpunt',
       trf('Op volledig geregistreerde dagen eet je gemiddeld ≈ {average} kcal, ongeveer {difference} onder je richtpunt van {target} kcal. Als dit langere tijd zo is, kun je later op de dag of ’s nachts meer honger krijgen. Een eiwitrijke snack in de namiddag, zoals skyr, kwark of noten, kan helpen het verschil kleiner te maken.', { average: fmtNum(a), difference: fmtNum(-diff), target: fmtNum(G.kcal) }),
       kcFull.length + ' volledige dagen', 'tip');
     else if (diff > 300) add('voeding', 'Gemiddeld boven je richtpunt',
@@ -70,7 +86,7 @@ function buildInsights(n) {
   const pr = recent.map(x => dayNutr(x.d, 'protein')).filter(r => r && !r.lb);
   if (pr.length >= 3) {
     const a = avg(pr.map(r => r.v));
-    if (a < G.protein * 0.85) add('voeding', 'Eiwit onder je doel', trf('Gemiddeld ≈ {average} g eiwit per dag; je doel is {target} g. Een eiwitbron bij het ontbijt, zoals eieren of yoghurt, kan een praktische aanvulling zijn.', { average: fmtNum(a), target: G.protein }), pr.length + ' dagen', 'tip');
+    if (a < G.protein * 0.85) add('voeding', 'Eiwit onder je doel', trf('Gemiddeld ≈ {average} g eiwit per dag; je doel is {target} g. Er ontbreekt dus ongeveer {gap} g per dag, of ≈ {perMeal} g per hoofdmaaltijd. Voorbeelden van ±20 g eiwit: 200 g skyr of magere platte kaas, 3 eieren, 100 g kipfilet of 150 g tofu. Kies de maaltijd waar het het makkelijkst past.', { average: fmtNum(a), target: G.protein, gap: fmtNum(G.protein - a), perMeal: fmtNum((G.protein - a) / 3) }), pr.length + ' dagen', 'tip');
     else add('voeding', 'Eiwit op niveau', trf('Gemiddeld ≈ {average} g eiwit per dag (doel {target} g).', { average: fmtNum(a), target: G.protein }), pr.length + ' dagen', 'good');
   }
   const fb = recent.map(x => dayNutr(x.d, 'fiber')).filter(r => r && !r.lb);
@@ -128,7 +144,7 @@ function buildInsights(n) {
   if (DB.settings.moodInsights === true) {
     const slMood = pairs(n, d => d.sleepH, d => isValidDailyRating(d.mood) ? d.mood : null);
     const sm = pearson(slMood);
-    if (sm !== null && Math.abs(sm) > 0.3 && slMood.length >= 14) add('stemming', 'Slaap en stemming', tr('Slaapduur en je stemmingsscore bewogen in deze registraties samen. Dit is een beschrijving, geen aanwijzing voor oorzaak.'), slMood.length + ' dagen', 'info');
+    if (sm !== null && Math.abs(sm) > 0.3 && slMood.length >= 14) add('stemming', 'Slaap en stemming', (sm > 0 ? tr('Na langere nachten gaf je jezelf meestal een hogere stemmingsscore, na kortere nachten een lagere.') : tr('Opvallend: na langere nachten was je stemmingsscore eerder lager.')) + ' ' + trf('Samenhang: {strength} (r = {r}).', { strength: tr(Math.abs(sm) >= 0.5 ? 'duidelijk' : 'matig'), r: fmtNum(sm, 2) }) + ' ' + tr('Meer details per factor vind je bij Stemming en gewoontes. Dit is een beschrijving, geen bewijs van oorzaak.'), slMood.length + ' dagen', 'info');
   }
   const cp = recent.filter(x => x.d.cpap && isValidDailyRating(x.d.energy));
   const cpFull = cp.filter(x => /hele|ja/i.test(x.d.cpap) && !/deels|vanaf|nee/i.test(x.d.cpap)).map(x => x.d.energy);
@@ -141,8 +157,28 @@ function buildInsights(n) {
     const a1 = avg(w.slice(-7).map(x => x.v));
     let t = trf('Het gemiddelde over je laatste {count} wegingen is ongeveer {average} kg.', { count: Math.min(7, w.length), average: fmtNum(a1, 1) });
     if (w.length >= 10) { const a0 = avg(w.slice(-14, -7).map(x => x.v)); if (isNum(a0)) t += ' ' + trf('Het gemiddelde van de 7 wegingen daarvoor was {average} kg.', { average: fmtNum(a0, 1) }); }
+    const wt = weightTrend(completeKey(), Math.max(28, n));
+    if (wt) {
+      const dir = Math.abs(wt.perWeek) < 0.1 ? tr('stabiel') : wt.perWeek < 0 ? trf('−{rate} kg per week', { rate: fmtNum(-wt.perWeek, 2) }) : trf('+{rate} kg per week', { rate: fmtNum(wt.perWeek, 2) });
+      t += ' ' + trf('Trend over {days} dagen ({count} wegingen): {direction}, dat is {pct}% van je gewicht per week.', { days: wt.span + 1, count: wt.n, direction: dir, pct: fmtNum(Math.abs(wt.pctWeek), 1) });
+      if (wt.perWeek < -0.1) t += ' ' + trf('Houd je dit tempo aan, dan is dat ongeveer {month} kg per maand.', { month: fmtNum(-wt.perWeek * 4.35, 1) });
+    }
     t += ' ' + tr('Gewicht kan van dag tot dag 1–2 kg schommelen door vocht, zout, alcohol en restaurantmaaltijden. Kijk naar het verloop over meerdere weken.');
     add('gewicht', 'Gewichtsverloop', t, w.length + ' wegingen', 'info');
+  }
+
+  /* --- Energiebalans: wat je gewicht zegt over je werkelijke verbruik --- */
+  const ebKeys = rangeKeys(completeKey(), 35);
+  const wtE = weightTrend(completeKey(), 35);
+  const kcE = ebKeys.map(k => DB.days[k] && dayNutr(DB.days[k], 'kcal')).filter(r => r && !r.lb && !r.approx).map(r => r.v);
+  if (wtE && wtE.n >= 6 && kcE.length >= 10) {
+    const eat = avg(kcE), est = Math.round((eat - wtE.perDay * 7700) / 50) * 50;
+    const gap = est - G.kcal;
+    let t = trf('Over de laatste 5 weken at je op volledig geregistreerde dagen gemiddeld ≈ {eat} kcal, terwijl je gewicht {trend}. Daaruit volgt een geschat werkelijk verbruik van ≈ {est} kcal per dag (1 kg lichaamsgewicht ≈ 7.700 kcal).', { eat: fmtNum(eat), trend: Math.abs(wtE.perWeek) < 0.1 ? tr('ongeveer gelijk bleef') : trf('met {rate} kg per week {dir}', { rate: fmtNum(Math.abs(wtE.perWeek), 2), dir: wtE.perWeek < 0 ? tr('daalde') : tr('steeg') }), est: fmtNum(est) });
+    if (Math.abs(gap) >= 300) t += ' ' + trf('Dat ligt {gap} kcal {side} je ingestelde richtpunt van {target} kcal.', { gap: fmtNum(Math.abs(gap)), side: gap > 0 ? tr('boven') : tr('onder'), target: fmtNum(G.kcal) }) + ' ' + (gap > 0 ? tr('Mogelijk verbruik je meer dan de formule bij de start schatte, of mis je wat eten in je registratie (sauzen, drankjes, snacks).') : tr('Vaak betekent dit dat niet alles geregistreerd werd (sauzen, olie, drankjes, kleine snacks), of dat vocht je gewicht tijdelijk beïnvloedt.'));
+    else t += ' ' + tr('Dat sluit goed aan bij je ingestelde richtpunt.');
+    t += ' ' + tr('Dit is een ruwe schatting die betrouwbaarder wordt naarmate je langer en vollediger registreert. Gebruik ze om met je diëtist te bespreken, niet om zelf drastisch te schrappen.');
+    add('voeding', 'Wat je gewicht zegt over je verbruik', t, kcE.length + ' volledige dagen · ' + wtE.n + ' wegingen', Math.abs(gap) >= 300 ? 'tip' : 'good');
   }
 
   /* --- Mealpreps: wat werkt voor jou --- */

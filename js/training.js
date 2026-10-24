@@ -533,8 +533,12 @@ function trTrainingText(value) {
   if (dynamic) return trf('Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.', { week: dynamic[1] });
   return tr(text);
 }
+function trainingExerciseList(s) {
+  if (!(s.exercises || []).length) return '';
+  return '<ul class="small train-exercises">' + s.exercises.map(x => '<li><b>' + esc(trTrainingText(x.name)) + '</b> · ' + x.sets + ' ' + tr('sets') + ' × ' + exerciseTargetText(x) + ' · ' + x.rest + ' ' + tr('sec rust') + (x.focus ? '<br><span class="muted">' + esc(trTrainingText(x.focus)) + '</span>' : '') + '</li>').join('') + '</ul>';
+}
 function renderProgressiveProgram(g) {
-  const cards = g.weeks.map(w => '<details class="card train-week"' + (w.number === 1 ? ' open' : '') + '><summary><b>' + tr('Week') + ' ' + w.number + ' · ' + tr(w.phase) + '</b><span class="muted small">' + tr(w.focus) + '</span></summary>' + w.sessions.map(s => '<div class="train-session"><b>' + tr(s.day) + ' · ' + trTrainingText(s.title) + '</b><p>' + trTrainingText(s.detail) + '</p></div>').join('') + '</details>').join('');
+  const cards = g.weeks.map(w => '<details class="card train-week"' + (w.number === 1 ? ' open' : '') + '><summary><b>' + tr('Week') + ' ' + w.number + ' · ' + tr(w.phase) + '</b><span class="muted small">' + tr(w.focus) + '</span></summary>' + w.sessions.map(s => '<div class="train-session"><b>' + tr(s.day) + ' · ' + trTrainingText(s.title) + '</b><p>' + trTrainingText(s.detail) + '</p>' + trainingExerciseList(s) + '</div>').join('') + '</details>').join('');
   const caution = g.goal === 'rehab' ? '<div class="card note"><b>' + tr('Revalidatie blijft onder regie van je behandelaar') + '</b><p class="small">' + tr('Dit is alleen een weekindeling om de door je behandelaar goedgekeurde activiteiten te plannen. De app verhoogt geen oefeningen, gewicht of intensiteit. Stop en vraag advies bij scherpe/toenemende pijn, terugkerende zwelling of verlies van beweging/kracht.') + '</p><p class="muted small">' + tr('Richtlijn') + ': <a href="https://leedscommunityhealthcare.nhs.uk/our-services-a-z/musculoskeletal-msk/return-to-activity-or-sport-after-injury/" target="_blank" rel="noopener">' + tr('Leeds Community Healthcare NHS · terugkeer na blessure') + '</a></p></div>' : '<div class="card"><p class="muted small">' + tr('Verhoog alleen als je goed herstelt; herhaal gerust een week. Rustdagen zijn onderdeel van het plan. Bij pijn of een medische aandoening: overleg met een zorgverlener.') + '</p></div>';
   const source = g.goal === 'runStart' ? '<p class="muted small">' + tr('Opbouwprincipe: afwisselend wandelen en lopen met rust tussen loopdagen, zoals bij') + ' <a href="https://www.nhs.uk/better-health/get-active/get-running-with-couch-to-5k/couch-to-5k-running-plan/" target="_blank" rel="noopener">NHS Couch to 5K</a>. ' + tr('Dit is een eigen, vereenvoudigde planning en geen kopie van het NHS-programma.') + '</p>' : ['strength', 'muscle'].includes(g.goal) ? '<p class="muted small">' + tr('Krachtprincipes afgestemd op de') + ' <a href="https://acsm.org/resistance-training-guidelines-update-2026/" target="_blank" rel="noopener">ACSM · 2026</a>: ' + tr('train grote spiergroepen minstens 2 dagen per week, kies een haalbare belasting en bouw geleidelijk op. Je hoeft niet tot spierfalen te trainen.') + '</p>' : '';
   const nutritionFocus = { regularity: 'Kies een eetmoment dat vaak wegvalt en maak daar een haalbare routine van.', protein: 'Voeg bij een of meer maaltijden een eiwitbron toe die je graag eet.', fiber: 'Voeg geleidelijk een vezelrijke keuze toe, zoals fruit, groente, volkoren of peulvruchten.' }[g.nutritionFocus];
@@ -615,22 +619,41 @@ function eventProgram(p) {
 }
 function eventPhase(n, duration, hyrox) {
   if (hyrox) return n === duration ? 'Taper en frisheid' : n >= duration - 2 ? 'Wedstrijdspecifiek' : n % 4 === 0 ? 'Herstelweek' : n >= Math.ceil(duration * 0.5) ? 'Opbouw en combineren' : 'Basis en techniek';
-  if (n >= 18) return n === 20 ? 'Wedstrijdweek' : 'Taper en herstel';
+  if (n >= 17) return n === 20 ? 'Wedstrijdweek' : 'Taper en herstel';
   if ([4, 8, 12, 16].includes(n)) return 'Herstelweek';
   if (n >= 13) return 'Piekblok';
   if (n >= 5) return 'Duur en kracht opbouwen';
   return 'Rustige basis';
 }
+/* Weekvolume: start bij je huidige weekkilometers, groeit ±7 % per opbouwweek (ruim onder de vaak
+   genoemde 10 %), herstelweken op ±80 %, taper 80 → 65 → 45 %. Lange duurloop ≤ ±45 % van de week. */
+function marathonWeekKm(n, p) {
+  const start = Math.max(20, p.weeklyRunKm || 20), cap = Math.max(start, Math.min(start * 1.7, p.level === 'beginner' ? 50 : p.level === 'intermediate' ? 60 : 75));
+  let km = start, peak = start;
+  for (let w = 2; w <= Math.min(n, 16); w++) { if (w % 4 === 0) km = peak * 0.8; else { peak = Math.min(cap, peak * 1.07); km = peak; } }
+  if (n === 17) km = peak * 0.8; if (n === 18) km = peak * 0.65; if (n === 19) km = peak * 0.45;
+  return Math.max(km, marathonLongRunKm(n, p.comfortableRunKm) / 0.45);
+}
+function marathonQuality(n) {
+  if (n <= 8) return { title: 'Fartlek', detail: '15 min rustig inlopen, dan 6–8 × 2 min vlot (inspanning 7/10, je kan nog maar enkele woorden zeggen) met 2 min rustig joggen ertussen, 10 min uitlopen.' };
+  if (n <= 12) return { title: 'Tempoblokken', detail: '15 min rustig inlopen, dan ' + (n <= 10 ? 4 : 5) + ' × 5 min op stevig maar controleerbaar tempo (ongeveer je tempo voor een uurloop, 7–8/10) met 2 min dribbelen, 10 min uitlopen.' };
+  return { title: 'Marathontempo', detail: '15 min rustig inlopen, dan ' + (n <= 14 ? '2 × 15' : '2 × 20') + ' min op je beoogde marathontempo (comfortabel stevig, 6/10) met 3 min rustig ertussen, 10 min uitlopen. Oefen hier ook je wedstrijdvoeding.' };
+}
 function marathonWeek(n, duration, phase, days, p) {
   const km = marathonLongRunKm(n, p.comfortableRunKm), quality = n >= 6 && n < 17 && !phase.includes('Herstel') && !phase.includes('Taper');
+  const weekKm = marathonWeekKm(n, p), q = marathonQuality(n), qKm = n >= 6 ? 10 : 0;
+  const easyCount = Math.max(1, days.length - 1 - (quality ? 1 : 0) - (!quality && days.length >= 4 ? 1 : 0));
+  const easyKm = Math.max(5, Math.round(((weekKm - km - qKm) / easyCount) * 2) / 2);
   if (n === duration) return { number: n, phase, focus: 'Rustig aan de start en volg je afgesproken raceplan.', sessions: [{ day: p.eventDate ? new Date(p.eventDate + 'T12:00:00').toLocaleDateString(currentLocale(), { weekday: 'long', day: 'numeric', month: 'short' }) : 'Wedstrijddag', title: 'Marathon · 42,2 km', detail: 'Start beheerst. Gebruik alleen voeding en drinken die je eerder hebt getest; volg de actuele wedstrijdinformatie.' }] };
   const sessions = days.map((d, i) => {
-    if (i === days.length - 1) return { day: d.label, title: 'Lange rustige duurloop · ' + km + ' km', detail: phase === 'Taper en herstel' ? 'Loop ontspannen; houd de afstand bewust lager zodat je fris blijft.' : 'Rustig praattempo. Verhoog niet als je huidige afstand, herstel of klachten daar niet bij passen.' };
-    if (i === 1 && quality) return { day: d.label, title: 'Beheerste kwaliteit', detail: 'Rustige warming-up, daarna enkele korte blokken op een stevig maar controleerbaar tempo met ruim herstel, gevolgd door rustig uitlopen. Stop vóór uitputting.' };
+    if (i === days.length - 1) return { day: d.label, title: 'Lange rustige duurloop · ' + String(km).replace('.', ',') + ' km', detail: phase === 'Taper en herstel' ? 'Loop ontspannen; houd de afstand bewust lager zodat je fris blijft.' : 'Rustig praattempo. Verhoog niet als je huidige afstand, herstel of klachten daar niet bij passen.' };
+    if (i === 1 && quality) return { day: d.label, title: q.title + ' · ±10 km', detail: q.detail + ' Stop vóór uitputting.' };
     if (i === 1 && p.days.length >= 4) return { day: d.label, title: 'Kracht en stabiliteit', detail: 'Technisch beheerste oefeningen voor benen, heupen en romp; houd ruimte over en train niet tot falen.' };
-    return { day: d.label, title: 'Rustige duurloop', detail: 'Loop op praattempo. Houd de duur passend bij je recente weekvolume; in herstel- en taperweken maak je deze korter.' };
+    return { day: d.label, title: 'Rustige duurloop · ' + String(easyKm).replace('.', ',') + ' km', detail: 'Op praattempo (je kan volzinnen praten, 3–4/10). Voel je je zwaar vermoeid, maak hem korter of wandel.' };
   });
-  return { number: n, phase, focus: phase === 'Herstelweek' ? 'Minder belasting, behoud je rustige routine.' : phase === 'Taper en herstel' ? 'Minder kilometers; kom uitgerust aan de start.' : phase === 'Wedstrijdweek' ? 'Rust, korte losse beweging en wedstrijddag.' : 'Verhoog de belasting pas als je goed hersteld bent.', sessions };
+  const total = sessions.reduce((t, x) => { const m = String(x.title).match(/([\d.,]+) km/); return t + (m ? Number(m[1].replace(',', '.')) : 0); }, 0);
+  const focus = phase === 'Herstelweek' ? 'Minder belasting, behoud je rustige routine.' : phase === 'Taper en herstel' ? 'Minder kilometers; kom uitgerust aan de start.' : phase === 'Wedstrijdweek' ? 'Rust, korte losse beweging en wedstrijddag.' : 'Verhoog de belasting pas als je goed hersteld bent.';
+  return { number: n, phase, focus: focus + ' Weekvolume ±' + Math.round(total) + ' km.', sessions };
 }
 function hyroxWeek(n, duration, phase, days, p) {
   const taper = n === duration, specific = phase === 'Wedstrijdspecifiek';
@@ -649,6 +672,42 @@ function hyroxWeek(n, duration, phase, days, p) {
     return { day: d.label, title: 'Herstelbeweging', detail: 'Wandelen of rustige mobiliteit; dit mag ook volledige rust zijn.' };
   });
   return { number: n, phase, focus: taper ? 'Verminder trainingsbelasting en houd je fris.' : phase === 'Herstelweek' ? 'Behoud techniek, verlaag volume en herstel.' : phase === 'Wedstrijdspecifiek' ? 'Combineer lopen met een klein aantal stations, zonder uitputting.' : 'Bouw aerobe basis, kracht en bewegingstechniek geleidelijk op.', sessions };
+}
+/* Concrete full-body krachttrainingen (A/B), per beschikbaar materiaal.
+   Grote spiergroepen: knie-dominant, heup-dominant, duwen, trekken, romp. */
+const STRENGTH_WORKOUTS = {
+  gym: {
+    A: [['Goblet squat of leg press', 'Benen en billen; knieën in de richting van je tenen', '8–12', 90], ['Roemeense deadlift met dumbbells', 'Achterkant benen en billen; rug neutraal, heupen naar achter', '8–12', 90], ['Dumbbell bench press', 'Borst, schouders, triceps', '8–12', 90], ['Lat pulldown', 'Rug; trek de stang naar je bovenborst', '8–12', 90], ['Plank', 'Romp; lichaam in een rechte lijn', '20–40 sec', 60]],
+    B: [['Leg press of split squat', 'Benen; gecontroleerd zakken', '10–12', 90], ['Hip thrust of heupbrug met gewicht', 'Billen; even vasthouden bovenaan', '8–12', 90], ['Seated cable row', 'Rug; schouderbladen naar achter en omlaag', '8–12', 90], ['Schouderdruk met dumbbells (zittend)', 'Schouders; romp stevig', '8–12', 90], ['Dead bug', 'Romp; onderrug blijft op de grond', '8–12', 60]]
+  },
+  home: {
+    A: [['Goblet squat met dumbbell of kettlebell', 'Benen en billen', '8–12', 90], ['Roemeense deadlift met dumbbells', 'Achterkant benen; rug neutraal', '8–12', 90], ['Push-up (op knieën of handen verhoogd)', 'Borst en armen; kies de variant waarmee 8 herhalingen lukken', '6–12', 90], ['Roeien met dumbbell (per kant)', 'Rug; steun op bank of stoel', '8–12', 60], ['Plank', 'Romp', '20–40 sec', 60]],
+    B: [['Split squat (per been)', 'Benen; houd je vast aan een stoel als dat helpt', '8–12', 90], ['Heupbrug (eventueel met gewicht)', 'Billen en heupen', '10–15', 60], ['Schouderdruk met band of dumbbells', 'Schouders', '8–12', 60], ['Roeien met weerstandsband', 'Rug', '10–15', 60], ['Dead bug', 'Romp', '8–12', 60]]
+  },
+  none: {
+    A: [['Stoel squat', 'Benen; ga gecontroleerd zitten en sta op zonder handen als dat lukt', '8–12', 60], ['Heupbrug', 'Billen en heupen', '10–15', 60], ['Push-up tegen muur of aanrecht', 'Borst en armen; lager = zwaarder', '8–15', 60], ['Rugheffen op de buik (superman)', 'Rug; rustig optillen, 2 tellen vasthouden', '8–12', 60], ['Bird dog', 'Romp en coördinatie; 3 seconden stabiel per herhaling', '8', 60]],
+    B: [['Step-up op traptrede (per been)', 'Benen; houd de leuning vast', '8–10', 60], ['Achterwaartse lunge met steun (per been)', 'Benen en billen', '6–10', 60], ['Push-up op knieën of aanrecht', 'Borst en armen', '6–12', 60], ['Kuitheffen', 'Kuiten en enkels', '12–15', 45], ['Zijwaartse plank (per kant)', 'Romp; heupen gestapeld', '15–30 sec', 45]]
+  }
+};
+function strengthExercises(p, which, week, recovery) {
+  const kit = p.equipment === 'gym' && p.access === 'yes' ? 'gym' : p.equipment === 'home' ? 'home' : 'none';
+  const beginner = p.level === 'beginner';
+  let sets = beginner ? (week <= 2 ? 1 : week <= 5 ? 2 : 3) : (week <= 2 ? 2 : 3);
+  if (recovery) sets = Math.max(1, Math.round(sets / 2));
+  const heavy = p.goal === 'strength' && !beginner;
+  const list = STRENGTH_WORKOUTS[kit][which].slice(0, p.minutes < 25 ? 3 : p.minutes < 40 ? 4 : 5);
+  return list.map(([name, focus, reps, rest], i) => ({ name, focus, sets, reps: heavy && i < 4 && !/sec/.test(reps) ? '5–8' : reps, rest: heavy && i < 4 ? 150 : rest }));
+}
+const STRENGTH_PROGRESSION = 'Progressie: haal je bij elke set het hoogste aantal herhalingen met nog 2 herhalingen over, verhoog dan de volgende keer het gewicht met een kleine stap (of kies een zwaardere variant) en begin weer onderaan de herhalingsrange.';
+/* Loop-wandelopbouw voor starters (eigen opbouw in de geest van Couch to 5K). */
+const RUN_START_STEPS = [
+  [8, 1, 1.5], [6, 1.5, 2], [5, 2, 1.5], [6, 1.5, 2], [4, 3, 1.5], [3, 5, 2], [2, 8, 2], [3, 5, 2], [2, 10, 1.5]
+];
+function runStartDetail(n, i, days) {
+  const [reps, run, walk] = RUN_START_STEPS[n - 1];
+  const fmt = v => String(v).replace('.', ',');
+  if (n === 9 && i === days.length - 1) return 'Wandel 5 min in. Loop daarna 20 min rustig aan één stuk door (wandel gerust even als het nodig is). Wandel 5 min uit. Proficiat met je opbouw.';
+  return 'Wandel 5 min rustig in. Doe ' + reps + ' × (' + fmt(run) + ' min rustig joggen + ' + fmt(walk) + ' min wandelen) = ' + fmt(reps * run) + ' min joggen. Wandel 5 min uit. ' + ([4, 8].includes(n) ? 'Herstelweek: iets lichter dan vorige week.' : 'Praattempo; lukt het niet, herhaal dan de vorige week.');
 }
 function progressiveProgram(p) {
   const duration = p.goal === 'runStart' ? 9 : 8;
@@ -669,14 +728,16 @@ function progressiveProgram(p) {
       if (p.goal === 'rehab') return { day, title: i === 0 ? 'Behandelaar-goedgekeurde activiteit' : i === 1 ? 'Oefeningen volgens je behandelplan' : 'Rust of afgesproken lichte beweging', detail: 'Plan uitsluitend de activiteit en oefeningen die je behandelaar heeft toegestaan. Volg diens exacte duur, belasting, herhalingen en hersteladvies. Deze app voegt geen oefening of progressie toe.' };
       if (p.goal === 'runStart') {
         const runMinutes = Math.min(20, Math.max(1, Math.round((p.minutes - 10) * ((n - 1) / 8) * (recovery ? 0.7 : 1))));
-        return { day, title: 'Loop-wandeltraining ' + (i + 1), detail: 'Wandel 5 min rustig in en 5 min uit. Wissel daarna ' + runMinutes + ' min totaal rustig joggen af met wandelpauzes (bijv. 1 min jog / 2 min wandelen). ' + (recovery ? 'Herstelweek: herhaal kortere blokken uit de vorige week.' : 'Praattempo; als dit niet comfortabel is, wandel dan meer of herhaal de vorige week.') };
+        void runMinutes;
+        return { day, title: 'Loop-wandeltraining ' + (i + 1), detail: runStartDetail(n, i, days) };
       }
       if (['strength', 'muscle'].includes(p.goal)) {
         const earlierWeek = n === 4 ? 3 : 7;
+        const exercises = strengthExercises(p, i % 2 ? 'B' : 'A', n, recovery);
         const sets = recovery ? 'ongeveer de helft van je sets uit week ' + earlierWeek : p.level === 'beginner' ? (n <= 2 ? '1–2 sets' : '2 sets') : (n <= 2 ? '2 sets' : '2–3 sets');
         const detail = recovery ? strengthDetails[0] + ' Doe ' + sets + '; week 8 is eveneens lichter.' : strengthDetails[i % strengthDetails.length] + ' Richtlijn voor deze opbouwfase: ' + sets + ' per oefening.';
-        if (p.goal === 'muscle' && !recovery) return { day, title: 'Spiermassa · full-body kracht', detail: detail + ' Werk doorgaans in een comfortabele reeks van 6–15 herhalingen. Verhoog pas als de huidige sets goed herstellen; wie al ervaring heeft kan op termijn richting ongeveer 10 wekelijkse sets per spiergroep opbouwen.' };
-        return { day, title: p.goal === 'muscle' ? 'Spiermassa · lichtere krachtbasis' : 'Krachttraining · full-body', detail };
+        if (p.goal === 'muscle' && !recovery) return { day, title: 'Spiermassa · full-body ' + (i % 2 ? 'B' : 'A'), detail: STRENGTH_PROGRESSION + ' Werk in een reeks van 6–15 herhalingen tot dicht bij (maar niet tot) falen. Wie al ervaring heeft, bouwt op termijn richting ongeveer 10 sets per spiergroep per week.', exercises };
+        return { day, title: (p.goal === 'muscle' ? 'Spiermassa · lichtere week ' : 'Krachttraining · full-body ') + (i % 2 ? 'B' : 'A'), detail: recovery ? 'Herstelweek: dezelfde oefeningen met ongeveer de helft van de sets en een iets lichter gewicht.' : STRENGTH_PROGRESSION, exercises };
       }
       if (p.goal === 'interval') {
         const reps = recovery ? 4 : Math.min(8, 3 + Math.floor(n / 2) + (levelIndex >= 2 ? 1 : 0)), seconds = recovery ? 45 : Math.min(120, 45 + Math.floor(n / 2) * 15);
@@ -690,12 +751,12 @@ function progressiveProgram(p) {
         return { day, title: 'Rustig lopen / wandelen', detail: 'Beweeg ' + Math.max(15, minutes - 5) + ' min comfortabel. Beginners houden wandelpauzes; neem minstens een rustdag tussen looptrainingen.' };
       }
       const minutes = Math.min(p.minutes, recovery ? 20 : Math.min(50, 15 + n * (3 + levelIndex)));
-      if (i === 0 && (p.goal === 'weight' || p.goal === 'general')) return { day, title: 'Full-body kracht', detail: strengthDetails[0] + ' Houd de sessie kort en beheersbaar.' };
+      if (i === 0 && (p.goal === 'weight' || p.goal === 'general')) return { day, title: 'Full-body kracht A', detail: recovery ? 'Herstelweek: dezelfde oefeningen met de helft van de sets.' : STRENGTH_PROGRESSION, exercises: strengthExercises(p, 'A', n, recovery) };
       if (p.goal === 'weight' && i === 1) return { day, title: 'Wandelen of fietsen', detail: minutes + ' min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.' };
-      if (p.goal === 'weight' && i === 2) return { day, title: 'Full-body kracht', detail: strengthDetails[1] };
+      if (p.goal === 'weight' && i === 2) return { day, title: 'Full-body kracht B', detail: recovery ? 'Herstelweek: dezelfde oefeningen met de helft van de sets.' : STRENGTH_PROGRESSION, exercises: strengthExercises(p, 'B', n, recovery) };
       if (p.goal === 'general' && i === 1) return { day, title: 'Rustige conditie', detail: minutes + ' min wandelen, fietsen of een andere activiteit op praattempo.' };
       if (i === 0 && p.goal === 'interval') return { day, title: 'Rustige conditie', detail: minutes + ' min comfortabel wandelen, fietsen of andere cardio.' };
-      if (p.goal === 'interval' && i === 1) return { day, title: 'Kracht en mobiliteit', detail: strengthDetails[0] };
+      if (p.goal === 'interval' && i === 1) return { day, title: 'Kracht en mobiliteit', detail: STRENGTH_PROGRESSION, exercises: strengthExercises(p, 'A', n, recovery) };
       return { day, title: 'Rustige beweging / herstel', detail: minutes + ' min ontspannen wandelen of fietsen, of neem volledige rust als je moe bent.' };
     });
     return { number: n, phase, focus, sessions };
