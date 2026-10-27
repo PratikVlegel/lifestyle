@@ -31,6 +31,7 @@ function defaultData() {
     training: { category: 'general', goal: 'weight', level: 'beginner', access: 'no', equipment: 'none', days: ['ma', 'wo', 'vr'], timeOfDay: 'any', minutes: 45, nutritionFocus: 'none', activityGoal: 'none', weeklyActivityMinutes: 150, eventDate: '', eventName: '', comfortableRunKm: 0, weeklyRunKm: 0, currentRunDays: 0, rehabCleared: false, generated: null, plans: [], activePlanId: null },
     days: {},
     cycleTracking: { enabled: false, selectedDate: '', periodStarts: [], logs: {} },
+    girth: { enabled: false, weekday: 6, since: '', lastDate: '', entries: [] },
     preps: [],
     foods: [],
     ai: []
@@ -45,6 +46,36 @@ function normalizeUnknownDailyValues(data) {
     for (const field of UNKNOWN_NUMERIC_DAY_FIELDS) if (day[field] === '?') day[field] = null;
   }
   return data;
+}
+
+/* Omtrekmetingen (cm). Leeg = onbekend, nooit 0. weekday volgt Date.getDay(): 0 = zondag … 6 = zaterdag. */
+const GIRTH_FIELDS = ['waist', 'chest', 'thigh', 'arm', 'hips', 'neck'];
+const GIRTH_RANGE = [10, 300];
+const GIRTH_MAX_ENTRIES = 1000;
+function isDateKey(v) {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const date = new Date(v + 'T00:00:00Z');
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === v;
+}
+function girthValue(v) { return typeof v === 'number' && Number.isFinite(v) && v >= GIRTH_RANGE[0] && v <= GIRTH_RANGE[1] ? Math.round(v * 10) / 10 : null; }
+function cleanGirth(g) {
+  const src = g && typeof g === 'object' && !Array.isArray(g) ? g : {};
+  const ids = new Set();
+  const entries = (Array.isArray(src.entries) ? src.entries : []).filter(e => e && typeof e === 'object' && !Array.isArray(e) && isDateKey(e.date)).map(e => {
+    let id = typeof e.id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(e.id) && !ids.has(e.id) ? e.id : uid();
+    ids.add(id);
+    const out = { id, date: e.date };
+    for (const f of GIRTH_FIELDS) out[f] = girthValue(e[f]);
+    return out;
+  }).filter(e => GIRTH_FIELDS.some(f => e[f] !== null)).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0).slice(-GIRTH_MAX_ENTRIES);
+  const last = entries.length ? entries[entries.length - 1].date : '';
+  return {
+    enabled: src.enabled === true,
+    weekday: Number.isInteger(src.weekday) && src.weekday >= 0 && src.weekday <= 6 ? src.weekday : 6,
+    since: isDateKey(src.since) ? src.since : '',
+    lastDate: last || (isDateKey(src.lastDate) ? src.lastDate : ''),
+    entries
+  };
 }
 
 let DB = load();
@@ -93,6 +124,7 @@ function migrate(d) {
       out.cycleTracking.logs[key] = clean;
     }
   }
+  out.girth = cleanGirth(d.girth);
   out.preps = d.preps || [];
   out.foods = d.foods || [];
   out.ai = d.ai || [];
@@ -318,7 +350,7 @@ function validateImportData(obj) {
     return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
   };
   if (!record(obj)) fail('verwacht een JSON-object.');
-  for (const field of ['days', 'profile', 'goals', 'settings', 'training', 'cycleTracking']) {
+  for (const field of ['days', 'profile', 'goals', 'settings', 'training', 'cycleTracking', 'girth']) {
     if (obj[field] !== undefined && obj[field] !== null && !record(obj[field])) fail('het veld ' + field + ' heeft een ongeldig formaat.');
   }
   if (obj.cycleTracking) {
@@ -333,6 +365,17 @@ function validateImportData(obj) {
         if (!validDate(date) || !record(log)) fail('een cyclusregistratie heeft een ongeldige datum of structuur.');
         for (const [field, value] of Object.entries(log)) if (fields[field] && (!Number.isInteger(value) || value < fields[field][0] || value > fields[field][1])) fail('een cyclusregistratie bevat een waarde buiten het toegestane bereik.');
       }
+    }
+  }
+  if (obj.girth) {
+    const g = obj.girth;
+    if (g.enabled !== undefined && typeof g.enabled !== 'boolean') fail('de instelling voor omtrekmetingen heeft een ongeldig formaat.');
+    if (g.weekday !== undefined && (!Number.isInteger(g.weekday) || g.weekday < 0 || g.weekday > 6)) fail('de weekdag voor omtrekmetingen is ongeldig.');
+    for (const field of ['since', 'lastDate']) if (g[field] !== undefined && g[field] !== '' && !validDate(g[field])) fail('een datum bij omtrekmetingen is ongeldig.');
+    if (g.entries !== undefined && (!Array.isArray(g.entries) || g.entries.length > GIRTH_MAX_ENTRIES)) fail('omtrekmetingen hebben een ongeldig formaat.');
+    for (const e of g.entries || []) {
+      if (!record(e) || !validDate(e.date)) fail('een omtrekmeting heeft een ongeldige datum of structuur.');
+      for (const f of GIRTH_FIELDS) if (e[f] !== undefined && e[f] !== null && (typeof e[f] !== 'number' || !Number.isFinite(e[f]) || e[f] < GIRTH_RANGE[0] || e[f] > GIRTH_RANGE[1])) fail('een omtrekmeting bevat een waarde buiten het toegestane bereik (10–300 cm).');
     }
   }
   if (obj.profile) {
@@ -596,6 +639,13 @@ function importJSON(obj, mode) {
         if (!DB.cycleTracking.logs[date]) DB.cycleTracking.logs[date] = log;
         else for (const [field, value] of Object.entries(log)) if (DB.cycleTracking.logs[date][field] === undefined || DB.cycleTracking.logs[date][field] === null) DB.cycleTracking.logs[date][field] = value;
       }
+    }
+    if (obj.girth) {
+      const imported = cleanGirth(obj.girth), cur = cleanGirth(DB.girth);
+      const dates = new Set(cur.entries.map(e => e.date)), ids = new Set(cur.entries.map(e => e.id));
+      for (const e of imported.entries) if (!dates.has(e.date)) { if (ids.has(e.id)) e.id = uid(); cur.entries.push(e); dates.add(e.date); ids.add(e.id); }
+      if (!cur.enabled && imported.enabled) Object.assign(cur, { enabled: true, weekday: imported.weekday, since: imported.since });
+      DB.girth = cleanGirth(cur);
     }
     const updated = new Set();
     for (const p of obj.preps || []) {

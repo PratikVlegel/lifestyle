@@ -87,7 +87,7 @@ const AUDIENCES = {
   psycholoog: { label: 'Psycholoog', parts: ['dagen', 'stemming', 'energie', 'slaap', 'ritme', 'honger', 'middelen', 'supplementen', 'notities'], cols: ['mood', 'energy', 'stress', 'sleepH'] },
   coach: { label: 'Sportcoach', parts: ['dagen', 'training', 'beweging', 'voeding', 'slaap', 'gewicht', 'energie', 'supplementen'], cols: ['steps', 'actMin', 'sleepH', 'energy', 'kcal', 'protein'] },
   arts: { label: 'Huisarts', parts: ['profiel', 'dagen', 'slaap', 'gewicht', 'middelen', 'stemming', 'voeding', 'supplementen'], cols: ['sleepH', 'cpap', 'mood', 'weight', 'alcohol'] },
-  alles: { label: 'Alles', parts: ['profiel', 'dagen', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'training', 'beweging', 'slaap', 'stemming', 'energie', 'notities', 'middelen', 'gewicht', 'drinken', 'supplementen'], cols: ['kcal', 'protein', 'sleepH', 'mood', 'steps', 'weight'] }
+  alles: { label: 'Alles', parts: ['profiel', 'dagen', 'voeding', 'maaltijden', 'ritme', 'honger', 'preps', 'training', 'beweging', 'slaap', 'stemming', 'energie', 'notities', 'middelen', 'gewicht', 'omtrek', 'drinken', 'supplementen'], cols: ['kcal', 'protein', 'sleepH', 'mood', 'steps', 'weight'] }
 };
 /* Kolommen van het dagoverzicht: [kop, waarde voor één dag]. */
 const REPORT_COLS = {
@@ -363,6 +363,7 @@ function reportHtml(aud, periodArg) {
     if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4><p>' + alcoholReport(periodKeys) + '</p></div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
     if (part === 'supplementen') h += sec('Supplementen', supplementReport(periodKeys));
     if (part === 'gewicht') h += sec('Gewicht (vóór ontbijt)', reportWeight(periodKeys));
+    if (part === 'omtrek') h += sec('Omtrekmetingen (cm)', reportGirth(periodKeys));
   }
   return h;
 }

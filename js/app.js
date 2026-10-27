@@ -25,7 +25,7 @@ function render() {
   const [page, a, b] = h.split('/');
   if (needsInvite()) return renderInvite();
   if (!DB.intakeDone && page !== 'intake') return go('#/intake');
-  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming', 'cycle'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared', 'train-community-exercises', 'exercise-community', 'exercise-share', 'schema-bewerken'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi', 'community-profiel'].includes(page)) || (el.dataset.tab === 'home' && ['kpi', 'checkin', 'ontdek'].includes(page))));
+  document.querySelectorAll('nav.tabs a').forEach(el => el.classList.toggle('on', el.dataset.tab === (page || 'home') || (el.dataset.tab === 'dagboek' && page === 'dag') || (el.dataset.tab === 'preps' && ['prep', 'bieb', 'recepten', 'recept', 'lijst'].includes(page)) || (el.dataset.tab === 'inzicht' && ['week', 'experimenten', 'rapport', 'stemming', 'cycle'].includes(page)) || (el.dataset.tab === 'schemas' && ['schemas', 'schema', 'train', 'train-custom', 'train-community', 'train-shared', 'train-community-exercises', 'exercise-community', 'exercise-share', 'schema-bewerken'].includes(page)) || (el.dataset.tab === 'meer' && ['meer', 'uitnodigen', 'community-kpi', 'community-profiel'].includes(page)) || (el.dataset.tab === 'home' && ['kpi', 'checkin', 'ontdek', 'omtrek'].includes(page))));
   $('nav.tabs').hidden = page === 'intake';
   window.scrollTo(0, 0);
   try {
@@ -35,6 +35,7 @@ function render() {
       case 'startscherm': return renderHomeSetup();
       case 'community-profiel': return renderCommunityProfile();
       case 'kpi': return renderKpi(a);
+      case 'omtrek': return renderGirth(a || 'nieuw');
       case 'checkin': return renderCheckin(a, b);
       case 'dagboek': return renderDays();
       case 'dag': return renderDay(a);
@@ -138,7 +139,7 @@ function renderHome() {
     h += '<button class="due" data-act="openCheckin" data-id="' + due.id + '"><span class="due-t">' + tr('Check-in klaar') + '</span><span class="due-l">' + esc(reminderDisplayLabel(due.label)) + ' · ' + due.time + '</span><span class="due-go">' + tr('Invullen ›') + '</span></button>';
   }
   if (st.length && homeSectionOn('checkins')) h += '<div class="chips row">' + st.map(x => '<button class="chip ' + (x.done ? 'done' : x.due ? 'open' : '') + '" data-act="openCheckin" data-id="' + x.r.id + '">' + (x.done ? '✓ ' : '') + x.r.time + ' ' + esc(reminderDisplayLabel(x.r.label)) + '</button>').join('') + '</div>';
-  const cards = [purposePromptCard(), homeSectionOn('training') ? activeTrainingHomeCard() : '', homeSectionOn('week') ? weekCard() : '', homeSectionOn('prepFeedback') ? feedbackCard() : ''].filter(Boolean);
+  const cards = [girthHomeCard(), purposePromptCard(), homeSectionOn('training') ? activeTrainingHomeCard() : '', homeSectionOn('week') ? weekCard() : '', homeSectionOn('prepFeedback') ? feedbackCard() : ''].filter(Boolean);
   if (cards.length) h += '<div class="home-focus-list">' + cards.join('') + '</div>';
   const quick = homeSectionOn('quick') ? homeQuickButtons() : [];
   if (quick.length) h += '<div class="quick' + (quick.length === 4 ? ' q4' : '') + '"' + (quick.length < 3 ? ' style="grid-template-columns:repeat(' + quick.length + ',1fr)"' : '') + '>' + quick.map(([act, label]) => '<button class="btn ghost" data-act="' + act + '">' + tr(label) + '</button>').join('') + '</div>';
@@ -323,6 +324,7 @@ function renderKpi(key) {
     const extra = (key === 'mood' && d.moodNote) ? ' <span class="muted">' + esc(d.moodNote) + '</span>' : (key === 'sleep' && d.cpap) ? ' <span class="muted">CPAP: ' + esc(d.cpap) + '</span>' : '';
     return '<a class="tr" href="#/dag/' + x.k + '"><span>' + fmtDay(x.k, true) + '</span><b>' + (isNum(x.v) ? (x.lb ? '≥ ' : '') + fmtNum(x.v, M.dec) : '–') + '</b>' + extra + '</a>';
   }).join('') + '</div>';
+  if (key === 'weight') h += girthWeightSection();
   view().innerHTML = h;
 }
 function stat(l, v) { return '<div class="stat"><span>' + l + '</span><b>' + v + '</b></div>'; }
@@ -1121,6 +1123,7 @@ function renderInsights() {
   h += '<a class="card fb" href="#/stemming"><b>' + tr('Stemming en gewoontes') + '</b><p class="small">' + tr('Bekijk stemming naast slaap, beweging en leefstijl. Alleen met jouw keuze, lokaal berekend en zonder vrije notities.') + '</p></a>';
   if (DB.profile.sex === 'v') h += '<a class="card fb cycle-link" href="#/cycle"><b>' + tr('Cyclus en menstruatie') + '</b><p class="small">' + tr('Houd optioneel je eigen ervaringen bij en krijg steun die aansluit op wat jij registreert.') + '</p></a>';
   h += '<div class="card tip"><b>' + tr('Tip van de dag') + '</b><p class="small">' + esc(tr(tipOfDay())) + '</p></div>';
+  h += girthInsightsHtml();
   h += '<h2 class="sec">' + tr('Onderbouwde acties') + '</h2>' + renderEvidenceAdvice();
   h += '<p class="muted small">' + tr('Dit zijn verbanden in je eigen cijfers, geen oorzaken en geen diagnose. Hoe meer dagen volledig ingevuld, hoe betrouwbaarder. Nieuw = sinds je laatste bezoek veranderd.') + '</p>';
   const seen = new Set(DB.settings.seenIns || []);
@@ -1538,7 +1541,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.16.1';
+const APP_VERSION = '1.17.0';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));
