@@ -44,6 +44,11 @@ function normalizeUnknownDailyValues(data) {
   for (const day of Object.values(data.days)) {
     if (!day || typeof day !== 'object' || Array.isArray(day)) continue;
     for (const field of UNKNOWN_NUMERIC_DAY_FIELDS) if (day[field] === '?') day[field] = null;
+    // Oudere dagboeken bevatten halve scores (bv. energie 6,5); de app kent hele scores 1–10: afronden naar boven.
+    for (const field of ['mood', 'energy', 'stress']) {
+      const v = day[field];
+      if (typeof v === 'number' && Number.isFinite(v) && !Number.isInteger(v) && v >= 1 && v <= 10) day[field] = Math.round(v);
+    }
   }
   return data;
 }
@@ -533,7 +538,8 @@ function validateImportData(obj) {
     if (value !== undefined && value !== null && !Number.isInteger(value)) fail('profiel of doelen bevatten een waarde die geen geheel getal is.');
   }
   if (obj.goals && Number.isFinite(obj.goals.stepsMin) && Number.isFinite(obj.goals.stepsMax) && obj.goals.stepsMax < obj.goals.stepsMin) fail('het stappendoelmaximum is lager dan het minimum.');
-  const ranges = { weight: [20, 500], sleepH: [0, 24], mood: [1, 10], energy: [1, 10], stress: [1, 10], steps: [0, 200000], waterMl: [0, 30000], caffeine: [0, 100], alcohol: [0, 50], softDrinkServings: [0, 100], sweetsServings: [0, 100] };
+  /* Gewicht wordt apart gecontroleerd, omdat '?' (niet gewogen) daar toegestaan is. */
+  const ranges = { sleepH: [0, 24], mood: [1, 10], energy: [1, 10], stress: [1, 10], steps: [0, 200000], waterMl: [0, 30000], caffeine: [0, 100], alcohol: [0, 50], softDrinkServings: [0, 100], sweetsServings: [0, 100] };
   for (const [key, day] of Object.entries(days)) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !record(day)) fail('een dag heeft een ongeldige datum of structuur.');
     const date = new Date(key + 'T00:00:00Z');
@@ -564,7 +570,7 @@ function validateImportData(obj) {
     for (const meal of day.meals || []) {
       if (!record(meal)) fail('een maaltijd op ' + key + ' heeft een ongeldig formaat.');
       if (meal.slot !== undefined && !SLOT_ORDER.includes(meal.slot)) fail('een maaltijd op ' + key + ' heeft een onbekend eetmoment.');
-      if (meal.time !== undefined && meal.time !== null && (typeof meal.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(meal.time))) fail('een maaltijd op ' + key + ' heeft een ongeldige tijd.');
+      if (meal.time !== undefined && meal.time !== null && meal.time !== '' && (typeof meal.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(meal.time))) fail('een maaltijd op ' + key + ' heeft een ongeldige tijd.');
       if (meal.desc !== undefined && (typeof meal.desc !== 'string' || meal.desc.length > 2000)) fail('een maaltijdtekst op ' + key + ' is ongeldig of te lang.');
       for (const field of ['kcal', 'protein', 'carbs', 'fat', 'fiber']) numeric(meal[field], field === 'kcal' ? [0, 20000] : [0, 1000], key + ' · ' + field);
       numeric(meal.used, [0, 100], key + ' · gebruikte porties');
