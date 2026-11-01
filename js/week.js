@@ -10,7 +10,10 @@ const WEEK_ROWS = [
 function weekStats(endKey) {
   const keys = rangeKeys(endKey, 7);
   const out = {};
-  for (const [name] of WEEK_ROWS) out[name] = avg(keys.map(k => dv(name, k)).filter(isNum));
+  for (const [name] of WEEK_ROWS) {
+    const values = keys.map(k => dv(name, k)).filter(isNum);
+    out[name] = avg(values); out[name + 'N'] = values.length;
+  }
   out.alcoholTotal = keys.reduce((s, k) => s + (isNum(dv('alcohol', k)) ? dv('alcohol', k) : 0), 0);
   const w = keys.map(k => DB.days[k] && DB.days[k].weight).filter(isNum);
   out.weight = avg(w); out.weighings = w.length;
@@ -30,7 +33,7 @@ function weekChangesHtml(cur, prev) {
   const better = [], worse = [], neutral = [];
   for (const [name, label] of WEEK_ROWS) {
     const a = cur[name], b = prev[name], cfg = WEEK_CHANGE[name];
-    if (!cfg || !isNum(a) || !isNum(b) || Math.abs(a - b) < cfg[0]) continue;
+    if (!cfg || cur[name + 'N'] < 3 || prev[name + 'N'] < 3 || !isNum(a) || !isNum(b) || Math.abs(a - b) < cfg[0]) continue;
     const up = a > b, D = DVARS[name];
     let good = cfg[1] === 0 ? null : (up ? cfg[1] > 0 : cfg[1] < 0);
     if (name === 'sleepH' && up && b >= (DB.goals.sleepH || 7.5)) good = null; // boven je slaapdoel is meer niet per se beter
@@ -40,7 +43,7 @@ function weekChangesHtml(cur, prev) {
     const txt = trf('{label}: {from} → {to}', { label: tr(label), from: f(b), to: f(a) }) + ' (' + (up ? '+' : '−') + fmtNum(Math.abs(a - b), dec) + ')';
     (good === true ? better : good === false ? worse : neutral).push(txt);
   }
-  if (isNum(cur.weight) && isNum(prev.weight)) {
+  if (cur.weighings >= 3 && prev.weighings >= 3 && isNum(cur.weight) && isNum(prev.weight)) {
     const d = cur.weight - prev.weight;
     neutral.push(trf('Gewicht (weekgemiddelde): {from} → {to} kg', { from: fmtNum(prev.weight, 1), to: fmtNum(cur.weight, 1) }) + ' (' + (d > 0 ? '+' : d < 0 ? '−' : '±') + fmtNum(Math.abs(d), 1) + ')');
   }
@@ -55,14 +58,14 @@ function renderWeek(endArg) {
   const cur = weekStats(end), prev = weekStats(addDays(end, -7));
   let h = header('Je week', fmtDay(addDays(end, -6)) + ' – ' + fmtDay(end), true);
   h += '<div class="seg"><button data-act="weekNav" data-k="' + addDays(end, -7) + '">' + tr('‹ vorige') + '</button>' + (end < weekEnd() ? '<button data-act="weekNav" data-k="' + addDays(end, 7) + '">' + tr('volgende ›') + '</button>' : '') + '</div>';
-  h += '<div class="card table week-compare"><div class="tr week-head"><span class="muted">' + tr('Gemiddeld per dag') + '</span><b class="muted">' + tr('Deze week') + '</b><small class="muted" style="width:auto">' + tr('Vorige week') + '</small></div>' +
+  h += '<div class="card table week-compare"><div class="tr week-head"><span class="muted">' + tr('Gemiddeld per dag · n = ingevulde dagen') + '</span><b class="muted">' + tr('Deze week') + '</b><small class="muted" style="width:auto">' + tr('Vorige week') + '</small></div>' +
     WEEK_ROWS.map(([name, label]) => {
       const a = cur[name], b = prev[name];
       if (!isNum(a) && !isNum(b)) return '';
       const D = DVARS[name];
       let arrow = '';
       if (isNum(a) && isNum(b) && Math.abs(a - b) > Math.max(Math.abs(b) * 0.05, D.d ? 0.2 : 1)) arrow = a > b ? ' ↑' : ' ↓';
-      return '<div class="tr"><span>' + tr(label) + '</span><b>' + (isNum(a) ? fmtV(name, a) : '–') + arrow + '</b><small class="muted" style="width:auto">' + (isNum(b) ? fmtV(name, b) : '–') + '</small></div>';
+      return '<div class="tr"><span>' + tr(label) + '</span><b>' + (isNum(a) ? fmtV(name, a) : '–') + arrow + '<small class="muted week-n">n=' + cur[name + 'N'] + '</small></b><small class="muted" style="width:auto">' + (isNum(b) ? fmtV(name, b) : '–') + '<br><span class="week-n">n=' + prev[name + 'N'] + '</span></small></div>';
     }).join('') + '</div>';
   const notes = [];
   if (isNum(cur.weight)) notes.push(tr('Gewicht: weekgemiddelde') + ' ' + fmtNum(cur.weight, 1) + ' kg · ' + cur.weighings + ' ' + tr('metingen') + (isNum(prev.weight) ? ' (' + tr('vorige week') + ' ' + fmtNum(prev.weight, 1) + ' kg)' : '') + '.');
@@ -171,19 +174,22 @@ ACT.expClose = () => { const a = DB.experiments.find(e => !e.closed); a.closed =
 function expResult(e) {
   const E = EXPERIMENTS.find(x => x.id === e.id);
   const yes = Object.entries(e.log || {}).filter(([, v]) => v === true).map(([k]) => k);
+  const no = Object.entries(e.log || {}).filter(([, v]) => v === false).map(([k]) => k);
   const base = rangeKeys(addDays(e.start, -1), 14);
   const shift = k => E.lagSleep ? addDays(k, 1) : k; // slaap hoort bij de nacht erna
   return E.m.map(name => {
     const s = name === 'sleepH' ? shift : (k => k);
-    const a = avg(yes.map(k => dv(name, s(k))).filter(isNum)), b = avg(base.map(k => dv(name, s(k))).filter(isNum));
-    return { name, a, b, n: yes.length };
+    const vals = keys => keys.map(k => dv(name, s(k))).filter(isNum);
+    const successful = vals(yes), notSuccessful = vals(no), before = vals(base);
+    return { name, a: avg(successful), b: avg(before), control: avg(notSuccessful), n: successful.length, nc: notSuccessful.length, nb: before.length };
   });
 }
 function expResultHtml(e) {
   if (e.stopped) return '<p class="small muted">' + tr('Vroegtijdig gestopt.') + '</p>';
   const r = expResult(e);
-  if (!r[0].n) return '<p class="small muted">' + tr('Geen dagen als gelukt aangeduid.') + '</p>';
-  return '<div class="table small">' + r.map(x => '<div class="tr"><span>' + tr(DVARS[x.name].l) + '</span><b>' + (isNum(x.a) ? fmtV(x.name, x.a) : '–') + '</b><small class="muted" style="width:auto">' + tr('ervoor') + ' ' + (isNum(x.b) ? fmtV(x.name, x.b) : '–') + '</small></div>').join('') + '</div><p class="small muted">' + trf('Op {count} geslaagde dagen. Met zo weinig dagen is dit een eerste aanwijzing, geen bewijs.', { count: r[0].n }) + '</p>';
+  const markedYes = Object.values(e.log || {}).filter(v => v === true).length, markedNo = Object.values(e.log || {}).filter(v => v === false).length;
+  if (!r.some(x => x.n)) return '<p class="small muted">' + tr('Geen meetbare uitkomsten op dagen gemarkeerd als gelukt.') + '</p>';
+  return '<div class="table small">' + r.map(x => '<div class="tr"><span>' + tr(DVARS[x.name].l) + '</span><b>' + (isNum(x.a) ? fmtV(x.name, x.a) : '–') + '<small class="muted week-n">ja n=' + x.n + '</small></b><small class="muted" style="width:auto">' + trf('nee: {value} ({count} d)', { value: isNum(x.control) ? fmtV(x.name, x.control) : '–', count: x.nc }) + '<br>' + (isNum(x.a) && isNum(x.control) ? trf('verschil ja–nee: {value}', { value: fmtV(x.name, x.a - x.control) }) + '<br>' : '') + trf('ervoor: {value} ({count} d)', { value: isNum(x.b) ? fmtV(x.name, x.b) : '–', count: x.nb }) + '</small></div>').join('') + '</div><p class="small muted">' + trf('Getoond: {yes} dagen met ja en {no} met nee. Alleen dagen met een bekende uitkomst tellen mee. Dit is een persoonlijke aanwijzing; andere verschillen tussen dagen kunnen de uitkomst beïnvloeden.', { yes: markedYes, no: markedNo }) + '</p>';
 }
 /* Vraag in de dagopname */
 function expQuestionHtml() {

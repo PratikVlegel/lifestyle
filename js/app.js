@@ -247,7 +247,7 @@ function mealsList(day, k, editable) {
     for (const m of ms) {
       h += '<div class="meal"><div class="mt">' + (m.time ? '<span class="tm">' + esc(m.time) + '</span>' : '') + (m.nothing ? '<em>' + tr('niets gegeten') + '</em>' : esc(m.desc)) + '</div>' +
         '<div class="mn">' + (m.nothing ? '' : nutrLine(m)) + '</div>' +
-        (editable ? '<div class="ma">' + (m.nothing ? '' : '<button class="link" data-act="mealExtra" data-k="' + k + '" data-id="' + m.id + '">+ ' + tr('erbij') + '</button>') + '<button class="link" data-act="editMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Wijzig') + '</button><button class="link danger" data-act="delMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Verwijder') + '</button></div>' : '') + '</div>';
+        (editable ? '<details class="meal-actions"><summary>' + tr('Meer') + '</summary><div class="ma">' + (m.nothing ? '' : '<button class="link" data-act="mealExtra" data-k="' + k + '" data-id="' + m.id + '">+ ' + tr('erbij') + '</button>') + '<button class="link" data-act="editMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Wijzig') + '</button><button class="link danger" data-act="delMeal" data-k="' + k + '" data-id="' + m.id + '">' + tr('Verwijder') + '</button></div></details>' : '') + '</div>';
     }
     h += '</div>';
   }
@@ -623,7 +623,9 @@ function closeSheet() { $('#sheet').hidden = true; document.body.classList.remov
 ACT.closeSheet = closeSheet;
 function renderPicker(msg) {
   let h = '<div class="sheet-h"><h2>' + tr('Eten toevoegen') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + tr('Sluiten') + '">✕</button></div>';
-  h += '<div class="seg">' + [['vaak', 'Vaak'], ['prep', 'Mealprep'], ['lib', 'Bibliotheek'], ['vrij', 'Vrij']].map(([k, l]) => '<button class="' + (PICK_TAB === k ? 'on' : '') + '" data-act="pickTab" data-t="' + k + '">' + tr(l) + '</button>').join('') + '</div>';
+  h += '<div class="seg">' + [['vaak', 'Vaak'], ['prep', 'Mealprep'], ['lib', 'Los product'], ['vrij', 'Losse maaltijd']].map(([k, l]) => '<button class="' + (PICK_TAB === k ? 'on' : '') + '" data-act="pickTab" data-t="' + k + '">' + tr(l) + '</button>').join('') + '</div>';
+  const help = { vaak: 'Kies iets dat je eerder hebt genoteerd.', prep: 'Kies een bereide mealprep; porties en voorraad worden bijgehouden.', lib: 'Kies één product en vul de gegeten hoeveelheid in. Bewaar ingrediënten hier om ze later snel terug te vinden.', vrij: 'Noteer een losse maaltijd of gerecht. Voedingswaarden zijn optioneel; onbekend blijft onbekend.' };
+  h += '<p class="muted small picker-help">' + tr(help[PICK_TAB]) + '</p>';
   if (msg) h += '<p class="note">' + esc(msg) + '</p>';
   if (PICK_TAB === 'vaak') {
     h += favResults();
@@ -806,29 +808,31 @@ ACT.openDate = el => { if (el.value) go('#/dag/' + el.value); };
 
 function renderDay(k) {
   const d = getDay(k) || {};
+  const hasWellbeing = ['mood','energy','stress'].some(n => isValidDailyRating(d[n])) || !!d.moodNote;
+  const hasNumbers = ['weight','sleepH','steps','waterMl','caffeine','alcohol','softDrinkServings','sweetsServings','cpap','vape','notes'].some(n => d[n] !== undefined && d[n] !== null && d[n] !== '') || d.nicotineForms !== undefined;
   let h = header(fmtDay(k, true), 'Alles van deze dag', true);
   h += mealsList(d, k, true);
-  h += '<div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + tr(SLOTS[s]).toLowerCase() + '</button>').join('') + '</div>';
+  h += '<div class="day-add"><b>' + tr('Eten toevoegen') + '</b><div class="chips">' + SLOT_ORDER.map(s => '<button class="chip add" data-act="dayAdd" data-k="' + k + '" data-s="' + s + '">+ ' + tr(SLOTS[s]).toLowerCase() + '</button>').join('') + '</div></div>';
   const dayTextLimits = { moodNote: 1000, cpap: 100, notes: 4000 };
   const f = (n, l, u, step) => '<label class="fld"><span>' + l + '</span><div class="inrow">' + (step === 'textarea' ? '<textarea rows="3" maxlength="' + dayTextLimits[n] + '" data-dk="' + n + '">' + (d[n] === undefined || d[n] === null ? '' : esc(d[n])) + '</textarea>' : '<input type="' + (step === 'text' ? 'text' : 'number') + '"' + (step === 'text' ? ' maxlength="' + (dayTextLimits[n] || 200) + '"' : ' inputmode="decimal" step="' + (step || 'any') + '"') + ' data-dk="' + n + '" value="' + (d[n] === undefined || d[n] === null ? '' : esc(n === 'waterMl' && isNum(d[n]) ? d[n] / 1000 : d[n])) + '">') + (u ? '<em>' + u + '</em>' : '') + '</div></label>';
   h += '<div class="card"><h3>' + tr('Beweging') + '</h3>' + activitiesHtml(d, k, true) + '<button class="chip add" data-act="dayAct" data-k="' + k + '">' + tr('+ activiteit') + '</button></div>';
   h += supplementDiary(d, k);
-  h += '<div class="card diary-wellbeing"><h3>' + tr('Welzijn') + '</h3><p class="muted small">' + tr('Optioneel: noteer hoe je je voelde. Je hoeft niet alles in te vullen.') + '</p><div class="grid2">' +
+  h += '<details class="card diary-wellbeing diary-section"' + (hasWellbeing ? ' open' : '') + '><summary>' + tr('Welzijn') + '</summary><p class="muted small">' + tr('Optioneel: noteer hoe je je voelde. Je hoeft niet alles in te vullen.') + '</p><div class="grid2">' +
     f('mood', tr('Stemming'), '/10', '1') + f('energy', tr('Energie'), '/10', '1') + f('stress', tr('Stress / spanning'), '/10', '1') + '</div>' +
     f('moodNote', tr('Wat droeg bij aan hoe je je voelde? (optioneel)'), '', 'textarea') +
-    '<p class="muted small">' + tr('Je stemming wordt niet automatisch met andere gegevens vergeleken. Dat kan je zelf apart inschakelen bij Stemming en gewoontes.') + '</p></div>' +
-    '<div class="card"><h3>' + tr('Cijfers') + '</h3><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
+    '<p class="muted small">' + tr('Je stemming wordt niet automatisch met andere gegevens vergeleken. Dat kan je zelf apart inschakelen bij Stemming en gewoontes.') + '</p></details>' +
+    '<details class="card diary-section"' + (hasNumbers ? ' open' : '') + '><summary>' + tr('Cijfers en gewoontes') + '</summary><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
     f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
     f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'textarea') +
     (d.kcalOverride ? '<p class="muted small">' + tr('Kcal van deze dag komt uit een dagschatting') + ' (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">' + tr('Gebruik de maaltijden') + '</button></p>' : '') +
-    '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></div>';
+    '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></details>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">' + tr('Check-ins gedaan:') + ' ' + DB.reminders.filter(r => d.done[r.id]).map(r => reminderDisplayLabel(r.label)).join(', ') + '</p>';
   h += '<button class="link danger" data-act="delDay" data-k="' + k + '">' + tr('Hele dag verwijderen') + '</button>';
   view().innerHTML = h;
 }
 function supplementDiary(d, k) {
   const entries = Array.isArray(d.supplements) ? d.supplements : [];
-  let h = '<section class="card"><h3>' + tr('Supplementen (optioneel)') + '</h3><p class="muted small">' + tr('Noteer alleen wat je al gebruikt, met de dosis zoals op het etiket. Dit logboek geeft geen start-, stop- of doseeradvies en wordt niet naar AI verstuurd.') + ' ' + tr('Deze gegevens blijven op dit toestel; ze gaan mee in een back-up die je zelf maakt.') + '</p>';
+  let h = '<details class="card diary-section"' + (d.supplementsLogged || entries.length ? ' open' : '') + '><summary>' + tr('Supplementen (optioneel)') + '</summary><p class="muted small">' + tr('Noteer alleen wat je al gebruikt, met de dosis zoals op het etiket. Dit logboek geeft geen start-, stop- of doseeradvies en wordt niet naar AI verstuurd.') + ' ' + tr('Deze gegevens blijven op dit toestel; ze gaan mee in een back-up die je zelf maakt.') + '</p>';
   if (d.supplementsLogged) {
     h += entries.length ? '<ul class="supplement-list">' + entries.map((s, i) => '<li><span><b>' + esc(s.name) + '</b>' + (s.dose ? ' · ' + esc(s.dose) : '') + '</span><button class="link danger" data-act="supplementRemove" data-k="' + k + '" data-i="' + i + '" aria-label="' + esc(tr('Verwijderen')) + '">×</button></li>').join('') + '</ul>' : '<p class="muted">' + tr('Je hebt voor deze dag genoteerd dat je geen supplementen nam.') + '</p>';
   } else h += '<p class="muted">' + tr('Nog niet bijgehouden. Een lege dag is geen registratie van geen gebruik.') + '</p>';
@@ -836,7 +840,7 @@ function supplementDiary(d, k) {
   if (!d.supplementsLogged && !entries.length) h += '<button class="btn ghost" data-act="supplementNone" data-k="' + k + '">' + tr('Vandaag geen supplementen') + '</button>';
   h += '</div>';
   if (d.supplementsLogged) h += '<button class="link" data-act="supplementClear" data-k="' + k + '">' + tr('Registratie wissen') + '</button>';
-  return h + '</section>';
+  return h + '</details>';
 }
 ACT.supplementAdd = el => {
   const k = el.dataset.k, nameInput = document.querySelector('[data-supp-name="' + k + '"]'), doseInput = document.querySelector('[data-supp-dose="' + k + '"]');
@@ -1130,7 +1134,8 @@ function renderInsights() {
   ins.forEach(i => { i.sig = (i.title + '|' + i.text).length + ':' + i.title; i.isNew = seen.size > 0 && !seen.has(i.sig); });
   ins.sort((a, b) => (b.isNew - a.isNew) || ({ tip: 0, info: 1, good: 2 }[a.tone] - { tip: 0, info: 1, good: 2 }[b.tone]));
   DB.settings.seenIns = ins.map(i => i.sig); save();
-  h += ins.length ? ins.map(insightCard).join('') : '<p class="card muted">' + tr('Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.') + '</p>';
+  h += ins.length ? ins.slice(0, 4).map(insightCard).join('') : '<p class="card muted">' + tr('Nog te weinig gegevens. Na een paar dagen check-ins verschijnen hier je eerste analyses.') + '</p>';
+  if (ins.length > 4) h += '<details class="card more-insights"><summary>' + trf('Meer inzichten ({count})', { count: ins.length - 4 }) + '</summary>' + ins.slice(4).map(insightCard).join('') + '</details>';
   h += '<h2 class="sec">' + tr('Diepere analyse met AI') + '</h2>';
   if (DB.settings.apiKey) {
     h += '<div class="card">' + aiDataDisclosure() + '<label class="fld"><span>' + tr('Vraag (optioneel)') + '</span><textarea id="aiq" rows="2" maxlength="2000" placeholder="' + tr('bv. Waarom voel ik me op woensdag zo moe?') + '"></textarea></label><button class="btn" data-act="runAI">' + tr('Analyseer mijn laatste 3 weken') + '</button><div id="aiout"></div></div>';
@@ -1541,7 +1546,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.17.1';
+const APP_VERSION = '1.18.0';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

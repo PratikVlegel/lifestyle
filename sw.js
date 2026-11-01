@@ -1,6 +1,6 @@
 /* Service worker: houdt de app offline beschikbaar. Verhoog VERSION bij elke update. */
-const VERSION = 'vd-1.17.1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js?v=1.17.1', 'js/i18n.js?v=1.16.0', 'js/ocr.js?v=1.16.0', 'js/cloud.js', 'js/library.js?v=1.16.0', 'js/migrate.js', 'js/activity.js?v=1.11.1', 'js/share.js?v=1.16.0', 'js/insights2.js?v=1.16.0', 'js/mood.js?v=1.16.0', 'js/cycle.js?v=1.11.6', 'js/week.js?v=1.16.0', 'js/extras.js?v=1.17.0', 'js/girth.js?v=1.17.0', 'js/invite.js?v=1.16.0', 'js/admin.js', 'js/training.js?v=1.16.0', 'js/community-exercises.js?v=1.10.44', 'js/community-kpi.js', 'js/charts.js?v=1.16.0', 'js/insights.js?v=1.16.0', 'js/app.js?v=1.17.0', 'js/home-setup.js?v=1.11.16', 'js/push.js?v=1.10.75', 'icons/icon-192.png', 'icons/icon-512.png'];
+const VERSION = 'vd-1.18.0';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'js/config.js', 'js/store.js?v=1.17.1', 'js/i18n.js?v=1.18.0', 'js/ocr.js?v=1.16.0', 'js/cloud.js', 'js/library.js?v=1.16.0', 'js/migrate.js', 'js/activity.js?v=1.11.1', 'js/share.js?v=1.16.0', 'js/insights2.js?v=1.16.0', 'js/mood.js?v=1.16.0', 'js/cycle.js?v=1.11.6', 'js/week.js?v=1.18.0', 'js/extras.js?v=1.17.0', 'js/girth.js?v=1.17.0', 'js/invite.js?v=1.16.0', 'js/admin.js', 'js/training.js?v=1.18.0', 'js/community-exercises.js?v=1.10.44', 'js/community-kpi.js', 'js/charts.js?v=1.16.0', 'js/insights.js?v=1.16.0', 'js/app.js?v=1.18.0', 'js/home-setup.js?v=1.18.0', 'js/push.js?v=1.10.75', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   // Elk bestand apart: één ontbrekend bestand mag de installatie van de worker niet laten mislukken.
@@ -12,15 +12,20 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return; // API's niet cachen
-  // Eerst het netwerk (zodat updates binnenkomen), anders de cache.
-  // cache: 'no-cache' omzeilt de 10 minuten browsercache van GitHub Pages: de browser vraagt
-  // steeds aan de server of het bestand veranderd is (meestal een klein 304-antwoord).
-  e.respondWith(
-    fetch(url.href, { cache: 'no-cache', credentials: 'same-origin' }).then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); }
+  const cached = caches.open(VERSION).then(c => c.match(e.request) || c.match(e.request, { ignoreSearch: true }));
+  if (e.request.mode === 'navigate') {
+    // Navigations check for a new app shell; offline, fall back to the installed shell.
+    e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(res => {
+      if (res.ok) caches.open(VERSION).then(c => c.put(e.request, res.clone()));
       return res;
-    }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('index.html')))
-  );
+    }).catch(async () => (await cached) || caches.match('index.html')));
+  } else {
+    // Versioned assets are immutable within this shell. Serve them immediately from cache.
+    e.respondWith(cached.then(hit => hit || fetch(e.request).then(res => {
+      if (res.ok) caches.open(VERSION).then(c => c.put(e.request, res.clone()));
+      return res;
+    })).catch(() => caches.match('index.html')));
+  }
 });
 self.addEventListener('push', e => {
   let payload = {};

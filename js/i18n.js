@@ -653,6 +653,14 @@ Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { '{minutes} min at a moderate pac
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.': '{minutes} min à un rythme modéré qui permet encore de parler. Progressez doucement ; cela favorise la forme, sans garantir une perte de poids.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.': '{minutes} Min. in mäßigem Tempo, bei dem du noch sprechen kannst. Steigere dich langsam; das unterstützt die Fitness, garantiert aber keine Gewichtsabnahme.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Los product': 'Individual product',
+  'Losse maaltijd': 'One-off meal',
+  'Kies iets dat je eerder hebt genoteerd.': 'Choose something you logged before.',
+  'Kies een bereide mealprep; porties en voorraad worden bijgehouden.': 'Choose a prepared meal prep; servings and remaining portions are tracked.',
+  'Kies één product en vul de gegeten hoeveelheid in. Bewaar ingrediënten hier om ze later snel terug te vinden.': 'Choose one product and enter how much you ate. Save ingredients here to find them quickly next time.',
+  'Noteer een losse maaltijd of gerecht. Voedingswaarden zijn optioneel; onbekend blijft onbekend.': 'Log a one-off meal or dish. Nutrition values are optional; unknown values stay unknown.',
+  'Geen meetbare uitkomsten op dagen gemarkeerd als gelukt.': 'No measurable outcomes on days marked as successful.',
+  'Gemiddeld per dag · n = ingevulde dagen': 'Daily average · n = days recorded',
   'het ingrediënt': 'the ingredient',
   '{minutes} min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.': '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.',
   'Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.': 'Do about half as many sets as in week {week}; week 8 is also lighter.',
@@ -666,6 +674,14 @@ Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
   'Herstelbeweging': 'Recovery movement', 'Kies een ontspannen wandeling of lichte mobiliteit; geef je spieren tijd om te herstellen.': 'Choose an easy walk or light mobility work; give your muscles time to recover.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Los product': 'Produit seul',
+  'Losse maaltijd': 'Repas libre',
+  'Kies iets dat je eerder hebt genoteerd.': 'Choisissez un élément déjà enregistré.',
+  'Kies een bereide mealprep; porties en voorraad worden bijgehouden.': 'Choisissez un plat préparé ; les portions et le stock restant sont suivis.',
+  'Kies één product en vul de gegeten hoeveelheid in. Bewaar ingrediënten hier om ze later snel terug te vinden.': 'Choisissez un produit et indiquez la quantité consommée. Enregistrez les ingrédients ici pour les retrouver rapidement.',
+  'Noteer een losse maaltijd of gerecht. Voedingswaarden zijn optioneel; onbekend blijft onbekend.': 'Notez un repas ou un plat ponctuel. Les valeurs nutritionnelles sont facultatives ; les données inconnues le restent.',
+  'Geen meetbare uitkomsten op dagen gemarkeerd als gelukt.': 'Aucun résultat mesurable les jours indiqués comme réussis.',
+  'Gemiddeld per dag · n = ingevulde dagen': 'Moyenne par jour · n = jours renseignés',
   'het ingrediënt': 'l’ingrédient',
   '{minutes} min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.': '{minutes} min à un rythme modéré qui permet encore de parler. Progressez doucement ; cela favorise la forme, sans garantir une perte de poids.',
   'Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.': 'Faites environ la moitié des séries de la semaine {week} ; la semaine 8 est également allégée.',
@@ -679,6 +695,14 @@ Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
   'Herstelbeweging': 'Mouvement de récupération', 'Kies een ontspannen wandeling of lichte mobiliteit; geef je spieren tijd om te herstellen.': 'Choisissez une marche tranquille ou quelques exercices légers de mobilité ; laissez vos muscles récupérer.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Los product': 'Einzelnes Produkt',
+  'Losse maaltijd': 'Einzelne Mahlzeit',
+  'Kies iets dat je eerder hebt genoteerd.': 'Wähle etwas aus, das du bereits erfasst hast.',
+  'Kies een bereide mealprep; porties en voorraad worden bijgehouden.': 'Wähle ein vorbereitetes Mealprep; Portionen und Restbestand werden erfasst.',
+  'Kies één product en vul de gegeten hoeveelheid in. Bewaar ingrediënten hier om ze later snel terug te vinden.': 'Wähle ein Produkt und gib die gegessene Menge ein. Speichere Zutaten hier, damit du sie später schnell findest.',
+  'Noteer een losse maaltijd of gerecht. Voedingswaarden zijn optioneel; onbekend blijft onbekend.': 'Erfasse eine einzelne Mahlzeit oder ein Gericht. Nährwerte sind optional; Unbekanntes bleibt unbekannt.',
+  'Geen meetbare uitkomsten op dagen gemarkeerd als gelukt.': 'Keine messbaren Ergebnisse an als erfolgreich markierten Tagen.',
+  'Gemiddeld per dag · n = ingevulde dagen': 'Tagesdurchschnitt · n = erfasste Tage',
   'het ingrediënt': 'die Zutat',
   '{minutes} min op een matig tempo waarbij praten nog lukt. Bouw rustig op; dit ondersteunt fitheid maar garandeert geen gewichtsverlies.': '{minutes} Min. in mäßigem Tempo, bei dem du noch sprechen kannst. Steigere dich langsam; das unterstützt die Fitness, garantiert aber keine Gewichtsabnahme.',
   'Doe ongeveer de helft van je sets uit week {week}; week 8 is eveneens lichter.': 'Mache etwa halb so viele Sätze wie in Woche {week}; auch Woche 8 ist leichter.',
@@ -3383,4 +3407,36 @@ Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
   'Eiwit': 'Eiweiß',
   'stemming': 'Stimmung',
   'energie': 'Energie'
+});
+
+/* UX refresh v1.18 */
+Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Cijfers en gewoontes': 'Numbers and habits',
+  'Meer': 'More',
+  'nee: {value} ({count} d)': 'no: {value} ({count} days)',
+  'ervoor: {value} ({count} d)': 'before: {value} ({count} days)',
+  'Getoond: {yes} dagen met ja en {no} met nee. Alleen dagen met een bekende uitkomst tellen mee. Dit is een persoonlijke aanwijzing; andere verschillen tussen dagen kunnen de uitkomst beïnvloeden.': 'Shown: {yes} days marked yes and {no} marked no. Only days with a recorded outcome are included. This is a personal clue; other differences between days may affect the result.',
+  '{count} bewaarde schema’s': '{count} saved plans',
+  'Meer inzichten ({count})': 'More insights ({count})',
+  'verschil ja–nee: {value}': 'difference (yes−no): {value}'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Cijfers en gewoontes': 'Chiffres et habitudes',
+  'Meer': 'Plus',
+  'nee: {value} ({count} d)': 'non : {value} ({count} j)',
+  'ervoor: {value} ({count} d)': 'avant : {value} ({count} j)',
+  'Getoond: {yes} dagen met ja en {no} met nee. Alleen dagen met een bekende uitkomst tellen mee. Dit is een persoonlijke aanwijzing; andere verschillen tussen dagen kunnen de uitkomst beïnvloeden.': 'Affiché : {yes} jours avec oui et {no} avec non. Seuls les jours avec un résultat connu sont inclus. C’est un indice personnel ; d’autres différences entre les jours peuvent influencer le résultat.',
+  '{count} bewaarde schema’s': '{count} programmes enregistrés',
+  'Meer inzichten ({count})': 'Plus d’aperçus ({count})',
+  'verschil ja–nee: {value}': 'différence (oui−non) : {value}'
+});
+Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Cijfers en gewoontes': 'Zahlen und Gewohnheiten',
+  'Meer': 'Mehr',
+  'nee: {value} ({count} d)': 'nein: {value} ({count} Tage)',
+  'ervoor: {value} ({count} d)': 'davor: {value} ({count} Tage)',
+  'Getoond: {yes} dagen met ja en {no} met nee. Alleen dagen met een bekende uitkomst tellen mee. Dit is een persoonlijke aanwijzing; andere verschillen tussen dagen kunnen de uitkomst beïnvloeden.': 'Angezeigt: {yes} Tage mit Ja und {no} mit Nein. Nur Tage mit bekanntem Ergebnis werden berücksichtigt. Dies ist ein persönlicher Hinweis; andere Unterschiede zwischen Tagen können das Ergebnis beeinflussen.',
+  '{count} bewaarde schema’s': '{count} gespeicherte Pläne',
+  'Meer inzichten ({count})': 'Weitere Einblicke ({count})',
+  'verschil ja–nee: {value}': 'Unterschied (Ja−Nein): {value}'
 });

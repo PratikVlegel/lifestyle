@@ -77,8 +77,8 @@ function applyPurposeSettings(purposes) {
 }
 function homeQuickButtons() {
   const p = selectedPurposes();
-  const all = [['quickEat', '+ eten', ['food', 'mealprep']], ['quickAct', '+ activiteit', ['movement', 'training']], ['quickWater', '+ glas water', ['food', 'wellbeing']], ['quickCoffee', '+ koffie', ['wellbeing']]];
-  return all.filter(([, , need]) => !p || !p.length || need.some(k => p.includes(k)));
+  const all = [['quickEat', 'Eten toevoegen', ['food', 'mealprep']], ['quickAct', '+ activiteit', ['movement', 'training']], ['quickWater', '+ glas water', ['food', 'wellbeing']], ['quickCoffee', '+ koffie', ['wellbeing']]];
+  return all.filter(([act, , need]) => act === 'quickEat' || !p || !p.length || need.some(k => p.includes(k)));
 }
 function purposeOptionsHtml(selected, chg) {
   return '<div class="purpose-options">' + PURPOSES.map(([k, label, sub]) =>
