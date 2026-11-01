@@ -64,6 +64,7 @@ Een JSON-back-up bevat persoonlijke dagboek- en appgegevens. De export laat de A
 
 ## Wijzigingen
 
+- **vd-1.18.1**: in de productkiezer voor mealprep-ingrediënten kun je nu direct zoeken op productnaam, merk of barcode. De lijst filtert terwijl je typt en probeert de al ingevulde ingrediëntnaam meteen te vinden.
 - **vd-1.18.0**: de dagelijkse eetknop heet nu duidelijker “Eten toevoegen”; minder gebruikte dagsecties en maaltijdbeheer klappen in, terwijl invoer direct bereikbaar blijft. Experimentresultaten tonen ja- en nee-dagen plus het aantal dagen met beschikbare metingen en leggen uit dat dit geen oorzakelijk bewijs is. Extra inzichten en bewaarde trainingsschema’s staan achter een inklapbare sectie. De service worker gebruikt gecachete appbestanden meteen en controleert bij paginanavigatie het netwerk op updates.
 
 - **vd-1.17.1**: een back-up of import met gewicht "?" (niet gewogen) werd geweigerd met "weight bevat een waarde buiten het toegestane bereik". Die waarde wordt nu aanvaard; ongeldige gewichten (geen getal, < 20 of > 500 kg) worden nog steeds geweigerd. Halve scores voor stemming, energie en stress uit oudere dagboeken (bv. 6,5) worden afgerond naar boven (7) in plaats van de import te weigeren. Een maaltijd zonder tijd (lege tijd, zoals de app zelf bewaart bij "+" in het dagboek) liet het terugzetten van een back-up mislukken; dat werkt nu.

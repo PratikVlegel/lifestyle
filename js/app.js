@@ -84,6 +84,7 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (el.dataset.ci) ciInput(el);
   if (el.dataset.pp) prepInput(el);
+  if (el.id === 'inglibq') renderIngLibResults(Number(el.dataset.i), el.value);
   if (el.dataset.communityFilter === 'recipes') renderCommunityRecipes();
   if (el.dataset.communityFilter === 'plans') renderTrainingCommunityList();
   if (el.dataset.communityFilter === 'exercises' && el.dataset.filterKey === 'query') scheduleCommunityExerciseSearch();
@@ -1053,10 +1054,16 @@ ACT.ingScan = el => { const i = Number(el.dataset.i); findByBarcode(food => fill
 ACT.ingOcr = el => { const i = Number(el.dataset.i), file = el.files[0]; el.value = ''; if (!file) return; openFoodEditor({ id: uid(), name: PREP.ingredients[i].name || '', brand: '', barcode: '', per: { kcal: null, protein: null, carbs: null, fat: null, fiber: null }, units: [], source: 'etiket' }, f => fillIng(i, f), file); };
 ACT.ingLib = el => {
   const i = Number(el.dataset.i);
+  const query = PREP.ingredients[i]?.name || '';
   $('#sheet .sheet-in').innerHTML = '<div class="sheet-h"><h2>' + tr('Uit bibliotheek') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>' +
-    (DB.foods.length ? libSearch('', 400).map(f => '<button class="pick wide" data-act="ingLibPick" data-i="' + i + '" data-id="' + f.id + '"><b>' + esc(f.name) + '</b><small>' + fmtNum(f.per.kcal) + ' kcal / 100 g</small></button>').join('') : '<p class="muted">' + tr('Je bibliotheek is nog leeg.') + '</p>');
+    (DB.foods.length ? '<input type="search" id="inglibq" data-i="' + i + '" value="' + esc(query) + '" placeholder="' + esc(tr('Zoek producten in je bibliotheek')) + '" autocomplete="off"><div id="inglibres">' + ingLibRows(i, query) + '</div>' : '<p class="muted">' + tr('Je bibliotheek is nog leeg.') + '</p>');
   $('#sheet').hidden = false;
 };
+function ingLibRows(i, query) {
+  const foods = libSearch(query, 300);
+  return foods.length ? foods.map(f => '<button class="pick wide" data-act="ingLibPick" data-i="' + i + '" data-id="' + f.id + '"><b>' + esc(f.name) + (f.brand ? ' <span class="muted">· ' + esc(f.brand) + '</span>' : '') + '</b><small>' + fmtNum(f.per.kcal) + ' kcal / 100 g</small></button>').join('') : '<p class="muted">' + tr('Geen producten gevonden.') + '</p>';
+}
+function renderIngLibResults(i, query) { const list = $('#inglibres'); if (list) list.innerHTML = ingLibRows(i, query); }
 ACT.ingLibPick = el => fillIng(Number(el.dataset.i), DB.foods.find(f => f.id === el.dataset.id));
 ACT.ingPhoto = async el => {
   const i = Number(el.dataset.i), file = el.files[0]; if (!file) return;
@@ -1546,7 +1553,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.18.0';
+const APP_VERSION = '1.18.1';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

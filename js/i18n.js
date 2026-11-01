@@ -653,6 +653,8 @@ Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], { '{minutes} min at a moderate pac
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], { '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.': '{minutes} min à un rythme modéré qui permet encore de parler. Progressez doucement ; cela favorise la forme, sans garantir une perte de poids.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], { '{minutes} min at a moderate pace where you can still talk. Build gradually; this supports fitness but does not guarantee weight loss.': '{minutes} Min. in mäßigem Tempo, bei dem du noch sprechen kannst. Steigere dich langsam; das unterstützt die Fitness, garantiert aber keine Gewichtsabnahme.' });
 Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
+  'Zoek producten in je bibliotheek': 'Search products in your library',
+  'Geen producten gevonden.': 'No products found.',
   'Los product': 'Individual product',
   'Losse maaltijd': 'One-off meal',
   'Kies iets dat je eerder hebt genoteerd.': 'Choose something you logged before.',
@@ -674,6 +676,8 @@ Object.assign(UI_EXTRA_TRANSLATIONS['en-GB'], {
   'Herstelbeweging': 'Recovery movement', 'Kies een ontspannen wandeling of lichte mobiliteit; geef je spieren tijd om te herstellen.': 'Choose an easy walk or light mobility work; give your muscles time to recover.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
+  'Zoek producten in je bibliotheek': 'Rechercher des produits dans la bibliothèque',
+  'Geen producten gevonden.': 'Aucun produit trouvé.',
   'Los product': 'Produit seul',
   'Losse maaltijd': 'Repas libre',
   'Kies iets dat je eerder hebt genoteerd.': 'Choisissez un élément déjà enregistré.',
@@ -695,6 +699,8 @@ Object.assign(UI_EXTRA_TRANSLATIONS['fr-FR'], {
   'Herstelbeweging': 'Mouvement de récupération', 'Kies een ontspannen wandeling of lichte mobiliteit; geef je spieren tijd om te herstellen.': 'Choisissez une marche tranquille ou quelques exercices légers de mobilité ; laissez vos muscles récupérer.'
 });
 Object.assign(UI_EXTRA_TRANSLATIONS['de-DE'], {
+  'Zoek producten in je bibliotheek': 'Produkte in deiner Bibliothek suchen',
+  'Geen producten gevonden.': 'Keine Produkte gefunden.',
   'Los product': 'Einzelnes Produkt',
   'Losse maaltijd': 'Einzelne Mahlzeit',
   'Kies iets dat je eerder hebt genoteerd.': 'Wähle etwas aus, das du bereits erfasst hast.',
