@@ -128,12 +128,12 @@ function reportCount(count, singular, plural) {
 }
 function alcoholReport(dateKeys) {
   const values = dateKeys.map(k => DB.days[k]?.alcohol).filter(v => isNum(v) && v >= 0);
-  if (!values.length) return tr('No alcohol entries were recorded in this period; missing entries are unknown.');
+  if (!values.length) return '<div class="alcohol-summary"><p>' + trf('Geen alcoholregistraties in deze periode ({count} dagen). Niet ingevuld betekent onbekend, niet nul.', { count: dateKeys.length }) + '</p></div>';
   const zero = values.filter(v => v === 0).length;
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return esc(trf('Alcohol total: {total} glasses · logged days: {logged} · mean per logged day: {average} glasses · zero entries: {zero} · unknown or unrecorded days: {unknown}.', {
-    total: fmtNum(total, 1), logged: values.length, average: fmtNum(total / values.length, 1), zero, unknown: dateKeys.length - values.length
-  }));
+  const drinkDays = values.filter(v => v > 0), total = drinkDays.reduce((sum, value) => sum + value, 0), unknown = dateKeys.length - values.length;
+  return '<div class="alcohol-summary"><p>' + esc(trf('Totaal: {total} glazen op {days} drinkdagen.', { total: fmtNum(total, 1), days: drinkDays.length })) + '</p><p>' + esc(trf('Gemiddeld op drinkdagen: {average} glazen. Dagen met expliciet 0: {zero}. Dagen onbekend of niet ingevuld: {unknown} van {period}.', {
+    average: drinkDays.length ? fmtNum(total / drinkDays.length, 1) : fmtNum(0, 1), zero, unknown, period: dateKeys.length
+  })) + '</p><p class="muted small">' + esc(tr('Alleen expliciet geregistreerde waarden tellen mee. Een lege dag is onbekend, geen alcoholvrije dag. Een standaardglas en de alcoholhoeveelheid kunnen verschillen per drank en glas.')) + '</p></div>';
 }
 function nicotineReport(dateKeys) {
   const formCounts = {}, oldVapeCounts = {}, labels = REPORT_NICOTINE_FORMS;
@@ -372,7 +372,7 @@ function reportHtml(aud, periodArg) {
       h += sec('Stemming', tbl([row('Stemming', mv('mood')), row('Dagen met stemming ≤ 5', lowMoodDays), cntOf('stress') ? row('Stress', mv('stress')) : '']));
     }
     if (part === 'notities') { const ns = keys.slice().reverse().filter(k => DB.days[k].moodNote || DB.days[k].notes); if (ns.length) h += sec('Notities', '<ul>' + ns.map(k => '<li><b>' + fmtDay(k) + (isValidDailyRating(DB.days[k].mood) ? ' (' + esc(tr('stemming')) + ' ' + DB.days[k].mood + '/10)' : '') + ':</b> ' + esc([DB.days[k].moodNote, DB.days[k].notes].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>'); }
-    if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4><p>' + alcoholReport(periodKeys) + '</p></div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
+    if (part === 'middelen') h += sec('Geregistreerd gebruik', '<div class="report-subsection"><h4>' + tr('Alcohol') + '</h4>' + alcoholReport(periodKeys) + '</div><div class="report-subsection"><h4>' + tr('Nicotine') + '</h4>' + nicotineReport(periodKeys) + '</div>' + (aud === 'psycholoog' ? '<div class="report-subsection"><h4>' + tr('Coffee servings') + '</h4><p>' + mv('caffeine') + '</p><p class="small muted">' + tr('Self-reported servings, not a measured caffeine dose in milligrams.') + '</p></div><div class="report-subsection"><h4>' + tr('Substances and mood') + '</h4>' + reportSubstanceMood(periodKeys) + '</div>' : ''));
     if (part === 'supplementen') h += sec('Supplementen', supplementReport(periodKeys));
     if (part === 'gewicht') h += sec('Gewicht (vóór ontbijt)', reportWeight(periodKeys));
     if (part === 'omtrek') h += sec('Omtrekmetingen (cm)', reportGirth(periodKeys));

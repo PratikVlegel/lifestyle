@@ -558,7 +558,8 @@ function validateImportData(obj) {
     if (day.activities !== undefined && !Array.isArray(day.activities)) fail('de activiteiten van ' + key + ' zijn geen lijst.');
     if ((day.activities || []).length > 100) fail('er staan meer dan 100 activiteiten op ' + key + '.');
     for (const activity of day.activities || []) {
-      if (record(activity) && activity.distanceKm !== undefined && (!isNum(activity.distanceKm) || activity.distanceKm <= 0 || activity.distanceKm > 200 || activity.distanceKm * 60 / activity.min > 10)) fail('een wandelafstand op ' + key + ' is ongeldig.');
+      const maxSpeed = { wandelen: 12, fietsen: 80, lopen: 30, zwemmen: 8 }[activity?.type] || 0;
+      if (record(activity) && activity.distanceKm !== undefined && (!maxSpeed || !isNum(activity.distanceKm) || activity.distanceKm <= 0 || activity.distanceKm > 200 || activity.distanceKm * 60 / activity.min > maxSpeed)) fail('een activiteitafstand op ' + key + ' is ongeldig.');
       if (!record(activity) || typeof activity.id !== 'string' || !activity.id || activity.id.length > 100 || !['wandelen', 'fietsen', 'lopen', 'zwemmen', 'kracht', 'cardio', 'padel', 'voetbal', 'dansen', 'yoga', 'huishouden', 'anders'].includes(activity.type) || !Number.isInteger(activity.min) || activity.min < 1 || activity.min > 1440 || !['licht', 'matig', 'zwaar'].includes(activity.int) || (activity.note !== undefined && (typeof activity.note !== 'string' || activity.note.length > 1000))) fail('een activiteit op ' + key + ' heeft een ongeldige structuur of waarde.');
     }
     if (day.done !== undefined && day.done !== null && !record(day.done)) fail('de herinneringen van ' + key + ' hebben een ongeldig formaat.');

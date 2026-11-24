@@ -353,6 +353,12 @@ function tipOfDay() {
   if (a(d => DVARS.water.f(d)) < G.waterMl / 1000 * 0.85) need.add('water');
   if (a(d => d.sleepH) < G.sleepH - 0.5) need.add('slaap');
   if (a(d => d.steps) < G.stepsMin) need.add('stappen');
+  const loggedStepDays = recent.filter(x => isNum(x.d.steps));
+  const avgSteps = avg(loggedStepDays.map(x => x.d.steps));
+  const activityGoal = DB.training && DB.training.activityGoal;
+  const loggedActivity = recent.reduce((sum, x) => sum + (x.d.activities || []).reduce((m, act) => m + (isNum(act.min) ? act.min : 0), 0), 0);
+  const weeklyActivityTarget = activityGoal === 'custom' ? Number(DB.training.weeklyActivityMinutes) || 150 : 150;
+  if (loggedActivity < weeklyActivityTarget * 2 && (activityGoal === 'guideline' || activityGoal === 'custom' || DB.profile.activity === 'zittend')) need.add('beweging');
   if (recent.some(x => (x.d.meals || []).some(m => m.slot === 'na' && !m.nothing))) need.add('avond');
   if (recent.some(x => x.d.alcohol > 0)) need.add('alcohol');
   if (recent.some(x => /deel|nee/.test(x.d.cpap || ''))) need.add('cpap');
@@ -361,11 +367,34 @@ function tipOfDay() {
   if (recent.some(x => isNum(x.d.sweetsServings) && x.d.sweetsServings > 0)) need.add('sweets');
   if (recent.some(x => isNum(x.d.caffeine) && x.d.caffeine > 0)) need.add('cafeine');
   const allTips = [...TIPS, ...EXTRA_TIPS];
+  if (loggedStepDays.length >= 5 && isNum(avgSteps) && avgSteps < G.stepsMin) need.add('stappen');
   const pool = allTips.filter(t => need.has(t.t));
   const list = pool.length ? pool : allTips;
   const seed = Math.floor(parseKey(todayKey()).getTime() / 864e5);
   const tip = list[seed % list.length];
   const translated = TIP_TRANSLATIONS[currentLocale()];
   const lang = ({ 'en-GB': 'en', 'fr-FR': 'fr', 'de-DE': 'de' })[currentLocale()];
+  if (tip.t === 'stappen' && loggedStepDays.length >= 5 && isNum(avgSteps)) {
+    const target = Math.max(250, Math.min(1000, Math.round((G.stepsMin - avgSteps) / 500) * 500));
+    return trf('Je gemiddelde is ongeveer {average} stappen op de dagen die je invulde. Als je dat wilt verhogen, probeer deze week op 2 dagen ongeveer {extra} extra stappen; kijk daarna of het haalbaar voelde.', { average: fmtNum(avgSteps), extra: fmtNum(target) });
+  }
+  if (tip.t === 'beweging') {
+    const activeDays = recent.filter(x => (x.d.activities || []).some(act => isNum(act.min))).length;
+    if (activeDays < 2) return trf('Je registreerde beweging op {days} van de laatste 14 dagen. Als je wilt opbouwen, kies 2 haalbare momenten van 10 minuten deze week; herhaal dit voordat je de duur verhoogt.', { days: activeDays });
+  }
+  if (tip.t === 'alcohol') {
+    const logged = recent.filter(x => isNum(x.d.alcohol) && x.d.alcohol >= 0);
+    const drinking = logged.filter(x => x.d.alcohol > 0).length;
+    if (logged.length && drinking) {
+      const values = { days: drinking, logged: logged.length };
+      const advice = {
+        'nl-BE': 'Je registreerde alcohol op {days} van {logged} ingevulde dagen in de voorbije 14 dagen. Als je wilt minderen, kies vooraf één haalbaar alcoholvrij moment; niet ingevulde dagen tellen we niet als nul.',
+        'en-GB': 'You recorded alcohol on {days} of {logged} days with an entry in the last 14 days. If you want to cut back, choose one manageable alcohol-free occasion in advance; unrecorded days are not counted as zero.',
+        'fr-FR': 'Vous avez noté de l’alcool sur {days} des {logged} jours renseignés au cours des 14 derniers jours. Si vous souhaitez réduire, choisissez à l’avance une occasion réaliste sans alcool ; les jours non renseignés ne sont pas considérés comme zéro.',
+        'de-DE': 'In den letzten 14 Tagen hast du an {days} von {logged} erfassten Tagen Alkohol eingetragen. Wenn du weniger trinken möchtest, plane vorab einen machbaren alkoholfreien Anlass; nicht eingetragene Tage zählen nicht als null.'
+      };
+      return (advice[currentLocale()] || advice['nl-BE']).replace('{days}', values.days).replace('{logged}', values.logged);
+    }
+  }
   return (lang && tip[lang]) || translated && translated[TIPS.indexOf(tip)] || tip.x;
 }
