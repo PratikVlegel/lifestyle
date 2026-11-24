@@ -96,8 +96,8 @@ ACT.prepPhotoDel = () => { delete PREP.photo; delete PREP.photoUrl; PREP.photoDi
 function prepExtrasHtml(P) {
   const src = prepPhotoSrc(P);
   return '<div class="card"><h3>' + tr('Foto en bereiding') + '</h3>' +
-    (src ? '<img class="prepimg" src="' + esc(src) + '" alt="' + tr('Foto van') + ' ' + esc(P.name) + '"><div class="inrow"><label class="btn ghost">' + tr('Andere foto') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="prepPhoto"></label><button class="link danger" data-act="prepPhotoDel">' + tr('Foto verwijderen') + '</button></div>'
-      : '<label class="btn ghost">+ ' + tr('Foto toevoegen') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="prepPhoto"></label>') +
+    (src ? '<img class="prepimg" src="' + esc(src) + '" alt="' + tr('Foto van') + ' ' + esc(P.name) + '"><div class="inrow"><label class="btn ghost">' + tr('Andere foto') + '<input type="file" accept="image/*" hidden data-chg="prepPhoto"></label><button class="link danger" data-act="prepPhotoDel">' + tr('Foto verwijderen') + '</button></div>'
+      : '<label class="btn ghost">+ ' + tr('Foto toevoegen') + '<input type="file" accept="image/*" hidden data-chg="prepPhoto"></label>') +
     '<label class="fld"><span>' + tr('Bereiding (optioneel)') + '</span><textarea rows="5" maxlength="2000" data-pp="recipeNote" placeholder="' + tr('1. Kip marineren… 2. Groenten roosteren op 200 °C…') + '">' + esc(P.recipeNote || '') + '</textarea></label>' +
     (P.feedback ? '<p class="small"><b>' + tr('Jouw beoordeling:') + '</b> ' + esc(feedbackSummary(P.feedback)) + (P.feedback.note ? ' · "' + esc(P.feedback.note) + '"' : '') + ' <button class="link" data-act="openFeedback" data-id="' + P.id + '">' + tr('Aanpassen') + '</button></p>' : '') + '</div>';
 }

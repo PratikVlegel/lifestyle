@@ -11,7 +11,20 @@ let PICK_CB = null;     // callback van de itemkiezer
 
 /* ================= router ================= */
 function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
-window.addEventListener('hashchange', () => { if (!$('#sheet').hidden) closeSheet(); render(); });
+let lastRoute = location.hash, revertingRoute = false;
+window.addEventListener('hashchange', () => {
+  if (revertingRoute) { revertingRoute = false; return; }
+  const sheet = $('#sheet');
+  if (!sheet.hidden) {
+    captureFreeDraft();
+    const hasDraft = PICK_BASKET.length || PICK_FREE.vdesc || $('#actmin') || $('#em_desc') || document.querySelector('[data-pf="name"]');
+    if (hasDraft && !confirm(tr('Je invoer is nog niet bewaard. Scherm verlaten?'))) {
+      revertingRoute = true; location.hash = lastRoute || '#/'; return;
+    }
+    closeSheet();
+  }
+  lastRoute = location.hash; render();
+});
 function applyPersonalSettings() {
   const S = INTAKE && location.hash.startsWith('#/intake') ? INTAKE.settings : DB.settings || {};
   document.documentElement.dataset.palette = ['forest', 'ocean', 'plum', 'sunset', 'slate', 'berry', 'lavender', 'sand', 'midnight'].includes(S.palette) ? S.palette : 'forest';
@@ -280,8 +293,8 @@ function renderKpi(key) {
     stat(tr('Gemiddeld'), fmtNum(avg(vals), M.dec) + ' ' + tr(M.unit)) +
     stat(tr('Laagste'), vals.length ? fmtNum(Math.min(...vals), M.dec) : '–') +
     stat(tr('Hoogste'), vals.length ? fmtNum(Math.max(...vals), M.dec) : '–') +
-    stat(tr(M.sum || key === 'water' ? 'Volledige dagen' : 'Dagen met data'), vals.length + '/' + PERIOD) + '</div>' +
-    (M.sum || key === 'water' ? '<p class="muted small">' + tr('Gemiddelde, laagste en hoogste tellen alleen volledige dagen: zonder onbekende maaltijden en zonder de lopende dag.') + '</p>' : '');
+    stat(tr(M.sum ? 'Dagen met volledige waarden' : 'Dagen met data'), vals.length + '/' + PERIOD) + '</div>' +
+    (M.sum || key === 'water' ? '<p class="muted small">' + tr('Voor voedingswaarden tellen alleen dagen waarop deze waarde bij alle genoteerde maaltijden bekend is. De lopende dag telt pas na de dagcheck-in. Water gebruikt de geregistreerde waarde; een lege waarde is onbekend.') + '</p>' : '');
   const opts = { goal, goal2: M.goal2 ? M.goal2() : null, goalIsMax: M.goalIsMax, dec: M.dec, unit: tr(M.unit), label: tr(M.label), ma: M.ma, min: M.min, max: M.max };
   h += '<div class="card"><h3>' + trf('{metric} per dag', { metric: tr(M.label) }) + '</h3>' + (M.chart === 'bar' ? barChart(ser, opts) : lineChart(ser, opts)) +
     '<p class="muted small">' + (goal ? trf('Stippellijn = {target} {value}{range}.', { target: M.goalIsMax ? tr('maximum') : tr('doel'), value: fmtNum(goal, M.dec), range: M.goal2 ? '–' + fmtNum(M.goal2()) : '' }) + ' ' : '') + (M.sum ? tr('Lichtere staaf = ondergrens (een deel is onbekend).') + ' ' : '') + (M.ma ? tr('Dikke lijn = 7-daags gemiddelde.') : '') + '</p></div>';
@@ -414,10 +427,11 @@ function field(name, label, type, o) {
   const v = CI.f[name];
   const unk = v === '?';
   const inner = '<span>' + tr(label) + '</span><div class="inrow"><input type="' + type + '" inputmode="decimal" step="' + (o.step || 'any') + '" data-ci="' + name + '" value="' + (unk || v === undefined ? '' : esc(v)) + '"' + (unk ? ' disabled' : '') + '>' + (o.unit ? '<em>' + tr(o.unit) + '</em>' : '') +
-    '<button class="chip sm ' + (unk ? 'on' : '') + '" data-act="ciUnknown" data-f="' + name + '">' + tr(o.unknown) + '</button></div>' + (o.hint ? '<small class="muted">' + esc(o.hint) + '</small>' : '');
+    (['softDrinkServings', 'sweetsServings', 'alcohol'].includes(name) ? '<button type="button" class="chip sm ' + (v === 0 ? 'on' : '') + '" data-act="ciZero" data-f="' + name + '">' + tr('Geen') + '</button>' : '') + '<button class="chip sm ' + (unk ? 'on' : '') + '" data-act="ciUnknown" data-f="' + name + '">' + tr(o.unknown) + '</button></div>' + (o.hint ? '<small class="muted">' + esc(o.hint) + '</small>' : '');
   const req = o.optional ? '' : ' data-req="' + name + '"';
   return o.bare ? '<label class="fld"' + req + '>' + inner + '</label>' : '<label class="fld card"' + req + '>' + inner + '</label>';
 }
+ACT.ciZero = el => { CI.f[el.dataset.f] = 0; rerenderCI(); };
 const NICOTINE_LABELS = { cigarette: 'Sigaretten', vape: 'Vape', nicotineGum: 'Nicotinekauwgom', nicotinePouch: 'Nicotinezakjes of snus', nicotinePatch: 'Nicotinepleister', heatedTobacco: 'Verhitte tabak', otherNicotine: 'Andere nicotinevorm' };
 const NICOTINE_FORMS = Object.keys(NICOTINE_LABELS);
 function nicotineFormChoice() {
@@ -563,8 +577,11 @@ let PICK_WASTE = false;
 let PICK_BASKET = [];
 let PICK_OPTS = {};
 let PICK_SLOT = null;
+let PICK_FREE = {};
+function captureFreeDraft() { for (const id of ['vdesc','vkcal','vprot','vcarbs','vfat','vfib','vfl','vwater']) { const el = document.getElementById(id); if (el) PICK_FREE[id] = el.value; } }
+function restoreFreeDraft() { for (const [id, value] of Object.entries(PICK_FREE)) { const el = document.getElementById(id); if (el) el.value = value; } }
 function openPicker(cb, opts) {
-  PICK_CB = cb; PICK_OPTS = opts || {}; PICK_BASKET = []; PICK_SLOT = PICK_OPTS.chooseSlot ? slotForNow() : null; PICK_WASTE = false;
+  PICK_CB = cb; PICK_OPTS = opts || {}; PICK_BASKET = []; PICK_FREE = {}; PICK_SLOT = PICK_OPTS.chooseSlot ? slotForNow() : null; PICK_WASTE = false;
   renderPicker(); $('#sheet').hidden = false; document.body.classList.add('noscroll');
 }
 function pickAdd(it) {
@@ -608,7 +625,8 @@ ACT.pickDone = () => {
   if (wv > 0) { if (wv > 10000) return toast(tr('Vul in hoeveel ml (1 tot 10000).')); PICK_BASKET.push({ id: uid(), src: 'vocht', desc: trf('Water in gerecht ({ml} ml)', { ml: fmtNum(wv) }), kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, fluidMl: wv }); }
   if (!PICK_BASKET.length) return toast(tr('Kies eerst wat je at, of vul bij Vrij in wat je at.'));
   const items = PICK_BASKET, slot = PICK_SLOT, cb = PICK_CB;
-  PICK_BASKET = []; closeSheet(); cb && cb(items, slot);
+  for (const item of items.filter(x => x.src === 'vrij')) rememberFreeMeal(item);
+  PICK_FREE = {}; PICK_BASKET = []; closeSheet(); cb && cb(items, slot);
 };
 ACT.pickWater = () => {
   const v = Math.round(Number(($('#vwater').value || '').replace(',', '.')));
@@ -621,7 +639,7 @@ ACT.mealExtra = el => {
   openPicker(items => { const d = getDay(k, true); items.forEach(it => { it.slot = m.slot; it.time = m.time || ''; d.meals.push(it); if (it.prepId) usePortion(it.prepId, prepStockUse(it)); }); if (!save()) return; toast(tr('Toegevoegd')); render(); });
 };
 function closeSheet() { $('#sheet').hidden = true; document.body.classList.remove('noscroll'); stopScan(); }
-ACT.closeSheet = closeSheet;
+ACT.closeSheet = () => { captureFreeDraft(); if ((PICK_BASKET.length || PICK_FREE.vdesc) || ($('#actmin') && ACT_DRAFT) || $('#em_desc')) { if (!confirm(tr('Je hebt een invoer openstaan. Sluiten zonder bewaren?'))) return; } closeSheet(); };
 function renderPicker(msg) {
   let h = '<div class="sheet-h"><h2>' + tr('Eten toevoegen') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + tr('Sluiten') + '">✕</button></div>';
   h += '<div class="seg">' + [['vaak', 'Vaak'], ['prep', 'Mealprep'], ['lib', 'Los product'], ['vrij', 'Losse maaltijd']].map(([k, l]) => '<button class="' + (PICK_TAB === k ? 'on' : '') + '" data-act="pickTab" data-t="' + k + '">' + tr(l) + '</button>').join('') + '</div>';
@@ -641,11 +659,11 @@ function renderPicker(msg) {
     }).join('');
   } else if (PICK_TAB === 'lib') {
     h += '<input type="search" id="libq" placeholder="' + tr('Zoek in je bibliotheek') + '">';
-    h += '<div class="chips"><button class="chip" data-act="scanFood">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="pickPhoto"></label><button class="chip add" data-act="pickNewFood">+ ' + tr('nieuw product') + '</button></div>';
+    h += '<div class="chips"><button class="chip" data-act="scanFood">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" hidden data-chg="pickPhoto"></label><button class="chip add" data-act="pickNewFood">+ ' + tr('nieuw product') + '</button></div>';
     h += '<div id="libres">' + libResults('') + '</div>';
   } else {
-    h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="vdesc" type="text" placeholder="' + tr('bv. croissant, mixgrill met frieten') + '"></label>' +
-      '<div class="grid3"><label class="fld"><span>kcal</span><input id="vkcal" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('eiwit g') + '</span><input id="vprot" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('vezels g') + '</span><input id="vfib" type="number" inputmode="decimal"></label></div>' +
+    h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="vdesc" type="text" maxlength="2000" placeholder="' + tr('bv. croissant, mixgrill met frieten') + '"></label>' +
+      '<div class="grid3"><label class="fld"><span>kcal</span><input id="vkcal" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('eiwit g') + '</span><input id="vprot" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('koolhydraten g') + '</span><input id="vcarbs" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('vet g') + '</span><input id="vfat" type="number" inputmode="decimal"></label><label class="fld"><span>' + tr('vezels g') + '</span><input id="vfib" type="number" inputmode="decimal"></label></div>' +
       '<p class="muted small">' + tr('Weet je de kcal niet? Laat leeg; dan telt de dag als ondergrens (≥).') + '</p>' +
       '<label class="fld"><span>💧 ' + tr('Waarvan vocht (ml, optioneel)') + '</span><input id="vfl" type="number" inputmode="numeric" placeholder="' + tr('bv. 330 bij een kom soep') + '"></label>' +
       '<button class="btn ghost" data-act="pickFree">+ ' + tr('Op je bord') + '</button>' +
@@ -653,6 +671,7 @@ function renderPicker(msg) {
   }
   h += basketHtml();
   $('#sheet .sheet-in').innerHTML = h;
+  if (PICK_TAB === 'vrij') restoreFreeDraft();
 }
 function libResults(q) {
   const list = libSearch(q, 40);
@@ -661,7 +680,7 @@ function libResults(q) {
 }
 ACT.libSearch = el => { $('#libres').innerHTML = libResults(el.value); };
 document.addEventListener('keyup', e => { if (e.target.id === 'libq') $('#libres').innerHTML = libResults(e.target.value); });
-ACT.pickTab = el => { PICK_TAB = el.dataset.t; renderPicker(); };
+ACT.pickTab = el => { captureFreeDraft(); PICK_TAB = el.dataset.t; renderPicker(); };
 ACT.pickWaste = el => { PICK_WASTE = el.checked; renderPicker(); };
 ACT.pickPrep = el => { const p = prepById(el.dataset.id); const it = itemFromPrep(p, Number(el.dataset.p)); if (PICK_WASTE) setMealWaste(it, true); pickAdd(it); };
 ACT.pickFood = el => {
@@ -676,15 +695,15 @@ ACT.pickFree = () => freeItemFromForm(false);
 function freeItemFromForm(silent) {
   const desc = $('#vdesc').value.trim(); if (!desc) { toast(tr('Wat at je?')); return null; }
   const num = id => { const v = $(id).value.replace(',', '.'); return v === '' ? null : Number(v); };
-  for (const [id, key] of [['#vkcal', 'kcal'], ['#vprot', 'protein'], ['#vfib', 'fiber']]) {
+  for (const [id, key] of [['#vkcal', 'kcal'], ['#vprot', 'protein'], ['#vcarbs', 'carbs'], ['#vfat', 'fat'], ['#vfib', 'fiber']]) {
     const err = numericError(key, num(id), DB);
     if (err) { toast(err); $(id).focus(); return null; }
   }
   const fl = num('#vfl');
   if (fl !== null && !(fl >= 0 && fl <= 10000)) { toast(tr('Vocht: tussen 0 en 10000 ml.')); $('#vfl').focus(); return null; }
-  const it = { id: uid(), src: 'vrij', desc, kcal: num('#vkcal'), protein: num('#vprot'), fiber: num('#vfib') };
+  const it = { id: uid(), src: 'vrij', desc, kcal: num('#vkcal'), protein: num('#vprot'), carbs: num('#vcarbs'), fat: num('#vfat'), fiber: num('#vfib') };
   if (fl) it.fluidMl = Math.round(fl);
-  if (silent) PICK_BASKET.push(it); else pickAdd(it);
+  PICK_FREE = {}; if (silent) PICK_BASKET.push(it); else pickAdd(it);
   return it;
 };
 
@@ -824,7 +843,7 @@ function renderDay(k) {
     '<p class="muted small">' + tr('Je stemming wordt niet automatisch met andere gegevens vergeleken. Dat kan je zelf apart inschakelen bij Stemming en gewoontes.') + '</p></details>' +
     '<details class="card diary-section"' + (hasNumbers ? ' open' : '') + '><summary>' + tr('Cijfers en gewoontes') + '</summary><p class="muted small">' + tr('"?" = onbekend. Slaap = de nacht ervóór.') + '</p><div class="grid2">' +
     f('weight', tr('Gewicht'), 'kg', '0.1') + f('sleepH', tr('Slaap'), 'u', '0.25') + f('steps', tr('Stappen'), '', '1') + f('waterMl', tr('Water'), 'l', '0.25') + f('caffeine', tr('Cafeïne'), 'shots', '1') + f('alcohol', tr('Alcohol'), 'glazen', '1') + '</div>' +
-    f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'textarea') +
+    '<p class="muted small">' + tr('Geen gebruikt? Vul 0 in; leeg betekent onbekend.') + '</p>' + f('cpap', 'CPAP', '', 'text') + dayNicotineChoice(d, k) + f('softDrinkServings', tr('Frisdrank (glazen of blikjes)'), tr('porties'), '0.5') + f('sweetsServings', tr('Snoep of zoetigheden (porties)'), tr('porties'), '0.5') + f('notes', tr('Notitie'), '', 'textarea') +
     (d.kcalOverride ? '<p class="muted small">' + tr('Kcal van deze dag komt uit een dagschatting') + ' (' + (d.kcalOverride.lb ? '≥ ' : '≈ ') + fmtNum(d.kcalOverride.v) + '). <button class="link" data-act="dropOverride" data-k="' + k + '">' + tr('Gebruik de maaltijden') + '</button></p>' : '') +
     '<button class="btn" data-act="saveDay" data-k="' + k + '">' + tr('Cijfers bewaren') + '</button></details>';
   if (d.done && Object.keys(d.done).length) h += '<p class="muted small">' + tr('Check-ins gedaan:') + ' ' + DB.reminders.filter(r => d.done[r.id]).map(r => reminderDisplayLabel(r.label)).join(', ') + '</p>';
@@ -963,7 +982,7 @@ function renderPrep(id) {
     '<div class="grid2"><label class="fld"><span>' + tr('Hoeveelheid (hele prep)') + '</span><div class="inrow"><input type="number" inputmode="decimal" data-pp="ing.' + i + '.grams" value="' + (isNum(g.grams) ? g.grams : '') + '"><em>g/ml</em></div></label>' +
     '<label class="fld"><span>' + tr('Waarden zijn') + '</span><select data-pp="ing.' + i + '.mode"><option value="per100"' + (g.mode !== 'totaal' ? ' selected' : '') + '>' + tr('per 100 g (etiket)') + '</option><option value="totaal"' + (g.mode === 'totaal' ? ' selected' : '') + '>' + tr('totaal voor deze hoeveelheid') + '</option></select></label></div>' +
     '<div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + tr(NUTR_LABEL[n]) + '</span><input type="number" inputmode="decimal" data-pp="ing.' + i + '.per.' + n + '" value="' + (isNum(g.per[n]) ? g.per[n] : '') + '"></label>').join('') + '</div>' +
-    '<div class="chips"><button class="chip" data-act="ingLib" data-i="' + i + '">' + tr('Uit bibliotheek') + '</button><button class="chip" data-act="ingScan" data-i="' + i + '">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="ingOcr" data-i="' + i + '"></label></div>' + ingUnitChips(g, i) +
+    '<div class="chips"><button class="chip" data-act="ingLib" data-i="' + i + '">' + tr('Uit bibliotheek') + '</button><button class="chip" data-act="ingScan" data-i="' + i + '">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" hidden data-chg="ingOcr" data-i="' + i + '"></label></div>' + ingUnitChips(g, i) +
     '<small class="muted" id="ingsum_' + i + '">' + ingSummary(g) + '</small></div>').join('');
   h += '<datalist id="foodlist">' + DB.foods.map(f => '<option value="' + esc(f.name) + '">').join('') + '</datalist>';
   h += '<button class="btn ghost" data-act="addIng">+ ' + tr('ingrediënt') + '</button>';
@@ -1465,7 +1484,7 @@ function renderIntake(step) {
     const bmr = mifflin(I);
     const P = I.settings.purposes, all = !P.length, has = (...k) => all || k.some(x => P.includes(x));
     const foodish = has('food', 'mealprep');
-    h = header('Je doelen', trf('Stap {n} van {total}', { n: 3, total: 5 })) + '<div class="card">' + (bmr && foodish ? '<p class="note">' + trf('Onderhoud volgens de formule ≈ {bmr} kcal per dag (Mifflin-St Jeor, geschat, niet gemeten). Kies je richtpunt eventueel samen met je diëtist.', { bmr: fmtNum(bmr) }) + '</p>' : '') + '<div class="grid2">' +
+    h = header('Je doelen', trf('Stap {n} van {total}', { n: 3, total: 5 })) + '<div class="card">' + (bmr && foodish ? '<p class="note">' + trf('Rustverbruik ≈ {rest} kcal per dag; onderhoud inclusief activiteit ≈ {bmr} kcal per dag. Dit zijn schattingen, geen metingen.', { rest: fmtNum(restingEnergy(I)), bmr: fmtNum(bmr) }) + '</p>' : '') + '<div class="grid2">' +
       (foodish ? ifield('goals.kcal', 'Kcal per dag', I.goals.kcal) + ifield('goals.protein', 'Eiwit (g)', I.goals.protein) + ifield('goals.fiber', 'Vezels (g)', I.goals.fiber) : '') + (has('food', 'wellbeing') ? ifield('goals.waterMl', 'Water (ml)', I.goals.waterMl) : '') +
       (has('movement', 'training') ? ifield('goals.stepsMin', 'Stappen min.', I.goals.stepsMin) + ifield('goals.stepsMax', 'Stappen max.', I.goals.stepsMax) : '') + (has('wellbeing') ? ifield('goals.sleepH', 'Slaap (u)', I.goals.sleepH) + ifield('goals.caffeineMax', 'Max. cafeïne (shots)', I.goals.caffeineMax) : '') + '</div>' +
       (all ? '' : '<p class="small muted">' + tr('We tonen alleen de doelen die passen bij wat je koos. De rest kun je later instellen via Meer.') + '</p>') + '</div>' +
@@ -1514,11 +1533,16 @@ ACT.intakeGo = el => {
   if (el.dataset.s === '5' && INTAKE.reminders.some(r => !/^([01]\d|2[0-3]):[0-5]\d$/.test(r.time || ''))) { toast(tr('Voer een geldige tijd in.')); renderIntake('4'); return; }
   go('#/intake/' + el.dataset.s);
 };
+function restingEnergy(I) {
+  const w = I.weight || I.profile.startWeight, hgt = I.profile.heightCm, a = I.profile.age;
+  if (!w || !hgt || !a || !['m', 'v'].includes(I.profile.sex)) return null;
+  return Math.round(10 * w + 6.25 * hgt - 5 * a + (I.profile.sex === 'v' ? -161 : 5));
+}
 function mifflin(I) {
   const w = I.weight || I.profile.startWeight, hgt = I.profile.heightCm, a = I.profile.age;
-  if (!w || !hgt || !a) return null;
+  if (!restingEnergy(I)) return null;
   const f = { zittend: 1.2, licht: 1.375, matig: 1.55, actief: 1.725 }[I.profile.activity] || 1.2;
-  return Math.round((10 * w + 6.25 * hgt - 5 * a + (I.profile.sex === 'v' ? -161 : 5)) * f / 10) * 10;
+  return Math.round(restingEnergy(I) * f / 10) * 10;
 }
 ACT.intakePurpose = el => {
   const set = new Set(INTAKE.settings.purposes);
@@ -1553,7 +1577,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.18.1';
+const APP_VERSION = '1.19.1';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

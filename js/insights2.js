@@ -104,7 +104,7 @@ function moreInsights(n, recent, add) {
   for (const k of keys) { const a = dv('alcohol', k), nk = addDays(k, 1); const kc = dv('kcal', nk), st = dv('steps', nk); if (!isNum(a)) continue; (a > 0 ? after : noAfter).push({ kc, st }); }
   if (after.length >= 2 && noAfter.length >= 3) {
     const s1 = avg(after.map(x => x.st).filter(isNum)), s0 = avg(noAfter.map(x => x.st).filter(isNum));
-    if (isNum(s1) && isNum(s0) && Math.abs(s1 - s0) > 800) add('activiteit', 'Stappen na alcoholregistratie', trf('De dag na een dag waarop alcohol was geregistreerd, zette je gemiddeld {after} stappen; na dagen die expliciet als alcoholvrij waren genoteerd, {without}. Dit is een patroon in je registraties, geen oorzaak.', { after: fmtNum(s1), without: fmtNum(s0) }), after.length + ' + ' + noAfter.length + ' dagen', 'info');
+    if (after.filter(x => isNum(x.st)).length >= 2 && noAfter.filter(x => isNum(x.st)).length >= 3 && isNum(s1) && isNum(s0) && Math.abs(s1 - s0) > 800) add('activiteit', 'Stappen na alcoholregistratie', trf('De dag na een dag waarop alcohol was geregistreerd, zette je gemiddeld {after} stappen; na dagen die expliciet als alcoholvrij waren genoteerd, {without}. Dit is een patroon in je registraties, geen oorzaak.', { after: fmtNum(s1), without: fmtNum(s0) }), after.filter(x => isNum(x.st)).length + ' + ' + noAfter.filter(x => isNum(x.st)).length + ' dagen', 'info');
   }
 
   /* 8. Slaapregelmaat en korte nachten */
@@ -144,7 +144,7 @@ function moreInsights(n, recent, add) {
     const e1 = avg(actDays.map(x => x.d.energy).filter(isValidDailyRating)), e0 = avg(recent.filter(x => !(x.d.activities || []).length).map(x => x.d.energy).filter(isValidDailyRating));
     add('activiteit', 'Sporten en bewegen', trf('Op {days} dagen registreerde je extra beweging: {activities}.{energy}', {
       days: actDays.length,
-      activities: Object.entries(types).map(([t, m]) => tr(ACTIVITIES[t] || ACTIVITIES.anders).toLocaleLowerCase(currentLocale()) + ' ' + m + ' ' + tr('min')).join(', '),
+      activities: Object.entries(types).map(([t, m]) => tr((ACTIVITIES[t] || ACTIVITIES.anders).label).toLocaleLowerCase(currentLocale()) + ' ' + m + ' ' + tr('min')).join(', '),
       energy: isNum(e1) && isNum(e0) ? trf(' Je energie was op die dagen gemiddeld {active}/10 en op dagen zonder geregistreerde activiteit {rest}/10.', { active: fmtNum(e1, 1), rest: fmtNum(e0, 1) }) : ''
     }), actDays.length + ' dagen', 'good');
   }

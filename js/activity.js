@@ -27,7 +27,12 @@ function currentWeight(k) {
 }
 function activityKcal(a, k) {
   const A = ACTIVITIES[a.type] || ACTIVITIES.anders;
-  const met = A.met[Math.max(0, INTENS.indexOf(a.int))] || A.met[1];
+  let met = A.met[Math.max(0, INTENS.indexOf(a.int))] || A.met[1];
+  // 2024 Adult Compendium: vlak wandelen, snelheid afgeleid uit afstand en tijd.
+  if (a.type === 'wandelen' && a.distanceKm > 0 && a.min > 0) {
+    const speed = a.distanceKm * 60 / a.min;
+    met = speed < 3.2 ? 2.3 : speed < 4.0 ? 2.8 : speed < 4.5 ? 3.0 : speed < 5.6 ? 3.8 : speed < 6.4 ? 4.8 : speed < 7.2 ? 5.5 : speed < 8 ? 7.0 : 8.5;
+  }
   const minutes = Number(a.min);
   if (!Number.isFinite(minutes) || minutes < 0 || minutes > 1440) return 0;
   return Math.round(Math.max(0, met - 1) * currentWeight(k) * minutes / 60);
@@ -73,6 +78,8 @@ function renderActivitySheet() {
   if (A.type === 'anders') h += '<label class="fld"><span>' + tr('Wat?') + '</span><input id="actnote" maxlength="200" value="' + esc(A.note || '') + '" placeholder="' + tr('bv. klimmen') + '"></label>';
   h += '<div class="fld"><span>' + tr('Hoe lang?') + '</span><div class="amt-q"><button type="button" class="amt-b" data-act="actMin" data-d="-5">−</button><input type="number" inputmode="numeric" id="actmin" min="1" max="1440" step="1" value="' + A.min + '"><button type="button" class="amt-b" data-act="actMin" data-d="5">+</button></div><small class="muted">' + tr('minuten') + '</small></div>';
   h += '<div class="fld"><span>' + tr('Hoe zwaar?') + '</span><div class="seg">' + INTENS.map(i => '<button class="' + (A.int === i ? 'on' : '') + '" data-act="actInt" data-i="' + i + '">' + tr(i) + '</button>').join('') + '</div><small class="muted">' + tr('Licht: praten gaat makkelijk. Matig: praten gaat, zingen niet. Zwaar: praten lukt amper.') + '</small></div>';
+  if (A.type === 'wandelen') h += '<label class="fld"><span>' + tr('Afstand in km (optioneel)') + '</span><input id="actdistance" type="number" inputmode="decimal" min="0" max="200" step="0.1" value="' + (A.distanceKm || '') + '"><small class="muted">' + tr('Met afstand en duur schatten we je tempo op vlak terrein. Laat leeg als je het niet weet.') + '</small></label>';
+  if (!Object.keys(DB.days).some(x => (!A.k || x <= A.k) && isNum(DB.days[x].weight)) && !isNum(DB.profile.startWeight)) h += '<p class="note small">' + tr('Geen gewicht ingevuld: deze schatting gebruikt tijdelijk 80 kg. Vul je gewicht in voor een persoonlijkere schatting.') + '</p>';
   if (A.type === 'wandelen') h += '<p class="note small">' + tr('Heb je je stappen al ingevuld? Dan telt een wandeling niet dubbel: het verbruik komt dan uit je stappen.') + '</p>';
   h += '<p class="muted" id="actsum">' + trf('≈ {kcal} kcal extra bovenop rust (ruwe schatting, op basis van {weight} kg)', { kcal: fmtNum(activityKcal(A, A.k)), weight: fmtNum(currentWeight(A.k), 1) }) + '</p>';
   h += '<button class="btn big" data-act="actSave">' + tr('Bewaren') + '</button>';
@@ -83,12 +90,14 @@ ACT.actInt = el => { ACT_DRAFT.int = el.dataset.i; renderActivitySheet(); };
 ACT.actMin = el => { ACT_DRAFT.min = Math.min(1440, Math.max(1, (Number($('#actmin').value) || 0) + Number(el.dataset.d))); renderActivitySheet(); };
 document.addEventListener('input', e => {
   if (e.target.id === 'actmin' && ACT_DRAFT) { ACT_DRAFT.min = Number(e.target.value) || 0; const s = $('#actsum'); if (s) s.textContent = trf('≈ {kcal} kcal extra bovenop rust (ruwe schatting, op basis van {weight} kg)', { kcal: fmtNum(activityKcal(ACT_DRAFT, ACT_DRAFT.k)), weight: fmtNum(currentWeight(ACT_DRAFT.k), 1) }); }
+  if (e.target.id === 'actdistance' && ACT_DRAFT) { ACT_DRAFT.distanceKm = Number(e.target.value) || 0; const s = $('#actsum'); if (s) s.textContent = trf('≈ {kcal} kcal extra bovenop rust (ruwe schatting, op basis van {weight} kg)', { kcal: fmtNum(activityKcal(ACT_DRAFT, ACT_DRAFT.k)), weight: fmtNum(currentWeight(ACT_DRAFT.k), 1) }); }
   if (e.target.id === 'actnote' && ACT_DRAFT) ACT_DRAFT.note = e.target.value;
 });
 ACT.actSave = () => {
   const A = ACT_DRAFT;
   if (!Number.isInteger(Number(A.min)) || Number(A.min) < 1 || Number(A.min) > 1440) return toast(tr('Kies een duur tussen 1 minuut en 24 uur.'));
-  const a = { id: A.id, type: A.type, min: Number(A.min), int: A.int }; if (A.note) a.note = String(A.note).trim().slice(0, 200);
+  if (A.distanceKm && (A.distanceKm > 200 || A.distanceKm * 60 / A.min > 10)) return toast(tr('Controleer de afstand en duur van je wandeling.'));
+  const a = { id: A.id, type: A.type, min: Number(A.min), int: A.int }; if (A.type === 'wandelen' && A.distanceKm > 0) a.distanceKm = A.distanceKm; if (A.note) a.note = String(A.note).trim().slice(0, 200);
   const cb = ACT_CB; ACT_DRAFT = null; closeSheet();
   if (cb) cb(a); else { const d = getDay(A.k, true); d.activities = (d.activities || []).concat(a); if (!save()) return; toast(tr('Activiteit bewaard')); render(); }
 };

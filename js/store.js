@@ -34,6 +34,7 @@ function defaultData() {
     girth: { enabled: false, weekday: 6, since: '', lastDate: '', entries: [] },
     preps: [],
     foods: [],
+    freeMeals: [],
     ai: []
   };
 }
@@ -132,6 +133,7 @@ function migrate(d) {
   out.girth = cleanGirth(d.girth);
   out.preps = d.preps || [];
   out.foods = d.foods || [];
+  out.freeMeals = Array.isArray(d.freeMeals) ? d.freeMeals.filter(m => m && typeof m.desc === 'string' && m.desc.trim()).slice(0, 100) : [];
   out.ai = d.ai || [];
   const reminderKinds = new Set(['ontbijt', 'lunch', 'avond', 'dag', 'vrij']);
   const reminderIds = new Set();
@@ -358,6 +360,7 @@ function validateImportData(obj) {
   for (const field of ['days', 'profile', 'goals', 'settings', 'training', 'cycleTracking', 'girth']) {
     if (obj[field] !== undefined && obj[field] !== null && !record(obj[field])) fail('het veld ' + field + ' heeft een ongeldig formaat.');
   }
+  if (obj.freeMeals !== undefined && (!Array.isArray(obj.freeMeals) || obj.freeMeals.length > 100 || obj.freeMeals.some(m => !record(m) || typeof m.desc !== 'string' || !m.desc.trim() || m.desc.length > 2000 || NUTR.some(n => m[n] != null && (!isNum(m[n]) || m[n] < 0 || m[n] > 100000))))) fail('bewaarde losse maaltijden hebben een ongeldig formaat.');
   if (obj.cycleTracking) {
     const cycle = obj.cycleTracking;
     if (cycle.enabled !== undefined && typeof cycle.enabled !== 'boolean') fail('de cyclusinstelling heeft een ongeldig formaat.');
@@ -555,6 +558,7 @@ function validateImportData(obj) {
     if (day.activities !== undefined && !Array.isArray(day.activities)) fail('de activiteiten van ' + key + ' zijn geen lijst.');
     if ((day.activities || []).length > 100) fail('er staan meer dan 100 activiteiten op ' + key + '.');
     for (const activity of day.activities || []) {
+      if (record(activity) && activity.distanceKm !== undefined && (!isNum(activity.distanceKm) || activity.distanceKm <= 0 || activity.distanceKm > 200 || activity.distanceKm * 60 / activity.min > 10)) fail('een wandelafstand op ' + key + ' is ongeldig.');
       if (!record(activity) || typeof activity.id !== 'string' || !activity.id || activity.id.length > 100 || !['wandelen', 'fietsen', 'lopen', 'zwemmen', 'kracht', 'cardio', 'padel', 'voetbal', 'dansen', 'yoga', 'huishouden', 'anders'].includes(activity.type) || !Number.isInteger(activity.min) || activity.min < 1 || activity.min > 1440 || !['licht', 'matig', 'zwaar'].includes(activity.int) || (activity.note !== undefined && (typeof activity.note !== 'string' || activity.note.length > 1000))) fail('een activiteit op ' + key + ' heeft een ongeldige structuur of waarde.');
     }
     if (day.done !== undefined && day.done !== null && !record(day.done)) fail('de herinneringen van ' + key + ' hebben een ongeldig formaat.');
@@ -681,6 +685,9 @@ function importJSON(obj, mode) {
       }
     }
     importJSON.lastUpdated = updated.size;
+    const names = new Set((DB.freeMeals || []).map(m => m.desc.trim().toLocaleLowerCase()));
+    DB.freeMeals = DB.freeMeals || [];
+    for (const m of obj.freeMeals || []) if (!names.has(m.desc.trim().toLocaleLowerCase()) && DB.freeMeals.length < 100) { DB.freeMeals.push(m); names.add(m.desc.trim().toLocaleLowerCase()); }
     const fids = new Set(DB.foods.map(f => f.id));
     for (const f of obj.foods || []) if (!fids.has(f.id)) DB.foods.push(f);
     if (obj.profile && !DB.intakeDone) DB.profile = Object.assign(DB.profile, obj.profile);

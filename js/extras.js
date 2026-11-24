@@ -35,12 +35,24 @@ function frequentItems(max) {
   }
   return [...cnt.values()].filter(e => e.n >= 1).sort((a, b) => b.n - a.n || b.last.localeCompare(a.last)).slice(0, max || 15);
 }
-function favResults() {
-  const list = frequentItems(15);
-  if (!list.length) return '<p class="muted">' + tr('Nog niets. Wat je vaak eet, verschijnt hier vanzelf.') + '</p>';
-  return list.map((e, i) => '<button class="pick wide" data-act="pickFav" data-i="' + i + '"><b>' + esc(e.m.desc) + '</b><small>' + nutrLine(e.m) + ' · ' + trf('In 45 dagen: {count} keer', { count: e.n }) + '</small></button>').join('');
+function rememberFreeMeal(item) {
+  const saved = copyItem(item); delete saved.id; delete saved.prepId;
+  DB.freeMeals = Array.isArray(DB.freeMeals) ? DB.freeMeals : [];
+  const key = saved.desc.trim().toLocaleLowerCase();
+  const index = DB.freeMeals.findIndex(m => m.desc.trim().toLocaleLowerCase() === key);
+  if (index >= 0) DB.freeMeals.splice(index, 1);
+  DB.freeMeals.unshift(saved); DB.freeMeals = DB.freeMeals.slice(0, 100); save();
 }
-ACT.pickFav = el => { const e = frequentItems(15)[Number(el.dataset.i)]; pickAdd(copyItem(e.m)); };
+function favResults() {
+  const saved = Array.isArray(DB.freeMeals) ? DB.freeMeals : [];
+  const list = frequentItems(15).filter(e => !saved.some(m => m.desc.toLocaleLowerCase() === e.m.desc.toLocaleLowerCase()));
+  if (!saved.length && !list.length) return '<p class="muted">' + tr('Nog niets. Bewaarde losse maaltijden verschijnen hier vanzelf.') + '</p>';
+  return (saved.length ? '<p class="muted small">' + tr('Bewaarde losse maaltijden · waarden per ingevoerde portie') + '</p>' + saved.map((m, i) => '<div class="pick"><button class="pick wide" data-act="pickSavedFree" data-i="' + i + '"><b>' + esc(m.desc) + '</b><small>' + nutrLine(m) + '</small></button><button class="link danger" data-act="deleteSavedFree" data-i="' + i + '">' + tr('Verwijder') + '</button></div>').join('') : '') +
+    (list.length ? '<p class="muted small">' + tr('Recent gegeten') + '</p>' + list.map((e, i) => '<button class="pick wide" data-act="pickRecent" data-i="' + i + '"><b>' + esc(e.m.desc) + '</b><small>' + nutrLine(e.m) + '</small></button>').join('') : '');
+}
+ACT.pickSavedFree = el => { const m = (DB.freeMeals || [])[Number(el.dataset.i)]; if (m) pickAdd(copyItem(m)); };
+ACT.deleteSavedFree = el => { if (!confirm(tr('Deze bewaarde maaltijd verwijderen?'))) return; DB.freeMeals.splice(Number(el.dataset.i), 1); save(); renderPicker(); };
+ACT.pickRecent = el => { const saved = DB.freeMeals || []; const list = frequentItems(15).filter(e => !saved.some(m => m.desc.toLocaleLowerCase() === e.m.desc.toLocaleLowerCase())); const e = list[Number(el.dataset.i)]; if (e) pickAdd(copyItem(e.m)); };
 
 /* ---------- boodschappenlijst uit mealpreps ---------- */
 function shopState() { DB.shop = DB.shop || { sel: {}, done: {}, extra: [] }; return DB.shop; }

@@ -10,7 +10,7 @@ function renderLibrary() {
   const list = libSearch(LIBQ, 300);
   const shared = cloudReady() && DB.settings.share !== false;
   let h = header('Bibliotheek', trf('{count} producten · waarden per 100 g', { count: DB.foods.length }), true);
-  h += '<div class="inrow wrap"><button class="btn" data-act="newFood">' + tr('+ Nieuw product') + '</button><button class="btn ghost" data-act="libScan">' + tr('Scan barcode') + '</button><label class="btn ghost">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="libPhoto"></label></div>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="newFood">' + tr('+ Nieuw product') + '</button><button class="btn ghost" data-act="libScan">' + tr('Scan barcode') + '</button><label class="btn ghost">' + tr('Foto etiket') + '<input type="file" accept="image/*" hidden data-chg="libPhoto"></label></div>';
   h += '<input type="search" id="bibq" placeholder="' + esc(tr('Zoek op naam, merk of barcode')) + '" value="' + esc(LIBQ) + '">';
   h += '<p class="muted small">' + (shared ? tr('Gedeelde bibliotheek staat aan: producten die je toevoegt, kan iedereen met de app gebruiken.') + ' ' + (DB.settings.libSyncAt ? trf('Laatst bijgewerkt {date}.', { date: new Date(DB.settings.libSyncAt).toLocaleString(currentLocale(), { dateStyle: 'short', timeStyle: 'short' }) }) : '') + ' <button class="link" data-act="syncNow">' + tr('Nu bijwerken') + '</button>' : tr('Producten staan alleen op dit toestel.')) + '</p>';
   h += '<div class="card table" id="biblist">' + libRows(list) + '</div>';
@@ -55,7 +55,7 @@ function renderFoodEditor(note) {
   let h = '<div class="sheet-h"><h2>' + tr(P.isNew ? 'Nieuw product' : 'Product') + '</h2><button class="iconbtn" data-act="closeSheet" aria-label="' + esc(tr('Sluiten')) + '">✕</button></div>';
   if (note) h += '<p class="note">' + esc(tr(note)) + '</p>';
   if (locked) h += '<p class="muted small">' + tr('Dit product komt uit de gedeelde bibliotheek. Je wijzigingen blijven op dit toestel.') + '</p>';
-  h += '<div class="chips"><button class="chip" data-act="pedScan">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" capture="environment" hidden data-chg="pedPhoto"></label></div><div id="ocrstat"></div>';
+  h += '<div class="chips"><button class="chip" data-act="pedScan">' + tr('Scan barcode') + '</button><label class="chip">' + tr('Foto etiket') + '<input type="file" accept="image/*" hidden data-chg="pedPhoto"></label></div><div id="ocrstat"></div>';
   h += '<label class="fld"><span>' + tr('Naam') + '</span><input maxlength="200" data-pf="name" value="' + esc(P.name) + '" placeholder="' + esc(tr('bv. Kipfilet')) + '"></label>';
   h += '<div class="grid2"><label class="fld"><span>' + tr('Merk (optioneel)') + '</span><input maxlength="120" data-pf="brand" value="' + esc(P.brand || '') + '"></label><label class="fld"><span>' + tr('Barcode') + '</span><input maxlength="14" data-pf="barcode" inputmode="numeric" value="' + esc(P.barcode || '') + '"></label></div>';
   h += '<p class="muted small">' + tr('Waarden per 100 g (of 100 ml), zoals op het etiket.') + '</p><div class="grid5">' + NUTR.map(n => '<label class="fld"><span>' + tr(NUTR_LABEL[n]) + '</span><input type="number" inputmode="decimal" data-pf="per.' + n + '" value="' + (isNum(P.per[n]) ? P.per[n] : '') + '"' + (P.uncertain && P.uncertain.includes(n) ? ' class="check"' : '') + '></label>').join('') + '</div>';

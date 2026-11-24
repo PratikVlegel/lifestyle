@@ -69,7 +69,7 @@ function renderWeek(endArg) {
     }).join('') + '</div>';
   const notes = [];
   if (isNum(cur.weight)) notes.push(tr('Gewicht: weekgemiddelde') + ' ' + fmtNum(cur.weight, 1) + ' kg · ' + cur.weighings + ' ' + tr('metingen') + (isNum(prev.weight) ? ' (' + tr('vorige week') + ' ' + fmtNum(prev.weight, 1) + ' kg)' : '') + '.');
-  notes.push(tr('Registratie:') + ' ' + cur.complete + ' ' + tr('van de 7 dagen volledig') + (cur.complete >= 6 ? ', ' + tr('sterk!') : '.'));
+  notes.push(tr('Registratie:') + ' ' + cur.complete + ' ' + tr('van de 7 dagen met ontbijt, lunch, avondeten, slaap en stemming geregistreerd') + (cur.complete >= 6 ? ', ' + tr('sterk!') : '.'));
   if (cur.acts) notes.push(cur.acts + ' ' + tr(cur.acts > 1 ? 'extra activiteiten gelogd.' : 'extra activiteit gelogd.'));
   if (cur.alcoholTotal) notes.push(cur.alcoholTotal + ' ' + tr('glazen alcohol deze week.') );
   if (cur.best) notes.push(tr('Beste dag:') + ' ' + fmtDay(cur.best.k, true) + ' (' + tr('stemming') + ' ' + cur.best.v + '/10).');

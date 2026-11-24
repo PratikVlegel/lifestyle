@@ -64,6 +64,8 @@ Een JSON-back-up bevat persoonlijke dagboek- en appgegevens. De export laat de A
 
 ## Wijzigingen
 
+- **vd-1.19.1**: losse maaltijden bewaren alle vijf optionele voedingswaarden en zijn opnieuw te kiezen via Vaak; ze blijven lokaal en gaan mee in back-ups. Nieuwe barcodeproducten komen in de bibliotheek. Frisdrank, alcohol en zoetigheden hebben een keuze Geen. Fotokeuze ondersteunt galerij en camera. Wandelen kan met afstand en duur worden geschat; rustverbruik en geschat onderhoud staan apart. De app waarschuwt bij het verlaten van diverse geopende invoervensters en bewaart de vrije maaltijdinvoer bij tabwissels. Oefeningen zijn met suggesties toe te voegen; de analyse toont aantallen per groep.
+
 - **vd-1.18.1**: in de productkiezer voor mealprep-ingrediënten kun je nu direct zoeken op productnaam, merk of barcode. De lijst filtert terwijl je typt en probeert de al ingevulde ingrediëntnaam meteen te vinden.
 - **vd-1.18.0**: de dagelijkse eetknop heet nu duidelijker “Eten toevoegen”; minder gebruikte dagsecties en maaltijdbeheer klappen in, terwijl invoer direct bereikbaar blijft. Experimentresultaten tonen ja- en nee-dagen plus het aantal dagen met beschikbare metingen en leggen uit dat dit geen oorzakelijk bewijs is. Extra inzichten en bewaarde trainingsschema’s staan achter een inklapbare sectie. De service worker gebruikt gecachete appbestanden meteen en controleert bij paginanavigatie het netwerk op updates.
 
