@@ -104,6 +104,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const el = e.target;
+  if (el.dataset.change === 'openDate') ACT.openDate(el);
   if (el.dataset.ci && (el.type === 'checkbox' || el.tagName === 'SELECT')) ciInput(el);
   if (el.dataset.pp && el.tagName === 'SELECT') prepInput(el);
   if (el.dataset.communityFilter === 'recipes') renderCommunityRecipes();
@@ -793,7 +794,7 @@ function dayHasDiaryContent(d) {
 function renderDays() {
   const keys = Object.keys(DB.days).filter(k => dayHasDiaryContent(DB.days[k])).sort().reverse();
   let h = header('Dagboek', keys.length === 1 ? '1 dag geregistreerd' : keys.length + ' dagen geregistreerd');
-  h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><div class="diary-date-control"><button class="btn ghost" data-act="chooseDiaryDate">' + tr('Andere dag') + '</button><input class="diary-date" type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" data-chg="openDate"></div></div>';
+  h += '<div class="inrow wrap"><button class="btn" data-act="newEntry">' + tr('+ Iets noteren') + '</button><div class="diary-date-control"><button class="btn ghost" data-act="chooseDiaryDate">' + tr('Andere dag') + '</button><input class="diary-date" type="date" id="pdate" aria-label="' + tr('Kies een dag') + '" value="' + (DIARY_DATE || '') + '" data-change="openDate"></div></div><p class="muted small">' + tr('Kies een datum om die dag aan te vullen. Je kunt een maaltijd of check-in ook achteraf invoeren.') + '</p>';
   const readiness = moodDiaryReadiness();
   if (DB.settings.moodInsights && readiness.ready) h += '<a class="card diary-wellbeing" href="#/stemming"><span class="pill">' + tr('Welzijn') + '</span><h3>' + tr('Persoonlijke vergelijkingen staan klaar') + '</h3><p class="small">' + tr('Bekijk stemming naast slaap, alcohol, nicotine en beweging. Jij kiest zelf of je die persoonlijke vergelijkingen inschakelt.') + '</p><span class="plan-go">' + tr('Stemming en gewoontes bekijken ›') + '</span></a>';
   else h += '<a class="card diary-wellbeing" href="#/dag/' + todayKey() + '"><span class="pill">' + tr('Dagboek') + '</span><h3>' + tr('Hoe is het met je, los van de cijfers?') + '</h3><p class="small">' + tr('Per dag kun je ook stemming, energie, stress, slaap, gewoontes en supplementen noteren. Je kunt stemmingsvergelijkingen zelf inschakelen bij Stemming en gewoontes. Vanaf 14 stemmingsdagen in de laatste 60 dagen toont de app alleen vergelijkingen met voldoende gegevens.') + '</p>' + (DB.settings.moodInsights ? '<p class="small muted">' + trf('{count} van de 14 stemmingsdagen bijgehouden.', { count: readiness.count }) + '</p>' : '') + '<span class="plan-go">' + tr('Dagboek van vandaag aanvullen ›') + '</span></a>';
@@ -818,13 +819,14 @@ function renderDays() {
   if (older.length) h += '<details class="card diary-older"><summary>' + tr('Eerdere dagen') + ' <span class="muted">(' + older.length + ')</span></summary><div class="diary-days diary-days-older">' + older.map(dayRow).join('') + '</div></details>';
   view().innerHTML = h;
 }
-ACT.newEntry = () => go('#/checkin/vrij');
+let DIARY_DATE = '';
+ACT.newEntry = () => { const k = ($('#pdate') && $('#pdate').value) || DIARY_DATE || todayKey(); go('#/dag/' + k); };
 ACT.chooseDiaryDate = () => {
   const input = $('#pdate'); if (!input) return;
   try { if (typeof input.showPicker === 'function') input.showPicker(); else { input.focus(); input.click(); } }
   catch (_) { input.focus(); input.click(); }
 };
-ACT.openDate = el => { if (el.value) go('#/dag/' + el.value); };
+ACT.openDate = el => { DIARY_DATE = el.value || ''; };
 
 function renderDay(k) {
   const d = getDay(k) || {};
@@ -1577,7 +1579,7 @@ function tickReminders() {
 }
 
 /* ================= start ================= */
-const APP_VERSION = '1.19.1';
+const APP_VERSION = '1.19.2';
 function boot() {
   flushPushCleanup();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').then(() => refreshWebPushSchedule(true)).catch(e => console.warn(e));

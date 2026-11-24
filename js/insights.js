@@ -201,8 +201,8 @@ function buildInsights(n) {
   }
 
   /* --- Registratie --- */
-  const missing = rangeKeys(completeKey(), 7).filter(k => !DB.days[k] || !(DB.days[k].meals || []).length).length;
-  if (missing >= 3) add('registratie', 'Gaten in de registratie', trf('Op {count} van de laatste 7 dagen heb je geen maaltijden geregistreerd. Analyses zijn bruikbaarder wanneer je gegevens zo volledig mogelijk zijn.', { count: missing }), '7 dagen', 'info');
+  const noMealLog = rangeKeys(completeKey(), 7).filter(k => !DB.days[k] || !(DB.days[k].meals || []).length).length;
+  if (noMealLog >= 3) add('registratie', 'Maaltijden nog niet bijgehouden', trf('Op {count} van de laatste 7 dagen staan geen maaltijdregistraties. Een lege dag betekent alleen dat er niets is ingevoerd; de app kan niet weten of je toen niets at.', { count: noMealLog }), '7 dagen', 'info');
 
   if (typeof moreInsights === 'function') { try { moreInsights(n, recent, add); } catch (e) { console.warn('inzichten', e); } }
   return out;
